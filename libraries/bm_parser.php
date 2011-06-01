@@ -35,9 +35,13 @@ class Bm_parser {
         // parse single variables
         foreach ($this->EE->TMPL->var_single as $key => $val)
         {
-            if(array_key_exists($key, $row_vars))
+            // prevent array to string errors
+            if(array_search($key, $pairs) === FALSE)
             {
-                $rowdata = $this->EE->TMPL->swap_var_single($key, $row_vars[$key], $rowdata);
+                if(array_key_exists($key, $row_vars))
+                {
+                    $rowdata = $this->EE->TMPL->swap_var_single($key, $row_vars[$key], $rowdata);
+                }
             }
         }
 
@@ -71,7 +75,11 @@ class Bm_parser {
                                         var_dump($v);
                                         die;*/
                                     } else {
-                                        $pair_row_data  = $this->EE->TMPL->swap_var_single($k, $v, $pair_row_data);
+                                        // prevent array to string errors
+                                        if(array_key_exists($k, $row_vars) === FALSE)
+                                        {
+                                            $pair_row_data  = $this->EE->TMPL->swap_var_single($k, $v, $pair_row_data);
+                                        }
                                     }
                                 }
                                 $pair_data .= $pair_row_data;
