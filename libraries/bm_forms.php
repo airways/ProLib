@@ -1,11 +1,12 @@
 <?php
 
 class Bm_forms {
-    function create_cp_form($form_fields, $types)
+    function create_cp_form($object, $types)
     {
         $form = array();
+
         
-        foreach($form_fields as $key => $value) 
+        foreach($object as $key => $value)
         {
             if(substr($key, 0, 2) != "__") {
                 if(array_key_exists($key, $types)) {
@@ -15,6 +16,10 @@ class Bm_forms {
                 }
                 
                 if(is_array($type)) {
+                    if(count($type) == 3)
+                        $option_settings = $type[2];
+                    else
+                        $option_settings = array();
                     $options = $type[1];
                     $type = $type[0];
                 } else {
@@ -30,7 +35,42 @@ class Bm_forms {
                         $form[] = array('lang_field' => $key, 'control' => form_textarea($key, $value));
                         break;
                     case 'dropdown':
-                        $form[] = array('lang_field' => $key, 'control' => form_dropdown($key, $options, $value));
+                        $control = form_dropdown($key, $options, $value);
+                        foreach($option_settings as $k => $settings)
+                        {
+                            $control .= '<div id="'.$key.'_'.$k.'" class="edit_settings">';
+                            
+                            if(isset($object->settings))
+                            {
+                                if(array_key_exists($key.'_'.$k, $object->settings))
+                                {
+                                    $setting_value = $object->settings[$key.'_'.$k];
+                                } else {
+                                    $setting_value = '';
+                                }
+                            } else {
+                                echo 'No settings array exists for object of type ' . get_class($object);
+                                var_dump($object);
+                                exit;
+                            }
+
+                            foreach($settings as $settings_field)
+                            {
+                                $control .= '<div><label>'.$settings_field['label'].'</label>';
+                                switch($settings_field['type'])
+                                {
+                                    case 'textarea':
+                                        $control .= form_textarea($key.'_'.$k, $setting_value);
+                                        break;
+                                    case 'input':
+                                        $control .= form_input($key.'_'.$k, $setting_value);
+                                        break;
+                                }
+                                $control .= '</div>';
+                            }
+                            $control .= '</div>';
+                        }
+                        $form[] = array('lang_field' => $key, 'control' => $control);
                         break;
                     case 'grid':
                         $field = array('lang_field' => $key, 'control' => $this->render_grid($key, $options['headings'], $options['options'], $value));
