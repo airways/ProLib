@@ -66,19 +66,27 @@ class Bm_parser {
                             foreach($row_vars[$var_pair] as $data)
                             {
                                 $pair_row_data = $pair_row_template;
-                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
-                                foreach($data as $k => $v)
+
+                                if(!is_array($data))
                                 {
-                                    // prevent array to string errors
-                                    if(is_array($v)) {
-                                        $pair_row_data = $this->parse_variables($pair_row_data, $data, array($k));
-                                        /*echo $k;
-                                        var_dump($v);
-                                        die;*/
-                                    } else {
-                                        if(array_key_exists($k, $row_vars) === FALSE)
-                                        {
-                                            $pair_row_data  = $this->EE->TMPL->swap_var_single($k, $v, $pair_row_data);
+                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('row' => $data));
+                                    $pair_row_data  = $this->EE->TMPL->swap_var_single('row', $data, $pair_row_data);
+                                } else {
+                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
+                                    
+                                    foreach($data as $k => $v)
+                                    {
+                                        // prevent array to string errors
+                                        if(is_array($v)) {
+                                            $pair_row_data = $this->parse_variables($pair_row_data, $data, array($k));
+                                            /*echo $k;
+                                            var_dump($v);
+                                            die;*/
+                                        } else {
+                                            if(array_key_exists($k, $row_vars) === FALSE)
+                                            {
+                                                $pair_row_data  = $this->EE->TMPL->swap_var_single($k, $v, $pair_row_data);
+                                            }
                                         }
                                     }
                                 }
