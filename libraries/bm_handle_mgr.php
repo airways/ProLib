@@ -83,8 +83,8 @@ class Bm_handle_mgr
                 if(isset($object->$field) and $object->$field)
                 {
                     $object->$field = unserialize($object->$field);
-                } else {
-                    $object->$field = array();
+                //} else {
+                //    $object->$field = array();
                 }
             }
 
@@ -179,7 +179,10 @@ class Bm_handle_mgr
         elseif($query->num_rows() == 1)
         {
             $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'});
-            $this->EE->db->where($where)->update($this->table, $o);
+
+            if($where) $this->EE->db->where($where);
+
+            $this->EE->db->update($this->table, $o);
         }
 
         foreach($this->serialized as $field) {
