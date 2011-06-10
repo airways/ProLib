@@ -189,18 +189,22 @@ class BM_CellType {
         }
     }
 
-    function display_cell($field_name, $settings, $data, $template=FALSE)
+    function display_cell($field_name, $row_id, $col_id, $settings, $data, $template=FALSE)
     {
         $this->instance->settings = $settings;
+        $this->instance->row_id = $row_id;
+        $this->instance->col_id = $col_id;
+        $this->instance->cell_name = 'mason_'.$field_name.'_'.$settings['column_name'].'[]';
+        
         if($this->matrix_celltype)
         {
             $this->EE->session->cache['matrix']['theme_url'] = $this->EE->config->slash_item('theme_folder_url').'third_party/matrix/';
         }
-        $this->instance->cell_name = 'mason_'.$field_name.'_'.$settings['column_name'].'[]';
-        //var_dump($this->instance->settings);die;
+
         Bm_celltypes::push_package_path($this->instance);
         $result = $this->instance->display_cell($data);
         Bm_celltypes::pop_package_path();
+        
         unset($settings['__EE']);
         unset($settings['__mgr']);
 
