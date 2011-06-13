@@ -203,12 +203,20 @@ class BM_CellType {
 
         Bm_celltypes::push_package_path($this->instance);
         $result = $this->instance->display_cell($data);
+        if(!is_array($result))
+        {
+            $result = array('data' => $result);
+        }
         Bm_celltypes::pop_package_path();
         
         unset($settings['__EE']);
         unset($settings['__mgr']);
 
         $result['settings_js'] = $this->EE->javascript->generate_json($settings);
+        /*if($col_id == 2) {
+            echo $result;
+            exit;
+        }*/
         return $result;
     }
 
