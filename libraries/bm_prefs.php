@@ -98,7 +98,7 @@ class BM_Preference extends BM_RowInitialized
 
     function save()
     {
-        $this->__mgr->save_preference($this);
+        $this->__mgr->save_object($this);
     }
 
 }} // class Mason_preference
