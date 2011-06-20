@@ -63,6 +63,12 @@ class Bm_celltypes {
                 $this->cache['celltypes'][$fieldtype->name] = $celltype;
             }
 
+            if(!$celltype->name) {
+                echo "<b>Invalid celltype:</b>";
+                var_dump($celltype);
+                exit;
+            }
+            
             if($celltype->valid)
             {
                 if($full)
@@ -241,6 +247,7 @@ class BM_CellType {
             {
                 $result = array(array('', $result));
             }
+
             Bm_celltypes::pop_package_path();
 
             if(!is_array($result)) exit('fail: display_cell_settings not returning an array');
