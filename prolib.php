@@ -198,21 +198,21 @@ class Prolib {
         return $object;
     }
     
-    function copy_data(&$object, $class, $data)
+    function copy_data(&$to_object, $class, $data)
     {
         foreach($this->get_fields($class) as $k)
         {
             if(isset($data[$k]))
             {
-                if(is_array($object))
+                if(is_array($to_object))
                 {
                     $object[$k] = $data[$k];
                 } else {
-                    $object->$k = $data[$k];
+                    $to_object->$k = $data[$k];
                 }
             }
         }
-        return $object;
+        return $to_object;
     }
     
     function get_fields($class)
