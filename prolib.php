@@ -29,10 +29,10 @@ require_once 'libraries/bm_prefs.php';
 require_once 'libraries/bm_celltypes.php';
 require_once 'libraries/bm_validation.php';
 
+// @version 1.2
+
 function prolib(&$object, $package_name)
 {
-    // @version 1.1
-    var $version = "1.1";
     
     global $PROLIB;
     
