@@ -31,6 +31,9 @@ require_once 'libraries/bm_validation.php';
 
 function prolib(&$object, $package_name)
 {
+    // @version 1.1
+    var $version = "1.1";
+    
     global $PROLIB;
     
     $object->EE = &get_instance();

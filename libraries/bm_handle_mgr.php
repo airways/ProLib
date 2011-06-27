@@ -55,7 +55,7 @@ class Bm_handle_mgr
         return $object;
     }
     
-    function get_object($handle)
+    function get_object($handle, $show_error = TRUE)
     {
         $template = FALSE;
         $object = FALSE;
@@ -75,7 +75,8 @@ class Bm_handle_mgr
         
         if($query->num_rows > 0) 
         {
-            $object = new $this->class($query->row());
+            $class = $this->class;
+            $object = new $class($query->row());
             
             $object_id = $object->{$this->singular . '_id'};
 
@@ -88,10 +89,15 @@ class Bm_handle_mgr
                 }
             }
 
-            $query = $this->EE->db->get_where($this->table, array($this->singular . '_id' => $object_id));
+            //$query = $this->EE->db->get_where($this->table, array($this->singular . '_id' => $object_id));
+        }
+
+        if(!$object && $show_error) {
+            exit('Object not found: ' . $this->class . ' #' . $handle);
+        } else {
+            $object->__mgr = $this;
         }
         
-        $object->__mgr = $this;
         
         return $object;
     }
