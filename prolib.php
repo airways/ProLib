@@ -29,7 +29,7 @@ require_once 'libraries/bm_prefs.php';
 require_once 'libraries/bm_celltypes.php';
 require_once 'libraries/bm_validation.php';
 
-// @version 1.2
+// @version 1.2.1
 
 function prolib(&$object, $package_name)
 {
@@ -292,5 +292,94 @@ class Prolib {
             }
         }
         return $result;
+    }
+    
+    function is_cp()
+    {
+        return REQ == 'CP';
+    }
+    
+    function is_safecracker()
+    {
+        if(REQ == 'PAGE')
+        {
+            foreach($this->EE->TMPL->tag_data as $tag => $data)
+            {
+                if($data['class'] == 'safecracker')
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+    
+    private function ee_saef_css()
+    {
+        $files[] = PATH_THEMES.'cp_themes/default/css/file_browser.css';
+        $files[] = PATH_THEMES.'cp_themes/default/css/jquery-ui-1.7.2.custom.css';
+        $files[] = PATH_THEMES.'cp_themes/default/css/saef.css';
+
+        $out = '';
+
+        foreach ($files as $file)
+        {
+            if (file_exists($file))
+            {
+                $out .= file_get_contents($file);
+
+                if ($file == PATH_THEMES.'jquery_ui/default/jquery-ui-1.7.2.custom.css')
+                {
+                    $theme_url = $this->EE->config->item('theme_folder_url').'jquery_ui/'.$this->EE->config->item('cp_theme');
+
+                    $out = str_replace('url(images/', 'url('.$theme_url.'/images/', $out);
+                }
+
+                if ($file == PATH_THEMES.'cp_themes/default/css/file_browser.css')
+                {
+
+                }
+            }
+        }
+
+        // a few styles from global.css in the CP for consistency, but we dont want to include the entire global.css
+        $out .= '
+        .cke_dialog_ui_button_cancel span.submit { background-color: #999;  }
+        .cke_dialog_ui_button_ok span.submit { background-color: #333; }
+        .ui-dialog select { font-size: 12px; }
+        .ui-dialog textarea,
+        .ui-dialog textarea.markItUpEditor,
+        .ui-dialog input[type="text"],
+        .ui-dialog input[type="password"] {
+            font-family:            Arial, "Helvetica Neue", Helvetica, sans-serif;
+            font-size:              12px;
+            border:                 1px solid #b6c0c2;
+            color:                  #5f6c74;
+            outline:                0;
+            padding:                4px;
+            width:                  99%;
+            border-radius:          3px;
+            -moz-border-radius:     3px;
+            -webkit-border-radius:  3px;
+        }
+        .ui-dialog textarea {
+            resize:                 vertical;
+            -moz-box-sizing:        border-box;
+        }
+        .ui-dialog textarea:focus,
+        .ui-dialog extarea.markItUpEditor:focus,
+        .ui-dialog input[type="text"]:focus,
+        .ui-dialog input[type="password"]:focus {
+            border:                 2px solid #B2BEC0;
+            padding:                3px;
+        }';
+
+        $cp_theme  = $this->EE->config->item('cp_theme'); 
+        $cp_theme_url = $this->EE->config->slash_item('theme_folder_url').'cp_themes/'.$cp_theme.'/';
+
+        $out = str_replace('../images', $this->EE->config->slash_item('theme_folder_url') .'jquery_ui/'. $cp_theme .'/images', $out);
+
+        return preg_replace("/\s+/", " ", str_replace('<?=$cp_theme_url?>', $cp_theme_url, $out));
     }
 }
