@@ -86,9 +86,16 @@ class Bm_uploads {
      *                   [image_size_str] => width="800" height="200"
      *               )
      */
-    function handle_upload($pref_id, $field='userfile')
+    function handle_upload($pref_id, $field='userfile', $required=TRUE)
     {
         $this->errors = array();
+        
+        if(!isset($_FILES[$field]['name']) || !$_FILES[$field]['name']) {
+            // file not provided
+            if(!$required) {
+                return TRUE;
+            }
+        }
         
         $query = $this->EE->db->query($sql = "SELECT * FROM exp_upload_prefs WHERE id = '".$this->EE->db->escape_str($pref_id)."'");
 
