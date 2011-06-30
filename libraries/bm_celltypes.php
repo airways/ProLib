@@ -257,7 +257,7 @@ class BM_CellType {
         }
     }
 
-    function save_cell_settings($settings)
+    function save_cell_settings(&$settings)
     {
         if (method_exists($this->instance, 'save_cell_settings'))
         {
