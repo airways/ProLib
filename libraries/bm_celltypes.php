@@ -208,7 +208,10 @@ class BM_CellType {
         }
 
         Bm_celltypes::push_package_path($this->instance);
+        
         $result = $this->instance->display_cell($data);
+
+        
         if(!is_array($result))
         {
             $result = array('data' => $result);
@@ -223,6 +226,14 @@ class BM_CellType {
             echo $result;
             exit;
         }*/
+        $result['data'] = preg_replace('/name="([^\[\]]+?)\[\]"/', 'name="\1['.$row_id.']"', $result['data']);
+        $result['data'] = preg_replace('/name="([^\[\]]+?)\[\]\[\]"/', 'name="\1['.$row_id.'][]"', $result['data']);
+        if($this->name == 'pt_multiselect')
+        {
+            //echo "result:".$result['data'];
+            //exit;
+        }
+        
         return $result;
     }
 
