@@ -18,6 +18,8 @@
  **/
 
 class Bm_parser {
+    var $dst_enabled = FALSE;
+    
     function __construct()
     {
         $this->EE = &get_instance();
@@ -32,15 +34,40 @@ class Bm_parser {
         // prep basic conditionals
         $rowdata = $this->EE->functions->prep_conditionals($rowdata, $row_vars);
 
+        $custom_date_fields = array();
+        $this->date_vars_params = array();
+        
+
+        foreach($row_vars as $key => $val)
+        {
+            //if (strpos($rowdata, LD.$key) !== FALSE)
+            //{
+                if (preg_match_all("/".LD.$key."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
+                {
+                    for ($j = 0; $j < count($matches[0]); $j++)
+                    {
+                        $matches[0][$j] = str_replace(array(LD,RD), '', $matches[0][$j]);
+                        $this->date_vars_params[$matches[0][$j]] = $this->EE->localize->fetch_date_params($matches[1][$j]);
+                        $this->date_vars_vals[$matches[0][$j]] = $matches[1][$j];
+                    }
+                }
+            //}
+        }
+        
+        //var_dump($date_vars);
+        //var_dump($this->date_vars_params);
+        
         // parse single variables
         foreach ($this->EE->TMPL->var_single as $key => $val)
         {
             // prevent array to string errors
             if(array_search($key, $pairs) === FALSE)
             {
-                if(array_key_exists($key, $row_vars))
+                $var = explode(' ', $key);
+                $var = $var[0];
+                if(array_key_exists($var, $row_vars))
                 {
-                    $rowdata = $this->EE->TMPL->swap_var_single($key, $row_vars[$key], $rowdata);
+                    $rowdata = $this->_swap_var_single($key, $row_vars[$var], $rowdata);
                 }
             }
         }
@@ -85,7 +112,7 @@ class Bm_parser {
                                         } else {
                                             if(array_key_exists($k, $row_vars) === FALSE)
                                             {
-                                                $pair_row_data  = $this->EE->TMPL->swap_var_single($k, $v, $pair_row_data);
+                                                $pair_row_data  = $this->_swap_var_single($k, $v, $pair_row_data);
                                             }
                                         }
                                     }
@@ -110,6 +137,40 @@ class Bm_parser {
         return $rowdata;
     } // function parse_variables
 
+    function _swap_var_single($key, &$val, &$data)
+    {
+        //  parse custom date fields
+        if(isset($this->date_vars_params[$key]))
+        {
+            // use a temporary variable in case the custom date variable is used
+            // multiple times with different formats; prevents localization from
+            // occurring multiple times on the same value
+            $temp_val = $val;
+
+            // TODO: localize values
+            $localize = TRUE;
+            //if (isset($row['field_dt_'.$dval]) AND $row['field_dt_'.$dval] != '')
+            //{
+            //    $localize = TRUE;
+            //    if ($row['field_dt_'.$dval] != '')
+            //    {
+                if($this->dst_enabled)
+                {
+                    $temp_val = $this->EE->localize->simpl_offset($temp_val, $row['field_dt_'.$dval]);
+                    $localize = FALSE;
+                }
+            //}
+            
+            // convert to a timestamp
+            $time = strtotime($temp_val);
+            //var_dump($time, date('h', $time));
+            
+            $val = str_replace($this->date_vars_params[$key], $this->EE->localize->convert_timestamp($this->date_vars_params[$key], $time, $localize, FALSE), $this->date_vars_vals[$key]);
+        }
+        
+        return $this->EE->TMPL->swap_var_single($key, $val, $data);
+    }
+    
     function parse_variables_legacy($rowdata, &$row_vars, $backspace = 0)
     {
         $rowdata = $this->EE->TMPL->parse_variables($rowdata, $row_vars);

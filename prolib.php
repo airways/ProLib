@@ -87,6 +87,7 @@ class Prolib {
 
         // random fun stuff
         $this->query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
+        $this->dst_enabled = ($this->EE->session->userdata('daylight_savings') == 'y' ? TRUE : FALSE);
         
         // initialize caches
         $this->cache['get_fields'] = array();
