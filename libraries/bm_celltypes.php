@@ -195,12 +195,26 @@ class BM_CellType {
         }
     }
 
-    function display_cell($field_name, $row_id, $col_id, $settings, $data, $template=FALSE)
+    function _settings($field_id, $field_name, $row_id, $col_id, &$settings)
     {
+        $settings['field_id'] = $field_id;
+        $settings['field_name'] = $field_name;
+        $settings['row_id'] = $row_id;
+        $settings['row_name'] = 'block_'.$row_id;
+        $settings['col_id'] = $col_id;
+        $settings['col_name'] = 'column_'.$col_id;
+        $this->settings = $settings;
         $this->instance->settings = $settings;
+        $this->instance->field_id = $field_id;
+        $this->instance->field_name = $field_name;
         $this->instance->row_id = $row_id;
         $this->instance->col_id = $col_id;
-        $this->instance->cell_name = 'mason_'.$field_name.'_'.$settings['column_name'].'[]';
+        $this->instance->cell_name = 'mason_'.$field_name.'_column_'.$col_id.'[]';
+    }
+    
+    function display_cell($field_id, $field_name, $row_id, $col_id, $settings, $data, $template=FALSE)
+    {
+        $this->_settings($field_id, $field_name, $row_id, $col_id, $settings);
         
         if($this->matrix_celltype)
         {
@@ -237,9 +251,11 @@ class BM_CellType {
         return $result;
     }
 
-    function save_cell($settings, $data)
+    function save_cell($field_id, $field_name, $row_id, $col_id, $settings, $data)
     {
-        $this->instance->settings = $settings;
+        $this->_settings($field_id, $field_name, $row_id, $col_id, $settings);
+        
+        $this->instance->settings = $this->settings;
         if(method_exists($this->instance, 'save_cell'))
         {
             return $this->instance->save_cell($data);
@@ -254,6 +270,7 @@ class BM_CellType {
         {
             Bm_celltypes::push_package_path($this->instance);
             $result = $this->instance->display_cell_settings($settings);
+
             if(!is_array($result))
             {
                 $result = array(array('', $result));
@@ -264,6 +281,7 @@ class BM_CellType {
             if(!is_array($result)) exit('fail: display_cell_settings not returning an array');
             return $result;
         } else {
+            //show_error('Unable to display settings for cell type '.$this->name);
             return array(array('', ''));
         }
     }
@@ -273,6 +291,8 @@ class BM_CellType {
         if (method_exists($this->instance, 'save_cell_settings'))
         {
             $settings = $this->instance->save_cell_settings($settings);
+        /*} else {
+            show_error('Unable to save settings for cell type '.$this->name);*/
         }
     }
 

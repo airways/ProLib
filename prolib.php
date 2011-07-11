@@ -84,6 +84,9 @@ class Prolib {
         $this->bm_validation    = new Bm_Validation();
 
         $this->EE = &get_instance();
+
+        // random fun stuff
+        $this->query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
         
         // initialize caches
         $this->cache['get_fields'] = array();
