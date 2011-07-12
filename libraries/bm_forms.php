@@ -31,6 +31,9 @@ class Bm_forms {
                     case 'read_only':
                         $form[] = array('lang_field' => $key, 'control' => htmlentities(strip_tags($value)));
                         break;
+                    case 'read_only_checkbox':
+                        $form[] = array('lang_field' => $key, 'control' => '<b>'.($value == 'y' ? 'On' : 'Off') . '</b>: ' . $options/*.'<br/><br/>'.form_checkbox(array('name' => $key, 'value' => 'y', 'checked' => $value == 'y', 'disabled' => 'disabled'))*/);
+                        break;
                     case 'textarea':
                         $form[] = array('lang_field' => $key, 'control' => form_textarea($key, $value));
                         break;
