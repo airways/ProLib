@@ -25,12 +25,19 @@ class Bm_parser {
         $this->EE = &get_instance();
     }
     
-    function parse_variables($rowdata, &$row_vars, $pairs, $backspace = 0)
+    function parse_variables($rowdata, &$row_vars, $pairs, $backspace = 0, 
+        $options = array('dst_enabled' => FALSE))
     {
         // sadly we cannot use parse_variables_row because it only parses each tag_pair once! WTF!
         // we *have* to have multiple tag pairs support so that you can have fun stuff like a row
         // of headers for a table, as well as each row of data, powered by {fields}...{/fields}.
 
+        // set options as given
+        foreach($options as $key => $val)
+        {
+            $this->$key = $val;
+        }
+        
         // prep basic conditionals
         $rowdata = $this->EE->functions->prep_conditionals($rowdata, $row_vars);
 
@@ -149,6 +156,7 @@ class Bm_parser {
 
             // TODO: localize values
             $localize = TRUE;
+            /*
             //if (isset($row['field_dt_'.$dval]) AND $row['field_dt_'.$dval] != '')
             //{
             //    $localize = TRUE;
@@ -160,6 +168,7 @@ class Bm_parser {
                     $localize = FALSE;
                 }
             //}
+            */
             
             // convert to a timestamp
             $time = strtotime($temp_val);
