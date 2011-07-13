@@ -59,7 +59,7 @@ class Bm_forms {
 
                             foreach($settings as $settings_field)
                             {
-                                $control .= '<div><label>'.$settings_field['label'].'</label>';
+                                $control .= '<div><label>'.$settings_field['label'].'</label> ';
                                 switch($settings_field['type'])
                                 {
                                     case 'textarea':
@@ -67,6 +67,11 @@ class Bm_forms {
                                         break;
                                     case 'input':
                                         $control .= form_input($key.'_'.$k, $setting_value);
+                                        break;
+                                    case 'dropdown':
+                                        $control .= form_dropdown($key.'_'.$k, 
+                                                    isset($settings_field['options']) ? $settings_field['options'] : array(),
+                                                    $setting_value);
                                         break;
                                 }
                                 $control .= '</div>';
@@ -97,6 +102,15 @@ class Bm_forms {
         return $form;
     } // function _create_cp_form
     
+    function simple_select_options($options)
+    {
+        $result = array();
+        foreach($options as $k)
+        {
+            $result[$k] = $k;
+        }
+        return $result;
+    }
     
     function render_grid($key, $headings, $options, $value)
     {
