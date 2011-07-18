@@ -298,6 +298,20 @@ class Prolib {
         return $result;
     }
     
+    function copy_values(&$from, &$to)
+    {
+        foreach($from as $key => $value)
+        {
+            if(!is_array($value) 
+                AND !is_object($value)
+                AND substr($key, 0, 2) != '__')
+            {
+                $to[$key] = $value;
+            }
+        }
+        
+    }
+    
     function is_cp()
     {
         return REQ == 'CP';

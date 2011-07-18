@@ -35,6 +35,7 @@ class Bm_validation extends CI_Form_validation {
         'alphanumeric'                  => array('label' => 'Alpha Numeric Characters Only'),
         'alpha_dash'                    => array('label' => 'Alpha Numeric Characters, Underscores and Dashes Only'),
         'numeric'                       => array('label' => 'Numeric Characters Only'),
+        'numeric_dash'                  => array('label' => 'Numeric Characters and Dashes Only'),
         'integer'                       => array('label' => 'Integer Number'),
         'is_natural'                    => array('label' => 'Natural Number'),
         'is_natural_no_zero'            => array('label' => 'Natural Number other than zero'),
@@ -352,9 +353,9 @@ class Bm_forms_validation_callbacks {
         $this->lang = $CI->lang;
         $this->bm_validation = $CI->bm_validation;
 
-        if ($this->EE->extensions->active_hook('prolib_register_callbacks') === TRUE)
+        if ($this->EE->extensions->active_hook('prolib_register_validation_callbacks') === TRUE)
         {
-            $this->EE->extensions->call('prolib_register_callbacks', $this);
+            $this->EE->extensions->call('prolib_register_validation_callbacks', $this);
         }
     }
     
@@ -380,6 +381,17 @@ class Bm_forms_validation_callbacks {
             return TRUE;
         } else {
             $this->bm_forms_validation->set_message('matches_value', 'The %s field must be the value "'.$param.'"');
+            return FALSE;
+        }
+    }
+    
+    function numeric_dash($value, $param)
+    {
+        if(preg_match('/^[1-9\-]*$/', $value))
+        {
+            return TRUE;
+        } else {
+            $this->bm_forms_validation->set_message('numeric_dash', 'The %s field must numbers and dashes only');
             return FALSE;
         }
     }

@@ -92,7 +92,12 @@ class Bm_email extends CI_Email {
 			$config['crlf'] = $this->EE->config->item('email_crlf');
 		}
 
-		$this->useragent = APP_NAME.' '.APP_VER;
+        if(defined('APP_NAME'))
+        {
+		    $this->useragent = APP_NAME.' '.APP_VER;
+	    } else {
+	        $this->useragent = "EE UPGRADE";
+	    }
 
 		$this->initialize($config);
 	}
