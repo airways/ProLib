@@ -52,6 +52,11 @@ class Bm_handle_mgr
         $insert_id = $this->EE->db->insert_id();
 
         $object = $this->get_object($insert_id);
+        if(method_exists($object, 'init'))
+        {
+            $object->init($this);
+        }
+        
         return $object;
     }
     

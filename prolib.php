@@ -138,7 +138,7 @@ class Prolib {
         $this->EE->cp->set_variable('cp_page_title', lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
     }
     
-    function cp_start_edit($mcp, $op, $field_types, $id_field, $method_stub, $class)
+    function cp_start_edit($mcp, $op, $field_types, $id_field, $method_stub, $class, $lib)
     {
         // Automatically get an object to edit and dispatch process_edit_* or process_new_* if request is a POST
         $this->EE->load->library('table');
@@ -162,7 +162,7 @@ class Prolib {
         {
             $object_id = (int)$this->EE->input->get_post($method_stub.'_id');
             
-            $object = $this->EE->masonlib->{'get_'.$method_stub}($object_id);
+            $object = $lib->{'get_'.$method_stub}($object_id);
             #$this->debug($object, TRUE);
         } else {
             $object_id = 0;
@@ -188,8 +188,9 @@ class Prolib {
         return array($done, $object_id, $object, $vars);
     }
     
-    function copy_post(&$object, $class)
+    function copy_post(&$object, $class = FALSE)
     {
+        if(!$class) $class = get_class($object);
         foreach($this->get_fields($class) as $k)
         {
             if($this->EE->input->post($k) !== FALSE)
