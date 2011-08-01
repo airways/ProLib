@@ -1,0 +1,133 @@
+/*.pl_tabset_tabs { 
+    list-style-type: none;
+    position: relative;
+    z-index: 2;
+    white-space: nowrap;
+    width: 100%;
+    padding-left: 10px;
+    margin-top: -14px;
+    padding-top: 14px;
+    background: white;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+.pl_tabset_tabs li {
+    padding-right: 5px;
+    display: inline;
+}
+.pl_tabset_tabs a  { 
+    color:#222 ! important; 
+    background-color:#BBB ! important; 
+    border-left: 1px solid #999; 
+    border-top: 1px solid #999; 
+    border-right: 1px solid #999; 
+    text-decoration:none; 
+    padding:0 0.6em;
+}
+.pl_tabset_tabs a:hover {
+    color:#000 !important;
+    background-color:#eff !important;
+}
+.pl_tabset_tabs a.active   {
+    color:black !important;
+    background-color: #DDE2E5 !important;
+    border-color: black;
+    border-left-width: 1px;
+    cursor: default;
+    border-bottom: white;
+    padding-top: 1px;
+    padding-bottom: 1px;
+}
+
+.pl_tabset_tabs li.firstchild a {
+    border-left-width:1px;
+}
+
+.pl_tabset_content {
+    border: 1px solid black;
+    background-color: white;
+    position: relative;
+    z-index: 1;
+    padding: 0.5em 1em;
+    display: none;
+}
+.pl_tabset_label {
+    display: none;
+}
+
+.pl_tabset_content_active {
+    display:block;
+}
+
+@media aural{
+    .pl_tabset_content,
+    .pl_tabset_label {
+        display: block;
+    }
+}*/
+
+.pl_tab_menu {
+    margin-bottom:      6px;
+    height:             24px;
+}
+
+.pl_tab_menu li {
+    float:              left;
+    display:            inline;
+    background:         #3a4850 url('../images/backgrounds_sprite.png') repeat-x 0 -217px;
+    border-right:       1px solid #505f66;
+    border-left:        4px solid #2d383e;
+    border-top:         1px solid #4f5e65;
+    padding-bottom:     3px;
+}
+
+.pl_tab_menu li a {
+/*  margin-top:         12px;*/
+    float:              left;
+    display:            block;
+    padding:            7px 12px 4px 12px;
+    font-size:          13px;
+    color:              #ffffff;
+    font-weight:        bold;
+}
+
+.pl_tab_menu li a:hover {
+    text-decoration:    none;
+}
+
+.pl_tab_menu li.current {
+    background:         #ECF1F4;
+    margin-bottom:      -3px; /* needed to pull the current tab down over the 1px white border of the toolbar */
+    
+    border-left:        4px solid #ECF1F4;
+    border-bottom:      2px solid #ECF1F4;
+    border-right:       1px solid #ECF1F4;
+    border-top:         1px solid #FEFFFF;
+}
+
+.pl_tab_menu li.highlight_tab {
+    background:         #e11842;
+    color:              #FFF!important;
+}
+
+.pl_tab_menu li.current a {
+    color:              #445058;
+}
+
+#mainContent #publishForm .tab_menu li.addTabButton {
+    padding-left:           6px;
+    padding-right:          6px;
+    background:             none;
+    border-top:             0;
+    border-right:           0;
+    border-left:            0;
+    display:                none;
+}
+
+#mainContent #publishForm .tab_menu li.addTabButton img {
+    margin-right:           6px;
+}
+
+#mainContent #publishForm .tab_menu li.addTabButton a {
+    color:                  #E11842;
+}
