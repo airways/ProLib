@@ -138,7 +138,7 @@ class Prolib {
         $this->EE->cp->set_variable('cp_page_title', lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
     }
     
-    function cp_start_edit($mcp, $op, $field_types, $id_field, $method_stub, $class, $lib)
+    function cp_start_edit($mcp, $op, $field_types, $id_field, $method_stub, $class, &$lib)
     {
         // Automatically get an object to edit and dispatch process_edit_* or process_new_* if request is a POST
         $this->EE->load->library('table');
