@@ -38,6 +38,11 @@ class Bm_parser {
             $this->$key = $val;
         }
         
+        if(is_object($row_vars))
+        {
+            $row_vars = (array)$row_vars;
+        }
+        
         // prep basic conditionals
         $rowdata = $this->EE->functions->prep_conditionals($rowdata, $row_vars);
 
