@@ -4,7 +4,7 @@
  * @package ProLib
  * @author Isaac Raway <isaac.raway@gmail.com>
  *
- * Copyright (c)2009, 2010. Isaac Raway and MetaSushi, LLC. All rights reserved.
+ * Copyright (c)2009, 2010, 2011. Isaac Raway and MetaSushi, LLC. All rights reserved.
  *
  * This source is commercial software. Use of this software requires a site license for each
  * domain it is used on. Use of this software or any of it's source code without express
@@ -79,7 +79,12 @@ class Bm_parser {
                 $var = $var[0];
                 if(array_key_exists($var, $row_vars))
                 {
-                    $rowdata = $this->_swap_var_single($key, $row_vars[$var], $rowdata);
+                    if(is_callable($row_vars[$var]))
+                    {
+                        $rowdata = $this->_swap_var_single($key, $row_vars[$var]($row_vars), $rowdata);
+                    } else {
+                        $rowdata = $this->_swap_var_single($key, $row_vars[$var], $rowdata);
+                    }
                 }
             }
         }
@@ -102,13 +107,19 @@ class Bm_parser {
                             $pair_row_template = &$matches[1][$i];
 
                             $pair_data = '';
-                            foreach($row_vars[$var_pair] as $data)
+                            foreach($row_vars[$var_pair] as $i => $data)
                             {
                                 $pair_row_data = $pair_row_template;
 
                                 if(!is_array($data))
                                 {
+                                    if(is_callable($data))
+                                    {
+                                        $data = $data($row_vars[$var_pair], $i);
+                                    }
+                                    
                                     $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('row' => $data));
+                                    
                                     $pair_row_data  = $this->EE->TMPL->swap_var_single('row', $data, $pair_row_data);
                                 } else {
                                     $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
@@ -124,7 +135,12 @@ class Bm_parser {
                                         } else {
                                             if(array_key_exists($k, $row_vars) === FALSE)
                                             {
-                                                $pair_row_data  = $this->_swap_var_single($k, $v, $pair_row_data);
+                                                if(is_callable($v))
+                                                {
+                                                    $pair_row_data  = $this->_swap_var_single($k, $v($data, $k), $pair_row_data);
+                                                } else {
+                                                    $pair_row_data  = $this->_swap_var_single($k, $v, $pair_row_data);
+                                                }
                                             }
                                         }
                                     }
