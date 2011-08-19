@@ -118,8 +118,10 @@ class Bm_handle_mgr
             $this->EE->db->where($where);
         }
         
-        if($order && is_array($order))
+        if($order)
         {
+            if(!is_array($order)) $order = array($order);
+            
             foreach($order as $field)
             {
                 if(is_array($field))
