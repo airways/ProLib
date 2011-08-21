@@ -66,9 +66,6 @@ class Bm_parser {
             //}
         }
         
-        //var_dump($date_vars);
-        //var_dump($this->date_vars_params);
-        
         // parse single variables
         foreach ($this->EE->TMPL->var_single as $key => $val)
         {
@@ -96,6 +93,7 @@ class Bm_parser {
                 if(strpos($key, $var_pair) === 0)
                 {
                     $count = preg_match_all($pattern = "/".LD.$key.RD."(.*?)".LD."\/".$var_pair.RD."/s", $rowdata, $matches);
+
                     // if we got some matches
                     if($count > 0)
                     {
@@ -107,7 +105,7 @@ class Bm_parser {
                             $pair_row_template = &$matches[1][$i];
 
                             $pair_data = '';
-                            foreach($row_vars[$var_pair] as $i => $data)
+                            foreach($row_vars[$var_pair] as $j => $data)
                             {
                                 $pair_row_data = $pair_row_template;
 
@@ -115,7 +113,7 @@ class Bm_parser {
                                 {
                                     if(is_callable($data))
                                     {
-                                        $data = $data($row_vars[$var_pair], $i);
+                                        $data = $data($row_vars[$var_pair], $j);
                                     }
                                     
                                     $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('row' => $data));
@@ -129,9 +127,6 @@ class Bm_parser {
                                         // prevent array to string errors
                                         if(is_array($v)) {
                                             $pair_row_data = $this->parse_variables($pair_row_data, $data, array($k));
-                                            /*echo $k;
-                                            var_dump($v);
-                                            die;*/
                                         } else {
                                             if(array_key_exists($k, $row_vars) === FALSE)
                                             {
@@ -147,7 +142,6 @@ class Bm_parser {
                                 }
                                 $pair_data .= $pair_row_data;
                             }
-                            ///echo $fields_data;
 
                             $rowdata = str_replace($pair_tag, $pair_data, $rowdata);
                         }
@@ -193,7 +187,6 @@ class Bm_parser {
             
             // convert to a timestamp
             $time = strtotime($temp_val);
-            //var_dump($time, date('h', $time));
             
             $val = str_replace($this->date_vars_params[$key], $this->EE->localize->convert_timestamp($this->date_vars_params[$key], $time, $localize, FALSE), $this->date_vars_vals[$key]);
         }
