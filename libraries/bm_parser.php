@@ -105,7 +105,7 @@ class Bm_parser {
                             $pair_row_template = &$matches[1][$i];
 
                             $pair_data = '';
-                            foreach($row_vars[$var_pair] as $j => $data)
+                            foreach($row_vars[$var_pair] as $data_key => $data)
                             {
                                 $pair_row_data = $pair_row_template;
 
@@ -113,9 +113,12 @@ class Bm_parser {
                                 {
                                     if(is_callable($data))
                                     {
-                                        $data = $data($row_vars[$var_pair], $j);
+                                        $data = $data($row_vars[$var_pair], $data_key);
                                     }
                                     
+                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('key' => $data_key));
+                                    $pair_row_data  = $this->EE->TMPL->swap_var_single('key', $data_key, $pair_row_data);
+
                                     $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('row' => $data));
                                     
                                     $pair_row_data  = $this->EE->TMPL->swap_var_single('row', $data, $pair_row_data);
