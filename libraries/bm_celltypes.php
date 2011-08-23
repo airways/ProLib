@@ -54,7 +54,7 @@ class Bm_celltypes {
             // try to get a celltype for the fieldtype. if it is a valid
             // cell type, $celltype->valid will be TRUE, otherwise the field
             // can't be used as a cell
-
+            //echo $fieldtype->name."<br/>";
             if(array_key_exists($fieldtype->name, $this->cache['celltypes']))
             {
                 $celltype = $this->cache['celltypes'][$fieldtype->name];
@@ -65,7 +65,8 @@ class Bm_celltypes {
 
             if(!$celltype->name) {
                 echo "<b>Invalid celltype:</b>";
-                var_dump($celltype);
+                unset($fieldtype->EE);
+                var_dump($fieldtype);
                 exit;
             }
             
@@ -78,6 +79,8 @@ class Bm_celltypes {
                     $result[$celltype->name] = $celltype->name;
                 }
             }
+            
+            //echo $celltype->name.': '.$celltype->provider.'<br/>';
         }
         return $result;
     }
@@ -135,7 +138,7 @@ class BM_CellType {
     var $settings = FALSE;
     var $instance = FALSE;
 
-    static $mason_celltypes = array('simple_text');
+    static $mason_celltypes = array('simple_text', 'simple_file');
     static $matrix_celltypes = array('text', 'date', 'file');
 
     function __construct($fieldtype)
@@ -147,6 +150,7 @@ class BM_CellType {
         // find the celltype class, if possible
         if (in_array($fieldtype->name, BM_CellType::$mason_celltypes))
         {
+            $this->provider = "mason";
             $class = 'Mason_'.$fieldtype->name.'_ft';
             $this->mason_celltype = TRUE;
             if (!class_exists($class))
@@ -159,6 +163,7 @@ class BM_CellType {
         }
         elseif (in_array($fieldtype->name, BM_CellType::$matrix_celltypes))
         {
+            $this->provider = "matrix";
             $class = 'Matrix_'.$fieldtype->name.'_ft';
             $this->matrix_celltype = TRUE;
             if (!class_exists($class))
@@ -171,6 +176,7 @@ class BM_CellType {
         }
         else
         {
+            $this->provider = "fieldtype";
             $class = ucfirst($fieldtype->name.'_ft');
             $this->EE->api_channel_fields->include_handler($fieldtype->name);
         }
