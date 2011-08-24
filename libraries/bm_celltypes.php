@@ -139,7 +139,7 @@ class BM_CellType {
     var $instance = FALSE;
 
     static $mason_celltypes = array('simple_text', 'simple_file');
-    static $matrix_celltypes = array('text', 'date', 'file');
+    static $matrix_celltypes = array('text', 'date');
 
     function __construct($fieldtype)
     {
