@@ -201,8 +201,13 @@ class BM_CellType {
         }
     }
 
-    function _settings($field_id, $field_name, $row_id, $col_id, &$settings)
+    function _settings($field_id, $field_name, $row_id, $col_id, &$settings, $entry_id=FALSE)
     {
+        if($entry_id)
+        {
+            $settings['entry_id'] = $entry_id;
+        }
+        
         $settings['field_id'] = $field_id;
         $settings['field_name'] = $field_name;
         $settings['row_id'] = $row_id;
@@ -229,7 +234,12 @@ class BM_CellType {
 
         Bm_celltypes::push_package_path($this->instance);
         
-        $result = $this->instance->display_cell($data);
+        if(method_exists($this->instance, 'display_cell'))
+        {
+            $result = $this->instance->display_cell($data);
+        } else {
+            $result = array();
+        }
 
         
         if(!is_array($result))
@@ -264,7 +274,22 @@ class BM_CellType {
         $this->instance->settings = $this->settings;
         if(method_exists($this->instance, 'save_cell'))
         {
+            #echo get_class($this->instance).'->save_call()<br/>';
             return $this->instance->save_cell($data);
+        } else {
+            return $data;
+        }
+    }
+    
+    function post_save_cell($entry_id, $field_id, $field_name, $row_id, $col_id, $settings, $data)
+    {
+        $this->_settings($field_id, $field_name, $row_id, $col_id, $settings, $entry_id);
+        
+        $this->instance->settings = $this->settings;
+        if(method_exists($this->instance, 'post_save_cell'))
+        {
+            #echo get_class($this->instance).'->post_save_cell()<br/>';
+            return $this->instance->post_save_cell($data);
         } else {
             return $data;
         }
