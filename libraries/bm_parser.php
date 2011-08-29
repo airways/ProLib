@@ -76,7 +76,7 @@ class Bm_parser {
                 $var = $var[0];
                 if(array_key_exists($var, $row_vars))
                 {
-                    if(is_callable($row_vars[$var]))
+                    if(is_object($row_vars[$var]) AND is_callable($row_vars[$var]))
                     {
                         $rowdata = $this->_swap_var_single($key, $row_vars[$var]($row_vars), $rowdata);
                     } else {
@@ -111,7 +111,7 @@ class Bm_parser {
 
                                 if(!is_array($data))
                                 {
-                                    if(is_callable($data))
+                                    if(is_object($data) AND is_callable($data))
                                     {
                                         $data = $data($row_vars[$var_pair], $data_key);
                                     }
@@ -133,7 +133,7 @@ class Bm_parser {
                                         } else {
                                             if(array_key_exists($k, $row_vars) === FALSE)
                                             {
-                                                if(is_callable($v))
+                                                if(is_object($v) AND is_callable($v))
                                                 {
                                                     $pair_row_data  = $this->_swap_var_single($k, $v($data, $k), $pair_row_data);
                                                 } else {
