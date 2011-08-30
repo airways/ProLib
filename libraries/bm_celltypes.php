@@ -220,7 +220,14 @@ class BM_CellType {
         $this->instance->field_name = $field_name;
         $this->instance->row_id = $row_id;
         $this->instance->col_id = $col_id;
-        $this->instance->cell_name = 'mason_'.$field_name.'_column_'.$col_id.'[]';
+        
+        $this->instance->cell_name = 'mason_'.$field_name.'_column_'.$col_id;
+        if(!isset($settings['playa']))
+        {
+            // Playa always adds a [] to the end of it's field_name, so we don't want to double add it
+            $this->instance->cell_name .= '[]';
+        }
+        
     }
     
     function display_cell($field_id, $field_name, $row_id, $col_id, $settings, $data, $template=FALSE)

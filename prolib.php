@@ -2,6 +2,7 @@
 
 /**
  * @package ProLib
+ * @version 0.22
  * @author Isaac Raway <isaac.raway@gmail.com>
  *
  * Copyright (c)2009, 2010. Isaac Raway and MetaSushi, LLC. All rights reserved.
@@ -28,8 +29,6 @@ require_once 'libraries/bm_forms.php';
 require_once 'libraries/bm_prefs.php';
 require_once 'libraries/bm_celltypes.php';
 require_once 'libraries/bm_validation.php';
-
-// @version 1.2.1
 
 function prolib(&$object, $package_name)
 {
