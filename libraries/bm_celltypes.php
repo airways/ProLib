@@ -17,6 +17,8 @@
  *
  **/
 
+require_once 'mason_db_shim.php';
+
 class Bm_celltypes {
     static $_ci_view_paths = array();
 
@@ -109,21 +111,27 @@ class Bm_celltypes {
         $path = PATH_THIRD.$name.'/';
 
         $EE->load->add_package_path($path);
-
-        // save the current ci_view_path so we can get it back later
-        array_push(BM_CellTypes::$_ci_view_paths, $EE->load->_ci_view_path);
-        $EE->load->_ci_view_path = $path.'views/';
+        
+        // Check for a language file in the package
+        if(file_exists(PATH_THIRD.$name.'/language/english/lang.'.$name.EXT))
+        {
+            $EE->lang->load($name, '', FALSE, FALSE, PATH_THIRD.$name.'/');
+        }
+        
+        // // save the current ci_view_path so we can get it back later
+        // array_push(BM_CellTypes::$_ci_view_paths, $EE->load->_ci_view_path);
+        // $EE->load->_ci_view_path = $path.'views/';
     }
 
     /*
-        * Remove current package paths and restore previous ones
-        */
+     * Remove current package paths and restore previous ones
+     */
     static function pop_package_path()
     {
         $EE = &get_instance();
         $EE->load->remove_package_path();
-        // pop the old ci_view_path off our stack
-        $EE->load->_ci_view_path = array_pop(BM_CellTypes::$_ci_view_paths);
+        // // pop the old ci_view_path off our stack
+        // $EE->load->_ci_view_path = array_pop(BM_CellTypes::$_ci_view_paths);
     }
 
 }
@@ -137,7 +145,8 @@ class BM_CellType {
     var $matrix_celltype = FALSE;
     var $settings = FALSE;
     var $instance = FALSE;
-
+    var $_apply_mason_shim = TRUE;
+    
     static $mason_celltypes = array('simple_text', 'simple_file');
     static $matrix_celltypes = array('text', 'date');
 
@@ -221,12 +230,12 @@ class BM_CellType {
         $this->instance->row_id = $row_id;
         $this->instance->col_id = $col_id;
         
-        $this->instance->cell_name = 'mason_'.$field_name.'_column_'.$col_id;
-        if(!isset($settings['playa']))
-        {
-            // Playa always adds a [] to the end of it's field_name, so we don't want to double add it
-            $this->instance->cell_name .= '[]';
-        }
+        $this->instance->cell_name = 'mason_'.$field_name.'_column_'.$col_id.'['.$row_id.']';
+        // if(!isset($settings['playa']))
+        // {
+        //     // Playa always adds a [] to the end of it's field_name, so we don't want to double add it
+        //     $this->instance->cell_name .= '[]';
+        // }
         
     }
     
@@ -239,6 +248,7 @@ class BM_CellType {
             $this->EE->session->cache['matrix']['theme_url'] = $this->EE->config->slash_item('theme_folder_url').'third_party/matrix/';
         }
 
+        
         Bm_celltypes::push_package_path($this->instance);
         
         if(method_exists($this->instance, 'display_cell'))
@@ -248,7 +258,6 @@ class BM_CellType {
             $result = array();
         }
 
-        
         if(!is_array($result))
         {
             $result = array('data' => $result);
@@ -274,7 +283,7 @@ class BM_CellType {
         return $result;
     }
 
-    function save_cell($field_id, $field_name, $row_id, $col_id, $settings, $data)
+    function save_cell($field_id, $field_name, $row_id, $col_id, $settings, $data, $apply_shim = FALSE)
     {
         $this->_settings($field_id, $field_name, $row_id, $col_id, $settings);
         
@@ -282,13 +291,16 @@ class BM_CellType {
         if(method_exists($this->instance, 'save_cell'))
         {
             #echo get_class($this->instance).'->save_call()<br/>';
-            return $this->instance->save_cell($data);
+            if($apply_shim) $this->EE->db = new DB_MasonData_Shim($this->EE->db);
+            $result = $this->instance->save_cell($data);
+            if($apply_shim) $this->EE->db->_remove_shim();
+            return $result;
         } else {
             return $data;
         }
     }
     
-    function post_save_cell($entry_id, $field_id, $field_name, $row_id, $col_id, $settings, $data)
+    function post_save_cell($entry_id, $field_id, $field_name, $row_id, $col_id, $settings, $data, $apply_shim = FALSE)
     {
         $this->_settings($field_id, $field_name, $row_id, $col_id, $settings, $entry_id);
         
@@ -296,7 +308,10 @@ class BM_CellType {
         if(method_exists($this->instance, 'post_save_cell'))
         {
             #echo get_class($this->instance).'->post_save_cell()<br/>';
-            return $this->instance->post_save_cell($data);
+            if($apply_shim) $this->EE->db = new DB_MasonData_Shim($this->EE->db);
+            $result = $this->instance->post_save_cell($data);
+            if($apply_shim) $this->EE->db->_remove_shim();
+            return $result;
         } else {
             return $data;
         }
