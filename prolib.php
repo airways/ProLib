@@ -29,6 +29,7 @@ require_once 'libraries/bm_forms.php';
 require_once 'libraries/bm_prefs.php';
 require_once 'libraries/bm_celltypes.php';
 require_once 'libraries/bm_validation.php';
+require_once 'libraries/bm_channel_fields.php';
 
 function prolib(&$object, $package_name)
 {
@@ -45,14 +46,15 @@ function prolib(&$object, $package_name)
     $object->prolib         = $PROLIB;
     $PROLIB->setup($object, $package_name);
 
-    $object->EE->bm_debug       = &$object->prolib->bm_debug;
-    $object->EE->bm_email       = &$object->prolib->bm_email;
-    $object->EE->bm_parser      = &$object->prolib->bm_parser;
-    $object->EE->bm_uploads     = &$object->prolib->bm_uploads;
-    $object->EE->bm_forms       = &$object->prolib->bm_forms;
-    $object->EE->bm_prefs       = &$object->prolib->bm_prefs;
-    $object->EE->bm_celltypes   = &$object->prolib->bm_celltypes;
-    $object->EE->bm_validation  = &$object->prolib->bm_validation;
+    $object->EE->bm_debug           = &$object->prolib->bm_debug;
+    $object->EE->bm_email           = &$object->prolib->bm_email;
+    $object->EE->bm_parser          = &$object->prolib->bm_parser;
+    $object->EE->bm_uploads         = &$object->prolib->bm_uploads;
+    $object->EE->bm_forms           = &$object->prolib->bm_forms;
+    $object->EE->bm_prefs           = &$object->prolib->bm_prefs;
+    $object->EE->bm_celltypes       = &$object->prolib->bm_celltypes;
+    $object->EE->bm_validation      = &$object->prolib->bm_validation;
+    $object->EE->bm_channel_fields  = &$object->prolib->bm_channel_fields;
 
     return $PROLIB;
 }
@@ -73,14 +75,15 @@ class Prolib {
         // objects are treated as singletons and attached to whatever objects
         // need to use them through their $this->prolib, initialized by prolib()
         
-        $this->bm_debug         = new Bm_debug();
-        $this->bm_email         = new Bm_email();
-        $this->bm_parser        = new Bm_parser();
-        $this->bm_uploads       = new Bm_uploads();
-        $this->bm_forms         = new Bm_forms();
-        $this->bm_prefs         = new Bm_prefs();
-        $this->bm_celltypes     = new Bm_celltypes();
-        $this->bm_validation    = new Bm_Validation();
+        $this->bm_debug             = new Bm_debug();
+        $this->bm_email             = new Bm_email();
+        $this->bm_parser            = new Bm_parser();
+        $this->bm_uploads           = new Bm_uploads();
+        $this->bm_forms             = new Bm_forms();
+        $this->bm_prefs             = new Bm_prefs();
+        $this->bm_celltypes         = new Bm_celltypes();
+        $this->bm_validation        = new Bm_Validation();
+        $this->bm_channel_fields    = new Bm_channel_fields();
 
         $this->EE = &get_instance();
 
