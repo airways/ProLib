@@ -33,8 +33,13 @@ class Bm_channel_fields {
      * @param  $site_id
      * @return array(field_id => field_object)
      */
-    function get_fields($group_id=0, $site_id=1)
+    function get_fields($group_id=0, $site_id=0)
     {
+        if(!$site_id)
+        {
+            $site_id = $this->EE->config->item('site_id');
+        }
+        
         $result = array();
         
         if($group_id)
@@ -54,6 +59,104 @@ class Bm_channel_fields {
         return $result;
     }
 
+    /**
+     * Get field
+     * 
+     * @param $group_id
+     * @param $field_name
+     * @param $site_id
+     * @return TRUE/FALSE
+     */
+    function get_field($group_id, $field_name, $site_id=0)
+    {
+        if(!$site_id)
+        {
+            $site_id = $this->EE->config->item('site_id');
+        }
+        
+        $result = FALSE;
+        
+        if($group_id)
+        {
+            $this->EE->db->where('group_id', $group_id);
+        }
+        
+        $fields_query = $this->EE->db
+                            ->where('site_id', $site_id)
+                            ->where('field_name', $field_name)
+                            ->get('exp_channel_fields');
+        
+        if($fields_query->num_rows() > 0)
+        {
+            $result = new BM_ChannelField($fields_query->row());
+        }
+        
+        return $result;
+    }
+
+
+    
+    /**
+     * Create a new custom field in the given group
+     * 
+     * @param $group_id
+     * @param  $data field data with keys matching the fields of BM_ChannelField
+     * @param $site_id
+     * @return BM_ChannelField or FALSE on error
+     */
+    function new_field($group_id, $data, $site_id=0)
+    {
+        if(!$site_id)
+        {
+            $site_id = $this->EE->config->item('site_id');
+        }
+        
+        // Create new field object
+        $result = new BM_ChannelField($data);
+        $result->group_id = $group_id;
+        $result->site_id = $site_id;
+        
+        // Remove the field_id so we won't try to insert a record with a bad ID
+        unset($result->field_id);
+        
+        // Insert the new field record
+        $this->EE->db->insert('exp_channel_fields', $result);
+        
+        if($this->EE->db->affected_rows() == 1)
+        {
+            // Save the inserted row ID
+            $result->field_id = $this->EE->db->insert_id();
+            
+            // Create the needed columns on the exp_channel_data table for this new custom field
+            $fields = array(
+                'field_id_'.$result->field_id => array('type' => 'text'),
+                'field_ft_'.$result->field_id => array('type' => 'tinytext'),
+            );
+            
+            $this->EE->load->dbforge();
+            $forge = &$this->EE->dbforge;
+            
+            $forge->add_column('channel_data', $fields);
+            
+        } else {
+            $result = FALSE;
+        }
+        
+        return $result;
+    }
+    
+    /**
+     * Check if a field with the given name exists in the field group
+     * 
+     * @param $group_id
+     * @param $field_name
+     * @return TRUE/FALSE
+     */
+    function field_exists($group_id, $field_name)
+    {
+        return $this->EE->db->where(array('group_id' => $group_id, 'field_name' => $field_name))->count_all_results('exp_channel_fields');
+    }
+    
 }
 
 class BM_ChannelField {
@@ -61,6 +164,7 @@ class BM_ChannelField {
     var $site_id = FALSE;
     var $group_id = FALSE;
     var $field_name = FALSE;
+    var $field_label = FALSE;
     var $field_instructions = FALSE;
     var $field_type = FALSE;
     var $field_list_items = FALSE;
@@ -93,7 +197,10 @@ class BM_ChannelField {
         $this->EE = &get_instance();
         foreach($row as $k => $v)
         {
-            $this->$k = $v;
+            if(isset($this->$k))
+            {
+                $this->$k = $v;
+            }
         }
     }
     

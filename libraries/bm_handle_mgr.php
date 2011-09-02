@@ -254,9 +254,12 @@ class Bm_handle_mgr
 if(!class_exists('BM_RowInitialized')) {
 class BM_RowInitialized 
 {
-    function __construct($row)
+    var $__mgr = NULL;
+    
+    function __construct(&$row, &$mgr=NULL)
     {
         $this->__EE = &get_instance();
+        $this->__mgr = &$mgr;
         if($row)
         {
             foreach($row as $key => $value) 
@@ -271,7 +274,7 @@ class BM_RowInitialized
         echo "<b>" . get_class($this)  . "</b><br/>";
         foreach($this as $key => $value) 
         {
-            echo $key . "=" . (is_object($value) ? 'OBJECT: ' . get_class($value) : $value) . "<br/>";
+            echo '&nbsp;&nbsp;-&nbsp;&nbsp;'.$key.'='.(is_object($value) ? 'OBJECT: ' . get_class($value) : $value).'<br/>';
         }
         echo "<br/>";
     }
