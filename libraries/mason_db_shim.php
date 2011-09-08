@@ -48,6 +48,11 @@ class DB_MasonData_Shim {
         return $this->__db->select($select, $escape);
     }
     
+    function from($table)
+    {
+        return $this->__db->from($table);
+    }
+    
     function where_in($key = NULL, $values = NULL)
     {
         return $this->__db->where_in($key, $values);
@@ -56,6 +61,16 @@ class DB_MasonData_Shim {
     function get($table = '', $limit = null, $offset = null)
     {
         return $this->__db->get($table, $limit, $offset);
+    }
+    
+    function order_by($orderby, $direction = '')
+    {
+        return $this->__db->order_by($orderby, $direction);
+    }
+    
+    function count_all_results()
+    {
+        return $this->__db->count_all_results();
     }
     
     function delete($table = '', $where = '', $limit = NULL, $reset_data = TRUE)
@@ -69,6 +84,8 @@ class DB_MasonData_Shim {
             $table = 'mason_data';
             foreach($this->__db->ar_where as $i => $w)
             {
+                $this->__db->ar_where[$i] = str_replace('status', 'uhura_status', $this->__db->ar_where[$i]);
+                $this->__db->ar_where[$i] = str_replace('lang_id', 'uhura_lang_id', $this->__db->ar_where[$i]);
                 $this->__db->ar_where[$i] = str_replace('row_id', 'block_id', $this->__db->ar_where[$i]);
             }
         }
@@ -78,5 +95,15 @@ class DB_MasonData_Shim {
     function insert($table = '', $set = NULL)
     {
         return $this->__db->insert($table, $set);
+    }
+    
+    function insert_id()
+    {
+        return $this->__db->insert_id();
+    }
+    
+    function _reset_select()
+    {
+        return $this->__db->_reset_select();
     }
 } // END DB_MasonData_Shim
