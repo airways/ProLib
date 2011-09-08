@@ -168,7 +168,8 @@ class Prolib {
             #$this->debug($object, TRUE);
         } else {
             $object_id = 0;
-            $object = new $class(FALSE);
+            $row = FALSE;
+            $object = new $class($row);
         }
 
         $done = FALSE;
@@ -230,7 +231,8 @@ class Prolib {
         if(!isset($this->cache['get_fields'][$class]))
         {
             $this->cache['get_fields'][$class] = array();
-            $object = new $class(FALSE);
+            $row = FALSE;
+            $object = new $class($row);
             foreach($object as $k => $v)
             {
                 $this->cache['get_fields'][$class][] = $k;
