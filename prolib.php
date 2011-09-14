@@ -152,7 +152,7 @@ class Prolib {
         // find checkboxes and set their values to "n" if not present
         foreach($field_types as $field => $type)
         {
-            if($type == 'checkbox')
+            if($type == 'checkbox' or is_array($type) and $type[0] == 'checkbox')
             {
                 if(!$this->EE->input->get_post($field))
                 {
@@ -160,6 +160,7 @@ class Prolib {
                 }
             }
         }
+        exit;
         if($op != 'new')
         {
             $object_id = (int)$this->EE->input->get_post($method_stub.'_id');
