@@ -140,15 +140,16 @@ class Bm_handle_mgr
         {
             foreach($query->result() as $row) 
             {
+                
                 $obj = $this->get_object($row->{$this->singular . '_id'});
                 
                 switch($array_type)
                 {
                     case 'handle':
-                        $result[$row->{$this->singular . '_id'}] = $obj;
+                        $result[$obj->{$this->singular . '_id'}] = $obj;
                         break;
                     case 'name':
-                        $result[$row->{$this->singular . '_name'}] = $obj;
+                        $result[$obj->{$this->singular . '_name'}] = $obj;
                         break;
                     default:
                         $result[] = $obj;

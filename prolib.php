@@ -160,7 +160,7 @@ class Prolib {
                 }
             }
         }
-        exit;
+        
         if($op != 'new')
         {
             $object_id = (int)$this->EE->input->get_post($method_stub.'_id');
