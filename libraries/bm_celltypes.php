@@ -239,6 +239,11 @@ class BM_CellType {
         
     }
     
+    function has_method($method)
+    {
+        return method_exists($this->instance, $method);
+    }
+    
     function display_cell($field_id, $field_name, $row_id, $col_id, $settings, $data, $template=FALSE)
     {
         $this->_settings($field_id, $field_name, $row_id, $col_id, $settings);
@@ -346,6 +351,30 @@ class BM_CellType {
             $settings = $this->instance->save_cell_settings($settings);
         /*} else {
             show_error('Unable to save settings for cell type '.$this->name);*/
+        }
+    }
+    
+    function pre_process(&$entry_row, $field_id, $data, $params = array(), $tagdata = FALSE)
+    {
+        if (method_exists($this->instance, 'pre_process'))
+        {
+            $this->instance->row = &$entry_row;
+            $this->instance->field_id = $field_id;
+            return $this->instance->pre_process($data, $params, $tagdata);
+        } else {
+            return $data;
+        }
+    }
+    
+    function replace_tag(&$entry_row, $field_id, $data, $params = array(), $tagdata = FALSE)
+    {
+        if (method_exists($this->instance, 'save_cell_settings'))
+        {
+            $this->instance->row = &$entry_row;
+            $this->instance->field_id = $field_id;
+            return $this->instance->replace_tag($data, $params, $tagdata);
+        } else {
+            return $tagdata;
         }
     }
 

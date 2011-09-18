@@ -26,12 +26,25 @@ class Bm_parser {
     }
     
     function parse_variables($rowdata, &$row_vars, $pairs, $backspace = 0, 
-        $options = array('dst_enabled' => FALSE))
+        $options = array())
     {
         // sadly we cannot use parse_variables_row because it only parses each tag_pair once! WTF!
         // we *have* to have multiple tag pairs support so that you can have fun stuff like a row
         // of headers for a table, as well as each row of data, powered by {fields}...{/fields}.
 
+        // fill in default options if they are not provided
+        $default_options = array(
+            'dst_enabled' => FALSE
+        );
+        
+        foreach($default_options as $k => $v)
+        {
+            if(!array_key_exists($k, $options))
+            {
+                $options[$k] = $default_options[$k];
+            }
+        }
+        
         // set options as given
         foreach($options as $key => $val)
         {
@@ -97,6 +110,8 @@ class Bm_parser {
                     // if we got some matches
                     if($count > 0)
                     {
+                        // echo $key.'<br/>';
+                                            
                         // $matches[0] is an array of the full pattern matches
                         // $matches[1] is an array of the contents of the inside of each variable pair
                         for($i = 0; $i < count($matches[0]); $i++)
@@ -113,36 +128,56 @@ class Bm_parser {
                                 {
                                     if(is_object($data) AND is_callable($data))
                                     {
-                                        $data = $data($row_vars[$var_pair], $data_key);
-                                    }
-                                    
-                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('key' => $data_key));
-                                    $pair_row_data  = $this->EE->TMPL->swap_var_single('key', $data_key, $pair_row_data);
+                                        $data = $data($row_vars[$var_pair], $data_key, $pair_row_data);
+                                    } else {
+                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('key' => $data_key));
+                                        $pair_row_data  = $this->EE->TMPL->swap_var_single('key', $data_key, $pair_row_data);
 
-                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('row' => $data));
+                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('row' => $data));
                                     
-                                    $pair_row_data  = $this->EE->TMPL->swap_var_single('row', $data, $pair_row_data);
+                                        $pair_row_data  = $this->EE->TMPL->swap_var_single('row', $data, $pair_row_data);
+                                    }
                                 } else {
                                     $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
                                     
                                     foreach($data as $k => $v)
                                     {
                                         // prevent array to string errors
-                                        if(is_array($v)) {
-                                            $pair_row_data = $this->parse_variables($pair_row_data, $data, array($k));
-                                        } else {
-                                            if(array_key_exists($k, $row_vars) === FALSE)
+                                        if(is_object($v) AND is_callable($v))
+                                        {
+                                            // find matches on this subpair (this is used for celltype substitution in mason, for instance)
+                                            $f_count = preg_match_all($f_pattern = "/".LD.$k.RD."(.*?)".LD."\/".$k.RD."/s", $pair_row_data, $f_matches);
+                                            if($f_count > 0)
                                             {
-                                                if(is_object($v) AND is_callable($v))
+                                                // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
+                                                // $f_matches[1] is an array of the contents of the inside of each variable pair
+                                                for($fi = 0; $fi < count($f_matches[0]); $fi++)
                                                 {
-                                                    $pair_row_data  = $this->_swap_var_single($k, $v($data, $k), $pair_row_data);
-                                                } else {
+                                                    $f_pair_match = $f_matches[0][$fi];
+                                                    $f_pair_data = $f_matches[1][$fi];
+                                                    //echo $k.'='.$v->celltype->name.'<br/>';
+                                                    $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data), $pair_row_data);
+                                                }
+                                            }
+                                        } else {
+                                            if(is_array($v)) {
+                                                $pair_row_data = $this->parse_variables($pair_row_data, $data, array($k));
+                                            } else {
+                                                if(array_key_exists($k, $row_vars) === FALSE)
+                                                {
                                                     $pair_row_data  = $this->_swap_var_single($k, $v, $pair_row_data);
                                                 }
                                             }
                                         }
                                     }
                                 }
+                                
+                                if(isset($this->row_callback))
+                                {
+                                    $callback = &$this->row_callback;
+                                    $pair_row_data = $callback($pair_row_data);
+                                }
+                                
                                 $pair_data .= $pair_row_data;
                             }
 

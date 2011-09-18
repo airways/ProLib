@@ -64,7 +64,7 @@ class Bm_prefs extends Bm_handle_mgr {
             return FALSE;
         }
         
-        $result = $this->get_object($name);
+        $result = $this->get_object($name, FALSE);
         
         // if there is no result, check for a default preference value
         if(!$result)
@@ -81,7 +81,7 @@ class Bm_prefs extends Bm_handle_mgr {
 
     /**
      * Get a preference setting from the database, or return the default if the preference
-     * is not found.
+     * is not found. Alias for get().
      * 
      * @param  $key
      * @param bool $default
@@ -89,9 +89,22 @@ class Bm_prefs extends Bm_handle_mgr {
      */
     function ini($key, $default = FALSE)
     {
+        return $this->get($key, $default);
+    }
+    
+    /**
+     * Get a preference setting from the database, or return the default if the preference
+     * is not found.
+     * 
+     * @param $key
+     * @param $default
+     * @return mixed
+     */
+    function get($key, $default = FALSE)
+    {
         if(is_numeric($name))
         {
-            echo "<div>Error: ini() cannot be called with an ID - key param must not be numeric.</div>";
+            echo "<div>Error: ini() or get() cannot be called with an ID - key param must not be numeric.</div>";
             return FALSE;
         }
         
@@ -104,6 +117,37 @@ class Bm_prefs extends Bm_handle_mgr {
         }
 
         return $result;
+    }
+    
+    /**
+     * Set a preference to a given value
+     * 
+     * @param $key
+     * @param $value
+     * @return BM_Preference or FALSE
+     */
+    function set($key, $value = FALSE)
+    {
+        $pref = $this->get_preference($key);
+        if($pref)
+        {
+            $pref->value = $value;
+            // echo '<b>'.$key.'</b><br/>';
+            // var_dump($pref);
+            $pref->__mgr = $this;
+            if(!$pref->save())
+            {
+                // return FALSE to indicate error
+                $pref = FALSE;
+            }
+        } else {
+            $data = array('preference_name' => $key, 'value' => $value);
+            // new_preference returns the new BM_Preference object or FALSE on failure
+            $pref = $this->new_preference($data);
+        }
+        
+        // return BM_Preference object or FALSE
+        return $pref;
     }
     
     /**

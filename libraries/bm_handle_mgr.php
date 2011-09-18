@@ -81,7 +81,11 @@ class Bm_handle_mgr
         if($query->num_rows > 0) 
         {
             $class = $this->class;
+            // echo '<b>____ new '.$class.'</b> '.$handle.'<br/>';
             $object = new $class($query->row());
+            // echo get_class($object).'<br/>';
+            // var_dump($query->row());
+            
             
             $object_id = $object->{$this->singular . '_id'};
 
@@ -100,7 +104,17 @@ class Bm_handle_mgr
         if(!$object && $show_error) {
             exit('Object not found: ' . $this->class . ' #' . $handle);
         } else {
-            $object->__mgr = $this;
+            // if(!is_object($object) OR get_class($object) == 'stdClass')
+            // {
+            //     echo 'Invalid object for'.$handle.':';
+            //     var_dump($object);
+            //     exit;
+            // }
+            // var_dump($object);
+            if(is_object($object))
+            {
+                $object->__mgr = $this;
+            }
         }
         
         
