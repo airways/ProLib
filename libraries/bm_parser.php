@@ -142,15 +142,36 @@ class Bm_parser {
                                     
                                     foreach($data as $k => $v)
                                     {
-                                        // prevent array to string errors
+                                        
+                                        // handle data callback
                                         if(is_object($v) AND is_callable($v))
                                         {
                                             // find matches on this subpair (this is used for celltype substitution in mason, for instance)
+                                            // TODO: add support for params
                                             $f_count = preg_match_all($f_pattern = "/".LD.$k.RD."(.*?)".LD."\/".$k.RD."/s", $pair_row_data, $f_matches);
-                                            if($f_count > 0)
+                                            
+                                            // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
+                                            // $f_matches[1] is an array of the contents of the inside of each variable pair
+                                            
+                                            // did we find any pairs for the tag?
+                                            if($f_count == 0)
                                             {
-                                                // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
-                                                // $f_matches[1] is an array of the contents of the inside of each variable pair
+                                                // find single occurances
+                                                
+                                                // TODO: add support for params
+                                                $f_count = preg_match_all($f_pattern = "/".LD.$k.RD."/s", $pair_row_data, $f_matches);
+                                                
+                                                if($f_count > 0)
+                                                {
+                                                    for($fi = 0; $fi < count($f_matches[0]); $fi++)
+                                                    {
+                                                        $f_var_match = $f_matches[0][$fi];
+                                                        //echo $k.'='.$v->celltype->name.'<br/>';
+                                                        $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match), $pair_row_data);
+                                                    }
+                                                }
+                                            } else {
+                                                
                                                 for($fi = 0; $fi < count($f_matches[0]); $fi++)
                                                 {
                                                     $f_pair_match = $f_matches[0][$fi];
