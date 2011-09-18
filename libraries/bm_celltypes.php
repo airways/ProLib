@@ -354,24 +354,28 @@ class BM_CellType {
         }
     }
     
-    function pre_process(&$entry_row, $field_id, $data, $params = array(), $tagdata = FALSE)
+    function pre_process(&$entry_row, $field_id, $row_id, $col_id, $data, $params = array(), $tagdata = FALSE)
     {
         if (method_exists($this->instance, 'pre_process'))
         {
             $this->instance->row = &$entry_row;
             $this->instance->field_id = $field_id;
+            $this->instance->row_id = $row_id;
+            $this->instance->col_id = $col_id;
             return $this->instance->pre_process($data, $params, $tagdata);
         } else {
             return $data;
         }
     }
     
-    function replace_tag(&$entry_row, $field_id, $data, $params = array(), $tagdata = FALSE)
+    function replace_tag(&$entry_row, $field_id, $row_id, $col_id, $data, $params = array(), $tagdata = FALSE)
     {
         if (method_exists($this->instance, 'save_cell_settings'))
         {
             $this->instance->row = &$entry_row;
             $this->instance->field_id = $field_id;
+            $this->instance->row_id = $row_id;
+            $this->instance->col_id = $col_id;
             return $this->instance->replace_tag($data, $params, $tagdata);
         } else {
             return $tagdata;
