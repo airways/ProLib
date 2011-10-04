@@ -1,7 +1,7 @@
 <?php
 
 class Bm_forms {
-    function create_cp_form($object, $types)
+    function create_cp_form($object, $types, $extra=array())
     {
         $form = array();
 
@@ -9,6 +9,7 @@ class Bm_forms {
         foreach($object as $key => $value)
         {
             if(substr($key, 0, 2) != "__") {
+                
                 if(array_key_exists($key, $types)) {
                     $type = $types[$key];
                 } else {
@@ -98,6 +99,14 @@ class Bm_forms {
                     default:
                         $form[] = array('lang_field' => $key, 'control' => form_input($key, $value));
                         break;
+                } // switch($type)
+                
+                if(array_key_exists('after', $extra) AND array_key_exists($key, $extra['after']))
+                {
+                    foreach($extra['after'][$key] as $after)
+                    {
+                        $form[] = $after;
+                    }
                 }
             }
         }
