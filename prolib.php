@@ -218,7 +218,7 @@ class Prolib {
             {
                 if(is_array($to_object))
                 {
-                    $object[$k] = $data[$k];
+                    $to_object[$k] = $data[$k];
                 } else {
                     $to_object->$k = $data[$k];
                 }

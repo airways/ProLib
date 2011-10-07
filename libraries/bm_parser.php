@@ -148,10 +148,11 @@ class Bm_parser {
                                         {
                                             // find matches on this subpair (this is used for celltype substitution in mason, for instance)
                                             // TODO: add support for params
-                                            $f_count = preg_match_all($f_pattern = "/".LD.$k.RD."(.*?)".LD."\/".$k.RD."/s", $pair_row_data, $f_matches);
+                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."(.*?)".RD."(.*?)".LD."\/".$k.RD."/s", $pair_row_data, $f_matches);
                                             
                                             // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
-                                            // $f_matches[1] is an array of the contents of the inside of each variable pair
+                                            // $f_matches[1] is an array of the parameters for each tag
+                                            // $f_matches[2] is an array of the contents of the inside of each variable pair
                                             
                                             // did we find any pairs for the tag?
                                             if($f_count == 0)
@@ -159,15 +160,17 @@ class Bm_parser {
                                                 // find single occurances
                                                 
                                                 // TODO: add support for params
-                                                $f_count = preg_match_all($f_pattern = "/".LD.$k.RD."/s", $pair_row_data, $f_matches);
+                                                $f_count = preg_match_all($f_pattern = "/".LD.$k."(.*?)".RD."/s", $pair_row_data, $f_matches);
                                                 
                                                 if($f_count > 0)
                                                 {
                                                     for($fi = 0; $fi < count($f_matches[0]); $fi++)
                                                     {
                                                         $f_var_match = $f_matches[0][$fi];
+                                                        $f_params = $f_matches[1][$fi];
+                                                        $f_params = $this->parse_params($f_params);
                                                         //echo $k.'='.$v->celltype->name.'<br/>';
-                                                        $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match), $pair_row_data);
+                                                        $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match, $f_params), $pair_row_data);
                                                     }
                                                 }
                                             } else {
@@ -175,9 +178,11 @@ class Bm_parser {
                                                 for($fi = 0; $fi < count($f_matches[0]); $fi++)
                                                 {
                                                     $f_pair_match = $f_matches[0][$fi];
-                                                    $f_pair_data = $f_matches[1][$fi];
+                                                    $f_pair_params = $f_matches[1][$fi];
+                                                    $f_pair_data = $f_matches[2][$fi];
+                                                    $f_pair_params = $this->parse_params($f_pair_params);
                                                     //echo $k.'='.$v->celltype->name.'<br/>';
-                                                    $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data), $pair_row_data);
+                                                    $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data, $f_pair_params), $pair_row_data);
                                                 }
                                             }
                                         } else {
@@ -263,5 +268,82 @@ class Bm_parser {
         }
 
         return $rowdata;
+    }
+    
+    function parse_params($code)
+    {
+        $result = array();
+        
+        if(strlen($code) == 0) {
+            return $result;
+        }
+        
+        $code .= ' '; // add extra space to trigger name adding so we only have to do it when state 1 switches to state 0
+        
+        $name = '';
+        $value = '';
+        $state = 0;
+        
+        for($i = 0; $i < strlen($code); $i++)
+        {
+            $c = $code[$i];
+            switch($state)
+            {
+                case 0: // name
+                    switch($c)
+                    {
+                        case '=':
+                            $state = 1;
+                            break;
+                        default:
+                            // skip white space
+                            if($c != ' ' AND $c != "\t")
+                            {
+                                $name .= $c;
+                            }
+                    }
+                    break;
+                case 1: // value
+                    switch($c)
+                    {
+                        case ' ':
+                        case "\t":
+                            $state = 0; // back to name
+                            break;
+                        case '"':
+                            $state = 2; // quote
+                            $quote = 2;
+                            break;
+                        case '\'':
+                            $state = 2; // quote
+                            $quote = 1;
+                            break;
+                        default:
+                            $value .= $c;
+                            break;
+                    }
+                    
+                    // done with the value?
+                    if($state == 0 OR $i == strlen($code)-1)
+                    {
+                        $result[$name] = $value;
+                        $name = '';
+                        $value = '';
+                    }
+                    break;
+                case 2: // quote
+                    if($quote == 1 AND $c == '\'')
+                    {
+                        $state = 1;
+                    } elseif($quote == 2 AND $c == '"') {
+                        $state = 1;
+                    } else {
+                        $value .= $c;
+                    }
+                    break;
+            }
+        }
+        
+        return $result;
     }
 }
