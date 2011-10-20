@@ -271,7 +271,7 @@ class BM_RowInitialized
 {
     var $__mgr = NULL;
     
-    function __construct(&$row, &$mgr=NULL)
+    function __construct($row, &$mgr=NULL)
     {
         $this->__EE = &get_instance();
         $this->__mgr = &$mgr;
