@@ -174,6 +174,11 @@ class Bm_prefs extends Bm_handle_mgr {
             }
         }
         
+        if(count($this->default_prefs) > 0)
+        {
+            $prefs = array_presort($prefs, array_keys($this->default_prefs));
+        }
+        
         return $prefs;
     }
     
