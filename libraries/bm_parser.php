@@ -26,7 +26,7 @@ class Bm_parser {
     }
     
     function parse_variables($rowdata, &$row_vars, $pairs, $backspace = 0, 
-        $options = array())
+        $options = array(), $reparse_vars = array())
     {
         // sadly we cannot use parse_variables_row because it only parses each tag_pair once! WTF!
         // we *have* to have multiple tag pairs support so that you can have fun stuff like a row
@@ -192,6 +192,9 @@ class Bm_parser {
                                                 if(array_key_exists($k, $row_vars) === FALSE)
                                                 {
                                                     $pair_row_data  = $this->_swap_var_single($k, $v, $pair_row_data);
+                                                    if (in_array($k, $reparse_vars)) {
+                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
+                                                    }
                                                 }
                                             }
                                         }
