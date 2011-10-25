@@ -147,42 +147,51 @@ class Bm_parser {
                                         if(is_object($v) AND is_callable($v))
                                         {
                                             // find matches on this subpair (this is used for celltype substitution in mason, for instance)
-                                            // TODO: add support for params
-                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."(.*?)".RD."(.*?)".LD."\/".$k.RD."/s", $pair_row_data, $f_matches);
-                                            
+                                            //match pair, preventing matches like
+                                            //{file:ul} ...{/file}
+                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."((?::[^ ]+?)?)(?: (.*?))?".RD."(.*?)".LD."\/".$k.'\1'.RD."/s", $pair_row_data, $f_matches);
                                             // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
-                                            // $f_matches[1] is an array of the parameters for each tag
-                                            // $f_matches[2] is an array of the contents of the inside of each variable pair
+                                            // $f_matches[1] is an array of segments for each tag
+                                            // $f_matches[2] is an array of the parameters for each tag
+                                            // $f_matches[3] is an array of the contents of the inside of each variable pair
                                             
                                             // did we find any pairs for the tag?
-                                            if($f_count == 0)
+                                            // find matches on this subpair (this is used for celltype substitution in mason, for instance)
+                                            if($f_count != 0)
                                             {
-                                                // find single occurances
-                                                
-                                                // TODO: add support for params
-                                                $f_count = preg_match_all($f_pattern = "/".LD.$k."(.*?)".RD."/s", $pair_row_data, $f_matches);
-                                                
-                                                if($f_count > 0)
-                                                {
-                                                    for($fi = 0; $fi < count($f_matches[0]); $fi++)
-                                                    {
-                                                        $f_var_match = $f_matches[0][$fi];
-                                                        $f_params = $f_matches[1][$fi];
-                                                        $f_params = $this->parse_params($f_params);
-                                                        //echo $k.'='.$v->celltype->name.'<br/>';
-                                                        $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match, $f_params), $pair_row_data);
-                                                    }
-                                                }
-                                            } else {
-                                                
+                                                //parse tag pairs
                                                 for($fi = 0; $fi < count($f_matches[0]); $fi++)
                                                 {
                                                     $f_pair_match = $f_matches[0][$fi];
-                                                    $f_pair_params = $f_matches[1][$fi];
-                                                    $f_pair_data = $f_matches[2][$fi];
+                                                    $f_segments = $f_matches[1][$fi];
+                                                    $f_segments = $this->parse_segments($f_segments);
+                                                    $f_pair_params = $f_matches[2][$fi];
                                                     $f_pair_params = $this->parse_params($f_pair_params);
+                                                    $f_pair_data = $f_matches[3][$fi];
+                                                    
                                                     //echo $k.'='.$v->celltype->name.'<br/>';
-                                                    $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data, $f_pair_params), $pair_row_data);
+                                                    $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data, $f_pair_params, $f_segments), $pair_row_data);
+                                                }
+                                            }
+                                                                  
+                                            // find single tags, not mutually exclusive
+                                            
+                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."(:[^ ]+?)?(?: (.*?))?".RD."/s", $pair_row_data, $f_matches);
+                                            // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
+                                            // $f_matches[1] is an array of segments for each tag
+                                            // $f_matches[2] is an array of the parameters for each tag
+                                            if($f_count > 0)
+                                            {
+                                                for($fi = 0; $fi < count($f_matches[0]); $fi++)
+                                                {
+                                                    $f_var_match = $f_matches[0][$fi];
+                                                    $f_segments = $f_matches[1][$fi];
+                                                    $f_segments = $this->parse_segments($f_segments);
+                                                    $f_params = $f_matches[2][$fi];
+                                                    $f_params = $this->parse_params($f_params);
+                                                    
+                                                    //echo $k.'='.$v->celltype->name.'<br/>';                                   
+                                                    $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match, $f_params, $f_segments), $pair_row_data);
                                                 }
                                             }
                                         } else {
@@ -273,6 +282,26 @@ class Bm_parser {
         return $rowdata;
     }
     
+    /**
+     * Parse segments from matched tag
+     * 
+     * @param $code
+     * @return array
+     */
+    function parse_segments($code)
+    {
+        $result = array();
+                
+        if(strlen($code) == 0 || strpos($code,':') === false) {
+            return $result;
+        }
+        preg_match('/^:([^\s}]+)/', $code, $matches);
+        if ( ! $matches) {
+            return $result;
+        }
+        return explode(':', $matches[1]);
+    }
+    
     function parse_params($code)
     {
         $result = array();
@@ -286,7 +315,7 @@ class Bm_parser {
         $name = '';
         $value = '';
         $state = 0;
-        
+
         for($i = 0; $i < strlen($code); $i++)
         {
             $c = $code[$i];
