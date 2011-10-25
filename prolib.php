@@ -21,6 +21,7 @@
 require_once 'helpers/array_helper.php';
 require_once 'helpers/icons_helper.php';
 require_once 'helpers/krumo_helper.php';
+require_once 'libraries/bm_callback_interface.php';
 require_once 'libraries/bm_debug.php';
 require_once 'libraries/bm_email.php';
 require_once 'libraries/bm_handle_mgr.php';

@@ -139,17 +139,30 @@ class Bm_parser {
                                     }
                                 } else {
                                     $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
+                                    $prepped_conditionals = array();
+                                    
+                                    foreach($data as $k => $v) {
+                                        if(is_object($v) AND is_callable($v)) {
+                                            if ($v instanceof Bm_Callback_Interface) {
+                                                $value = $v->getData();
+                                            } else {
+                                                $value = true;
+                                            }
+                                        } else {
+                                            $value = $v;
+                                        }
+                                        $prepped_conditionals[$k] = $value;
+                                    }
                                     
                                     foreach($data as $k => $v)
                                     {
-                                        
                                         // handle data callback
                                         if(is_object($v) AND is_callable($v))
                                         {
                                             // find matches on this subpair (this is used for celltype substitution in mason, for instance)
                                             //match pair, preventing matches like
                                             //{file:ul} ...{/file}
-                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."((?::[^ ]+?)?)(?: (.*?))?".RD."(.*?)".LD."\/".$k.'\1'.RD."/s", $pair_row_data, $f_matches);
+                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."((?::[^ ]+?)?)(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."(.*?)".LD."\/".$k.'\1'.RD."/s", $pair_row_data, $f_matches);
                                             // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
                                             // $f_matches[1] is an array of segments for each tag
                                             // $f_matches[2] is an array of the parameters for each tag
@@ -175,8 +188,8 @@ class Bm_parser {
                                             }
                                                                   
                                             // find single tags, not mutually exclusive
-                                            
-                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."(:[^ ]+?)?(?: (.*?))?".RD."/s", $pair_row_data, $f_matches);
+
+                                            $f_count = preg_match_all($f_pattern = "/".LD.$k."(:[^ ]+?)?(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."/s", $pair_row_data, $f_matches);
                                             // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
                                             // $f_matches[1] is an array of segments for each tag
                                             // $f_matches[2] is an array of the parameters for each tag
@@ -202,7 +215,7 @@ class Bm_parser {
                                                 {
                                                     $pair_row_data  = $this->_swap_var_single($k, $v, $pair_row_data);
                                                     if (in_array($k, $reparse_vars)) {
-                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
+                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $prepped_conditionals);
                                                     }
                                                 }
                                             }
