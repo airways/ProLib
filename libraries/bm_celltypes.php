@@ -370,7 +370,7 @@ class BM_CellType {
     
     function replace_tag(&$entry_row, $field_id, $row_id, $col_id, $data, $params = array(), $tagdata = FALSE)
     {
-        if (method_exists($this->instance, 'save_cell_settings'))
+        if (method_exists($this->instance, 'replace_tag'))
         {
             $this->instance->row = &$entry_row;
             $this->instance->field_id = $field_id;
