@@ -2,7 +2,7 @@
 
 /**
  * @package ProLib
- * @version 0.22
+ * @version 0.23
  * @author Isaac Raway <isaac.raway@gmail.com>
  *
  * Copyright (c)2009, 2010. Isaac Raway and MetaSushi, LLC. All rights reserved.
