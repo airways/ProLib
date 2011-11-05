@@ -25,6 +25,20 @@ class Bm_parser {
         $this->EE = &get_instance();
     }
     
+    function fetch_param_group($group_name, $default=array())
+    {
+        $result = $default;
+        foreach($this->EE->TMPL->tagparams as $param => $val)
+        {
+            if(strtolower(substr($param, 0, strlen($group_name)+1)) == $group_name.':')
+            {
+                $param = substr($param, strlen($group_name)+1);
+                $result[$param] = $val;
+            }
+        }
+        return $result;
+    }
+    
     function parse_variables($rowdata, &$row_vars, $pairs, $backspace = 0, 
         $options = array())
     {
