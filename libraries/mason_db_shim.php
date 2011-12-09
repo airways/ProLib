@@ -106,6 +106,11 @@ class DB_MasonData_Shim {
     {
         return $this->__db->insert_id();
     }
+
+    function insert_batch($table = '', $set = NULL)
+    {
+        return $this->__db->insert_batch($table, $set);
+    }
     
     function _reset_select()
     {
