@@ -239,6 +239,24 @@ class BM_CellType {
         
     }
     
+    /**
+     * Return whether the field type instance contains a 
+     * callable method beginning with $methodPrefix
+     * 
+     * @param string $methodPrefix
+     * @return bool
+     */
+    function has_callable_method_like($methodPrefix)
+    {
+        $methods = get_class_methods($this->instance);
+        foreach ($methods as $method) {
+            if (strpos($method, $methodPrefix) === 0 && is_callable(array($this->instance, $method))) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
     function has_method($method)
     {
         return method_exists($this->instance, $method);
@@ -370,16 +388,33 @@ class BM_CellType {
     
     function replace_tag(&$entry_row, $field_id, $row_id, $col_id, $data, $params = array(), $tagdata = FALSE)
     {
-        if (method_exists($this->instance, 'replace_tag'))
+        return $this->replaceType('replace_tag', $entry_row, $field_id, $row_id, $col_id, $data, $params, $tagdata);
+    }
+    
+    /**
+     * Support method for additional replace tag methods
+     * 
+     * @param string $replaceMethod
+     * @param $entry_row
+     * @param $field_id
+     * @param $row_id
+     * @param $col_id
+     * @param $data
+     * @param array $params
+     * @param bool|string $tagdata
+     * @return bool|string
+     */
+    function replaceType($replaceMethod, &$entry_row, $field_id, $row_id, $col_id, $data, $params = array(), $tagdata = FALSE)
+    {
+        if (method_exists($this->instance, $replaceMethod))
         {
             $this->instance->row = &$entry_row;
             $this->instance->field_id = $field_id;
             $this->instance->row_id = $row_id;
             $this->instance->col_id = $col_id;
-            return $this->instance->replace_tag($data, $params, $tagdata);
-        } else {
-            return $tagdata;
-        }
-    }
 
+            $tagdata = $this->instance->$replaceMethod($data, $params, $tagdata);
+        }
+        return $tagdata;
+    }
 }

@@ -63,6 +63,11 @@ class DB_MasonData_Shim {
         return $this->__db->get($table, $limit, $offset);
     }
     
+    function get_where($table = '', $where = null, $limit = null, $offset = null)
+    {
+        return $this->__db->get_where($table, $where, $limit, $offset);
+    }
+    
     function order_by($orderby, $direction = '')
     {
         return $this->__db->order_by($orderby, $direction);
@@ -100,6 +105,11 @@ class DB_MasonData_Shim {
     function insert_id()
     {
         return $this->__db->insert_id();
+    }
+
+    function insert_batch($table = '', $set = NULL)
+    {
+        return $this->__db->insert_batch($table, $set);
     }
     
     function _reset_select()

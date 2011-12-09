@@ -2,7 +2,6 @@
 
 /**
  * @package ProLib
- * @version 0.23
  * @author Isaac Raway <isaac.raway@gmail.com>
  *
  * Copyright (c)2009, 2010. Isaac Raway and MetaSushi, LLC. All rights reserved.
@@ -18,9 +17,11 @@
  *
  **/
 
+require_once 'config.php';
 require_once 'helpers/array_helper.php';
 require_once 'helpers/icons_helper.php';
 require_once 'helpers/krumo_helper.php';
+require_once 'libraries/bm_callback_interface.php';
 require_once 'libraries/bm_debug.php';
 require_once 'libraries/bm_email.php';
 require_once 'libraries/bm_handle_mgr.php';
