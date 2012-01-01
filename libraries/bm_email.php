@@ -73,7 +73,7 @@ class Bm_email extends CI_Email {
 						'smtp_host'		=> $this->EE->config->item('smtp_server'),
 						'smtp_user'		=> $this->EE->config->item('smtp_username'),
 						'smtp_pass'		=> $this->EE->config->item('smtp_password'),
-                        'smtp_port'		=> $this->EE->config->item('smtp_port')
+                        'smtp_port'		=> $this->EE->config->item('smtp_port') ? $this->EE->config->item('smtp_port') : 25,
 					);
 
 		/* -------------------------------------------
