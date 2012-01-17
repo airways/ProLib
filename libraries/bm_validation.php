@@ -68,6 +68,11 @@ class Bm_validation extends CI_Form_validation {
         parent::__construct();
     }
     
+    function set_error_messages($new_messages)
+    {
+        $this->_error_messages = array_merge($this->_error_messages, $new_messages);
+    }
+    
     /**
      * Executes the Validation routines
      **/
