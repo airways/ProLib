@@ -274,6 +274,7 @@ class BM_RowInitialized
     function __construct($row, &$mgr=NULL)
     {
         $this->__EE = &get_instance();
+        $this->__CI = &get_instance();
         $this->__mgr = &$mgr;
         if($row)
         {
