@@ -33,12 +33,13 @@ require_once 'libraries/pl_celltypes.php';
 require_once 'libraries/pl_validation.php';
 require_once 'libraries/pl_channel_fields.php';
 
-function prolib(&$object, $package_name)
+function prolib(&$object, $package_name="")
 {
     
     global $PROLIB;
     
     $object->EE = &get_instance();
+    $object->CI = &get_instance();
     
     if(!isset($PROLIB))
     {
@@ -90,7 +91,10 @@ class Prolib {
         $this->EE = &get_instance();
 
         // random fun stuff
+        if(isset($this->EE->uri->page_query_string))
+        {
         $this->query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
+        }
         $this->dst_enabled = ($this->EE->session->userdata('daylight_savings') == 'y' ? TRUE : FALSE);
         
         // initialize caches
