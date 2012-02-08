@@ -17,7 +17,7 @@
  *
  **/
 
-class Bm_parser {
+class PL_parser {
     var $dst_enabled = FALSE;
     
     function __construct()
@@ -157,7 +157,7 @@ class Bm_parser {
                                     
                                     foreach($data as $k => $v) {
                                         if(is_object($v) AND is_callable($v)) {
-                                            if ($v instanceof Bm_Callback_Interface) {
+                                            if ($v instanceof PL_Callback_Interface) {
                                                 $value = $v->getData();
                                             } else {
                                                 $value = true;

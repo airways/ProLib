@@ -17,7 +17,7 @@
  *
  **/
 
-class Bm_channel_fields {
+class PL_channel_fields {
     /**
      * Class constructor
      */
@@ -53,7 +53,7 @@ class Bm_channel_fields {
         
         foreach($fields_query->result() as $field)
         {
-            $result[$field->field_id] = new BM_ChannelField($field);
+            $result[$field->field_id] = new PL_ChannelField($field);
         }
         
         return $result;
@@ -88,7 +88,7 @@ class Bm_channel_fields {
         
         if($fields_query->num_rows() > 0)
         {
-            $result = new BM_ChannelField($fields_query->row());
+            $result = new PL_ChannelField($fields_query->row());
         }
         
         return $result;
@@ -100,9 +100,9 @@ class Bm_channel_fields {
      * Create a new custom field in the given group
      * 
      * @param $group_id
-     * @param  $data field data with keys matching the fields of BM_ChannelField
+     * @param  $data field data with keys matching the fields of PL_ChannelField
      * @param $site_id
-     * @return BM_ChannelField or FALSE on error
+     * @return PL_ChannelField or FALSE on error
      */
     function new_field($group_id, $data, $site_id=0)
     {
@@ -112,7 +112,7 @@ class Bm_channel_fields {
         }
         
         // Create new field object
-        $result = new BM_ChannelField($data);
+        $result = new PL_ChannelField($data);
         $result->group_id = $group_id;
         $result->site_id = $site_id;
         
@@ -159,7 +159,7 @@ class Bm_channel_fields {
     
 }
 
-class BM_ChannelField {
+class PL_ChannelField {
     var $field_id = FALSE;
     var $site_id = FALSE;
     var $group_id = FALSE;

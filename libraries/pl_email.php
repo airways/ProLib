@@ -38,13 +38,13 @@
 
 require_once(BASEPATH.'libraries/Email.php');
 
-class Bm_email extends CI_Email {
+class PL_email extends CI_Email {
 
 
 	/**
 	 * Constructor
 	 */
-	function Bm_email($init = TRUE)
+	function PL_email($init = TRUE)
 	{
 		parent::__construct();
 

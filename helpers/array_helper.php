@@ -24,7 +24,7 @@ if(!function_exists('array_presort'))
      * 
      * @param $array array of key => value pairs to sort in the defined order
      * @param $key_order array of strings defining the desired order of the array
-     * @return BM_Preference or FALSE
+     * @return PL_Preference or FALSE
      */
     function array_presort($array, $key_order)
     {

@@ -23,7 +23,7 @@ require_once(APPPATH.'../codeigniter/system/libraries/Form_validation.php');
 /**
  * Form Validation Class with custom callbacks
  */
-class Bm_validation extends CI_Form_validation {
+class PL_validation extends CI_Form_validation {
     var $available_rules = array( /* this works nicely as the 'options' part of a MCP grid control */
         'required'                      => array('label' => 'Always Required'),
         'matches_value'                 => array('label' => 'Matches Value', 'flags' => 'has_param'),
@@ -81,7 +81,7 @@ class Bm_validation extends CI_Form_validation {
         // create a new object that has our custom callbacks on it
         if(!isset($this->CI_callback) || !$this->CI_callback)
         {
-            $this->CI_callback = new Bm_forms_validation_callbacks($this->CI);
+            $this->CI_callback = new PL_forms_validation_callbacks($this->CI);
         }
 
         // save the real CI object, replace with our custom callback class
@@ -347,7 +347,7 @@ class Bm_validation extends CI_Form_validation {
  * This class provides custom BM validation callbacks.
  *
  **/
-class Bm_forms_validation_callbacks {
+class PL_forms_validation_callbacks {
     var $callbacks = array();
     
     function __construct($CI) {
@@ -356,7 +356,7 @@ class Bm_forms_validation_callbacks {
         // we need to copy the properties from CI that are used
         // in _execute()
         $this->lang = $CI->lang;
-        $this->bm_validation = $CI->bm_validation;
+        $this->pl_validation = $CI->pl_validation;
 
         if ($this->EE->extensions->active_hook('prolib_register_validation_callbacks') === TRUE)
         {
@@ -385,7 +385,7 @@ class Bm_forms_validation_callbacks {
         {
             return TRUE;
         } else {
-            $this->bm_forms_validation->set_message('matches_value', 'The %s field must be the value "'.$param.'"');
+            $this->pl_forms_validation->set_message('matches_value', 'The %s field must be the value "'.$param.'"');
             return FALSE;
         }
     }
@@ -396,7 +396,7 @@ class Bm_forms_validation_callbacks {
         {
             return TRUE;
         } else {
-            $this->bm_forms_validation->set_message('numeric_dash', 'The %s field must numbers and dashes only');
+            $this->pl_forms_validation->set_message('numeric_dash', 'The %s field must numbers and dashes only');
             return FALSE;
         }
     }

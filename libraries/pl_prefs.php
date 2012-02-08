@@ -17,11 +17,11 @@
  *
  **/
 
-if(!class_exists('Bm_prefs')) {
-class Bm_prefs extends Bm_handle_mgr {
+if(!class_exists('PL_prefs')) {
+class PL_prefs extends PL_handle_mgr {
     /* ------------------------------------------------------------
      * Preferences manager interface 
-     * Wraps bm_handle_mgr for this module's preference values.
+     * Wraps PL_handle_mgr for this module's preference values.
      * 
      * Initialize this class in your main library with the table name
      * you wish to use for your module's preferences.
@@ -34,7 +34,7 @@ class Bm_prefs extends Bm_handle_mgr {
         $singular = "preference";
         if(!$class)
         {
-            $class = "BM_Preference";
+            $class = "PL_Preference";
         }
         
         if($default_prefs)
@@ -54,7 +54,7 @@ class Bm_prefs extends Bm_handle_mgr {
      * Get a preference object by name.
      *
      * @param  $handle
-     * @return Bm_preference
+     * @return PL_preference
      */
     function get_preference($name)
     {
@@ -73,7 +73,7 @@ class Bm_prefs extends Bm_handle_mgr {
             {
                 // create a new preference object for the default preference
                 $row = array('preference_name' => $name, 'value' => $this->default_prefs[$name]);
-                $result = new BM_Preference($row);
+                $result = new PL_Preference($row);
             }
         }
         return $result;
@@ -124,7 +124,7 @@ class Bm_prefs extends Bm_handle_mgr {
      * 
      * @param $key
      * @param $value
-     * @return BM_Preference or FALSE
+     * @return PL_Preference or FALSE
      */
     function set($key, $value = FALSE)
     {
@@ -142,11 +142,11 @@ class Bm_prefs extends Bm_handle_mgr {
             }
         } else {
             $data = array('preference_name' => $key, 'value' => $value);
-            // new_preference returns the new BM_Preference object or FALSE on failure
+            // new_preference returns the new PL_Preference object or FALSE on failure
             $pref = $this->new_preference($data);
         }
         
-        // return BM_Preference object or FALSE
+        // return PL_Preference object or FALSE
         return $pref;
     }
     
@@ -200,7 +200,7 @@ class Bm_prefs extends Bm_handle_mgr {
         {
             if(!array_key_exists($k, $objects))
             {
-                $objects[$k] = new BM_Preference(array('preference_name' => $k, 'value' => $this->default_prefs[$k]));
+                $objects[$k] = new PL_Preference(array('preference_name' => $k, 'value' => $this->default_prefs[$k]));
             }
         }
         return $this->save_objects($objects);
@@ -209,10 +209,10 @@ class Bm_prefs extends Bm_handle_mgr {
     function delete_preference($object) {
         return $this->delete_object($object);
     }
-}} // class Bm_prefs
+}} // class PL_prefs
 
-if(!class_exists('BM_Preference')) {
-class BM_Preference extends BM_RowInitialized
+if(!class_exists('PL_Preference')) {
+class PL_Preference extends PL_RowInitialized
 {
     var $preference_id = FALSE;
     var $preference_name = FALSE;

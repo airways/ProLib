@@ -21,7 +21,7 @@
  * Wrapper to write log entries to files or the database.
  *
  */
-class Bm_debug {
+class PL_debug {
     function log($str)
     {
         
