@@ -1,6 +1,6 @@
 <?php
 
-class Bm_forms {
+class PL_forms {
     function create_cp_form($object, $types, $extra=array())
     {
         $form = array();
@@ -47,15 +47,8 @@ class Bm_forms {
                         {
                             $control .= '<div id="'.$key.'_'.$k.'" class="edit_settings">';
                             
-                            if(isset($object->settings))
+                            if(!isset($object->settings))
                             {
-                                if(array_key_exists($key.'_'.$k, $object->settings))
-                                {
-                                    $setting_value = $object->settings[$key.'_'.$k];
-                                } else {
-                                    $setting_value = '';
-                                }
-                            } else {
                                 echo 'No settings array exists for object of type ' . get_class($object);
                                 var_dump($object);
                                 exit;
@@ -63,17 +56,24 @@ class Bm_forms {
 
                             foreach($settings as $settings_field)
                             {
+								if(array_key_exists($key.'_'.$settings_field['name'], $object->settings))
+                                {
+                                    $setting_value = $object->settings[$key.'_'.$settings_field['name']];
+                                } else {
+                                    $setting_value = '';
+                                }
+
                                 $control .= '<div><label>'.$settings_field['label'].'</label> ';
                                 switch($settings_field['type'])
                                 {
                                     case 'textarea':
-                                        $control .= form_textarea($key.'_'.$k, $setting_value);
+                                        $control .= form_textarea($key.'_'.$settings_field['name'], $setting_value);
                                         break;
                                     case 'input':
-                                        $control .= form_input($key.'_'.$k, $setting_value);
+                                        $control .= form_input($key.'_'.$settings_field['name'], $setting_value);
                                         break;
                                     case 'dropdown':
-                                        $control .= form_dropdown($key.'_'.$k, 
+                                        $control .= form_dropdown($key.'_'.$settings_field['name'], 
                                                     isset($settings_field['options']) ? $settings_field['options'] : array(),
                                                     $setting_value);
                                         break;
@@ -142,7 +142,7 @@ class Bm_forms {
         }
         $dropdown = form_dropdown('addgridrow_'.$key, $dropdown_options, array(), 'id="'.'addgridrow_'.$key.'"');
         
-        $out .= '<div id="field_'.$key.'" class="bm_grid" data-key="'.$key.'">';
+        $out .= '<div id="field_'.$key.'" class="pl_grid" data-key="'.$key.'">';
         
         $out .= '<table id="gridrow_'.$key.'" class="plain"><tbody><tr>';
         
@@ -196,9 +196,9 @@ class Bm_forms {
         $out .= '<input type="hidden" name="'.$key.'" value="'.$value.'" />';
         
         $out .= '<script type="text/javascript">';
-        $out .= 'bm_grid.options["'.$key.'"] = ' . json_encode($options) . ';';
-        $out .= 'bm_grid.help["'.$key.'"] = ' . json_encode($help) . ';';
-        $out .= 'bm_grid.data["'.$key.'"] = ' . json_encode($grid) . ';';
+        $out .= 'pl_grid.options["'.$key.'"] = ' . json_encode($options) . ';';
+        $out .= 'pl_grid.help["'.$key.'"] = ' . json_encode($help) . ';';
+        $out .= 'pl_grid.data["'.$key.'"] = ' . json_encode($grid) . ';';
         /*$out .= 'var options = {';
         foreach($options as $option => $opts)
         {
@@ -212,7 +212,7 @@ class Bm_forms {
         }
         $out = substr($out, 0, -1);
         $out .= '};';*/
-        $out .= 'bm_grid.bind_events("'.$key.'", "gridrow_'.$key.'");</script>';
+        $out .= 'pl_grid.bind_events("'.$key.'", "gridrow_'.$key.'");</script>';
         $out .= '</div>';
         
         return $out;

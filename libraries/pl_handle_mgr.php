@@ -17,8 +17,8 @@
  *
  **/
 
-if(!class_exists('Bm_handle_mgr')) {
-class Bm_handle_mgr 
+if(!class_exists('PL_handle_mgr')) {
+class PL_handle_mgr 
 {
     var $table = "";
     var $singular = "";
@@ -264,10 +264,10 @@ class Bm_handle_mgr
         return $o;
     }
     
-}} // class Bm_handle_mgr
+}} // class PL_handle_mgr
 
-if(!class_exists('BM_RowInitialized')) {
-class BM_RowInitialized 
+if(!class_exists('PL_RowInitialized')) {
+class PL_RowInitialized 
 {
     var $__mgr = NULL;
     
@@ -293,4 +293,4 @@ class BM_RowInitialized
         }
         echo "<br/>";
     }
-}} // class BM_RowInitialized
+}} // class PL_RowInitialized

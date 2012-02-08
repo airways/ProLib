@@ -19,7 +19,7 @@
 
 require_once 'mason_db_shim.php';
 
-class Bm_celltypes {
+class PL_celltypes {
     static $_ci_view_paths = array();
 
     var $cache = array(
@@ -42,7 +42,7 @@ class Bm_celltypes {
             $types[$fieldtype->name] = $fieldtype;
         }
 
-        foreach(array_merge(BM_CellType::$mason_celltypes, BM_CellType::$matrix_celltypes) as $name)
+        foreach(array_merge(PL_CellType::$mason_celltypes, PL_CellType::$matrix_celltypes) as $name)
         {
             $types[$name] = new stdClass();
             $types[$name]->fieldtype_id = FALSE;
@@ -61,7 +61,7 @@ class Bm_celltypes {
             {
                 $celltype = $this->cache['celltypes'][$fieldtype->name];
             } else {
-                $celltype = new BM_CellType($fieldtype);
+                $celltype = new PL_CellType($fieldtype);
                 $this->cache['celltypes'][$fieldtype->name] = $celltype;
             }
 
@@ -119,7 +119,7 @@ class Bm_celltypes {
         }
         
         // // save the current ci_view_path so we can get it back later
-        // array_push(BM_CellTypes::$_ci_view_paths, $EE->load->_ci_view_path);
+        // array_push(PL_CellTypes::$_ci_view_paths, $EE->load->_ci_view_path);
         // $EE->load->_ci_view_path = $path.'views/';
     }
 
@@ -131,12 +131,12 @@ class Bm_celltypes {
         $EE = &get_instance();
         $EE->load->remove_package_path();
         // // pop the old ci_view_path off our stack
-        // $EE->load->_ci_view_path = array_pop(BM_CellTypes::$_ci_view_paths);
+        // $EE->load->_ci_view_path = array_pop(PL_CellTypes::$_ci_view_paths);
     }
 
 }
 
-class BM_CellType {
+class PL_CellType {
     var $valid = FALSE;
     var $name = FALSE;
     var $fieldtype = FALSE;
@@ -157,7 +157,7 @@ class BM_CellType {
         $this->EE->api->instantiate('channel_fields');
 
         // find the celltype class, if possible
-        if (in_array($fieldtype->name, BM_CellType::$mason_celltypes))
+        if (in_array($fieldtype->name, PL_CellType::$mason_celltypes))
         {
             $this->provider = "mason";
             $class = 'Mason_'.$fieldtype->name.'_ft';
@@ -170,7 +170,7 @@ class BM_CellType {
                 }
             }
         }
-        elseif (in_array($fieldtype->name, BM_CellType::$matrix_celltypes))
+        elseif (in_array($fieldtype->name, PL_CellType::$matrix_celltypes))
         {
             $this->provider = "matrix";
             $class = 'Matrix_'.$fieldtype->name.'_ft';
@@ -272,7 +272,7 @@ class BM_CellType {
         }
 
         
-        Bm_celltypes::push_package_path($this->instance);
+        PL_celltypes::push_package_path($this->instance);
         
         if(method_exists($this->instance, 'display_cell'))
         {
@@ -285,7 +285,7 @@ class BM_CellType {
         {
             $result = array('data' => $result);
         }
-        Bm_celltypes::pop_package_path();
+        PL_celltypes::pop_package_path();
         
         unset($settings['__EE']);
         unset($settings['__mgr']);
@@ -344,7 +344,7 @@ class BM_CellType {
     {
         if(method_exists($this->instance, 'display_cell_settings'))
         {
-            Bm_celltypes::push_package_path($this->instance);
+            PL_celltypes::push_package_path($this->instance);
             $result = $this->instance->display_cell_settings($settings);
 
             if(!is_array($result))
@@ -352,7 +352,7 @@ class BM_CellType {
                 $result = array(array('', $result));
             }
 
-            Bm_celltypes::pop_package_path();
+            PL_celltypes::pop_package_path();
 
             if(!is_array($result)) exit('fail: display_cell_settings not returning an array');
             return $result;

@@ -1,5 +1,5 @@
 <?php  if ( ! defined('BASEPATH')) exit('No direct script access allowed');
-interface Bm_Callback_Interface {
+interface Pl_Callback_Interface {
     /**
      * Get simple callback data
      * 

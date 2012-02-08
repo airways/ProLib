@@ -21,17 +21,17 @@ require_once 'config.php';
 require_once 'helpers/array_helper.php';
 require_once 'helpers/icons_helper.php';
 require_once 'helpers/krumo_helper.php';
-require_once 'libraries/bm_callback_interface.php';
-require_once 'libraries/bm_debug.php';
-require_once 'libraries/bm_email.php';
-require_once 'libraries/bm_handle_mgr.php';
-require_once 'libraries/bm_parser.php';
-require_once 'libraries/bm_uploads.php';
-require_once 'libraries/bm_forms.php';
-require_once 'libraries/bm_prefs.php';
-require_once 'libraries/bm_celltypes.php';
-require_once 'libraries/bm_validation.php';
-require_once 'libraries/bm_channel_fields.php';
+require_once 'libraries/pl_callback_interface.php';
+require_once 'libraries/pl_debug.php';
+require_once 'libraries/pl_email.php';
+require_once 'libraries/pl_handle_mgr.php';
+require_once 'libraries/pl_parser.php';
+require_once 'libraries/pl_uploads.php';
+require_once 'libraries/pl_forms.php';
+require_once 'libraries/pl_prefs.php';
+require_once 'libraries/pl_celltypes.php';
+require_once 'libraries/pl_validation.php';
+require_once 'libraries/pl_channel_fields.php';
 
 function prolib(&$object, $package_name)
 {
@@ -48,15 +48,15 @@ function prolib(&$object, $package_name)
     $object->prolib         = $PROLIB;
     $PROLIB->setup($object, $package_name);
 
-    $object->EE->bm_debug           = &$object->prolib->bm_debug;
-    $object->EE->bm_email           = &$object->prolib->bm_email;
-    $object->EE->bm_parser          = &$object->prolib->bm_parser;
-    $object->EE->bm_uploads         = &$object->prolib->bm_uploads;
-    $object->EE->bm_forms           = &$object->prolib->bm_forms;
-    $object->EE->bm_prefs           = &$object->prolib->bm_prefs;
-    $object->EE->bm_celltypes       = &$object->prolib->bm_celltypes;
-    $object->EE->bm_validation      = &$object->prolib->bm_validation;
-    $object->EE->bm_channel_fields  = &$object->prolib->bm_channel_fields;
+    $object->EE->pl_debug           = &$object->prolib->pl_debug;
+    $object->EE->pl_email           = &$object->prolib->pl_email;
+    $object->EE->pl_parser          = &$object->prolib->pl_parser;
+    $object->EE->pl_uploads         = &$object->prolib->pl_uploads;
+    $object->EE->pl_forms           = &$object->prolib->pl_forms;
+    $object->EE->pl_prefs           = &$object->prolib->pl_prefs;
+    $object->EE->pl_celltypes       = &$object->prolib->pl_celltypes;
+    $object->EE->pl_validation      = &$object->prolib->pl_validation;
+    $object->EE->pl_channel_fields  = &$object->prolib->pl_channel_fields;
 
     return $PROLIB;
 }
@@ -77,15 +77,15 @@ class Prolib {
         // objects are treated as singletons and attached to whatever objects
         // need to use them through their $this->prolib, initialized by prolib()
         
-        $this->bm_debug             = new Bm_debug();
-        $this->bm_email             = new Bm_email();
-        $this->bm_parser            = new Bm_parser();
-        $this->bm_uploads           = new Bm_uploads();
-        $this->bm_forms             = new Bm_forms();
-        $this->bm_prefs             = new Bm_prefs();
-        $this->bm_celltypes         = new Bm_celltypes();
-        $this->bm_validation        = new Bm_Validation();
-        $this->bm_channel_fields    = new Bm_channel_fields();
+        $this->pl_debug             = new PL_debug();
+        $this->pl_email             = new PL_email();
+        $this->pl_parser            = new PL_parser();
+        $this->pl_uploads           = new PL_uploads();
+        $this->pl_forms             = new PL_forms();
+        $this->pl_prefs             = new PL_prefs();
+        $this->pl_celltypes         = new PL_celltypes();
+        $this->pl_validation        = new PL_Validation();
+        $this->pl_channel_fields    = new PL_channel_fields();
 
         $this->EE = &get_instance();
 
@@ -138,7 +138,7 @@ class Prolib {
         } else {
             $package_name = '';
         }
-        $this->EE->cp->set_breadcrumb(ACTION_BASE.AMP.'module=bm_forms'.AMP, $this->EE->lang->line($package_name.'_module_name'));
+        $this->EE->cp->set_breadcrumb(ACTION_BASE.AMP.'module=pl_forms'.AMP, $this->EE->lang->line($package_name.'_module_name'));
         $this->EE->cp->set_variable('cp_page_title', lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
     }
     
