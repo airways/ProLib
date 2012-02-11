@@ -102,7 +102,7 @@ class PL_prefs extends PL_handle_mgr {
      */
     function get($key, $default = FALSE)
     {
-        if(is_numeric($name))
+        if(is_numeric($key))
         {
             echo "<div>Error: ini() or get() cannot be called with an ID - key param must not be numeric.</div>";
             return FALSE;

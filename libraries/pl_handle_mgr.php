@@ -36,6 +36,16 @@ class PL_handle_mgr
         if($serialized) $this->serialized = $serialized;
     }
     
+    function count()
+    {
+        return $this->EE->db->count_all($this->table);
+    }
+    
+    function create($data)
+    {
+        return $this->new_object($data);
+    }
+    
     function new_object($data)
     {
         // Create new table for the form
@@ -60,6 +70,11 @@ class PL_handle_mgr
         return $object;
     }
     
+    function get($handle, $show_error = TRUE)
+    {
+        return $this->get_object($handle, $show_error);
+    }
+
     function get_object($handle, $show_error = TRUE)
     {
         $template = FALSE;
@@ -117,11 +132,20 @@ class PL_handle_mgr
             }
         }
         
-        
+        if(method_exists($object, 'post_get'))
+        {
+            $object->post_get($this);
+        }
+
         return $object;
     }
+
+    function get_all($where = FALSE, $array_type = FALSE, $order = FALSE, $offset = FALSE, $perpage = FALSE)
+    {
+        return $this->get_objects($where, $array_type, $order, $offset, $perpage);
+    }
     
-    function get_objects($where = FALSE, $array_type = FALSE, $order = FALSE)
+    function get_objects($where = FALSE, $array_type = FALSE, $order = FALSE, $offset = FALSE, $perpage = FALSE)
     {
         $result = array();
         
@@ -146,6 +170,11 @@ class PL_handle_mgr
                 }
             }
 
+        }
+        
+        if($offset || $perpage)
+        {
+            $this->EE->db->limit($perpage, $offset);
         }
         
         $query = $this->EE->db->get($this->table);
@@ -173,12 +202,22 @@ class PL_handle_mgr
         return $result;
     }
     
+    function save($object, $where = false) 
+    {
+        return $this->save_object($object, $where);
+    }
+    
     function save_object($object, $where = false) 
     {
         foreach($this->serialized as $field) {
             if(isset($object->$field)) {
                 $object->$field = serialize($object->$field);
             }
+        }
+        
+        if(method_exists($object, 'pre_save'))
+        {
+            $object->pre_save($this);
         }
         
         $o = $this->remove_transitory($object);
@@ -218,7 +257,12 @@ class PL_handle_mgr
                 $object->$field = unserialize($object->$field);
             }
         }
-        
+
+        if(method_exists($object, 'post_save'))
+        {
+            $object->post_save($this);
+        }
+                
         return $object;
     }
     
@@ -231,11 +275,33 @@ class PL_handle_mgr
         }
         return $result;
     }
+
+    function delete($object) 
+    {
+        return $this->delete_object($object);
+    }
     
     function delete_object($object) 
     {
-        return $query = $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'})
-                                     ->delete($this->table);
+        $result = FALSE;
+        $abort = FALSE;
+        if(method_exists($object, 'pre_delete'))
+        {
+            $abort = $object->pre_delete($this);
+        }
+        
+        if(!$abort)
+        {
+            $result = $query = $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'})
+                                            ->delete($this->table);
+        }
+        
+        if(method_exists($object, 'post_delete'))
+        {
+            $object->post_delete($this);
+        }
+
+        return $result;
     }
 
     function delete_objects($where)
@@ -247,21 +313,24 @@ class PL_handle_mgr
         } else {
             exit('delete_objects cannot be run without a where array.');
         }
-
-
     }
-
 
     function remove_transitory($object)
     {
-        $o = array();
+        $data_array = array();
         foreach($object as $field => $value) {
             if(strpos($field, '__') !== 0) {
                 if(!is_object($value))
-                    $o[$field] = $value;
+                    $data_array[$field] = $value;
             }
         }
-        return $o;
+        
+        if(method_exists($object, 'post_remove_transitory'))
+        {
+            $data_array = $object->post_remove_transitory($data_array);
+        }
+        
+        return $data_array;
     }
     
 }} // class PL_handle_mgr

@@ -32,6 +32,7 @@ require_once 'libraries/pl_prefs.php';
 require_once 'libraries/pl_celltypes.php';
 require_once 'libraries/pl_validation.php';
 require_once 'libraries/pl_channel_fields.php';
+require_once 'libraries/pl_encryption.php';
 
 function prolib(&$object, $package_name="")
 {
@@ -58,6 +59,7 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_celltypes       = &$object->prolib->pl_celltypes;
     $object->EE->pl_validation      = &$object->prolib->pl_validation;
     $object->EE->pl_channel_fields  = &$object->prolib->pl_channel_fields;
+    $object->EE->pl_encryption      = &$object->prolib->pl_encryption;
 
     return $PROLIB;
 }
@@ -87,6 +89,7 @@ class Prolib {
         $this->pl_celltypes         = new PL_celltypes();
         $this->pl_validation        = new PL_Validation();
         $this->pl_channel_fields    = new PL_channel_fields();
+        $this->pl_encryption        = new PL_Encryption();
 
         $this->EE = &get_instance();
 
