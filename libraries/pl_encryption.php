@@ -199,8 +199,7 @@ class PL_Vault {
         if($query->num_rows() > 0)
         {
             $data = $query->row();
-            $data = unserialize($this->EE->encrypt->decode(base64_decode($data['data'])));
-            $data = $this->EE->pl_encryption->decrypt_values($data);
+            $data = unserialize($this->EE->encrypt->decode(base64_decode($data->data)));
             return $data;
         } else {
             return FALSE;
