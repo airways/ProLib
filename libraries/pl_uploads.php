@@ -30,39 +30,34 @@ class PL_uploads {
     }
 
     /**
-     * Get a list of directory upload preferences from exp_upload_prefs.
+     * Get a list of directory upload preferences.
      *
      * @return array of directory upload preferences appropriate for use in form_dropdown()
      */
     function get_upload_prefs()
     {
-        $query = $this->EE->db->query($sql = "SELECT * FROM exp_upload_prefs");
-
-        $result = array();
-        foreach($query->result() as $row)
+        $prefs = $this->_get_upload_preferences();
+        foreach($prefs as $upload_pref)
         {
-            $result[$row->id] = $row->name; 
+            $result[$row->id] = $upload_pref->name; 
         }
-
         return $result;
     }
 
     /**
-     * Get single record from exp_upload_prefs
+     * Get single upload preferences record.
      *
      * @return object containing pref record
      */
     function get_upload_pref($pref_id)
     {
         $pref_id = (int)$pref_id;
-        
-        $query = $this->EE->db->query($sql = "SELECT * FROM exp_upload_prefs WHERE id = $pref_id");
-
-        return $query->row();
+        $upload_pref = $this->_get_upload_preferences(NULL, $pref_id);
+        return $upload_pref;
     }
 
     /**
-     * Trigger an upload to a exp_upload_prefs directory.
+     * Trigger an upload to an upload preferences directory.
      *
      * @param $pref_id - id of exp_upload_prefs record to upload file to
      * @param $field - name of POST field to upload file from
@@ -97,24 +92,23 @@ class PL_uploads {
             }
         }
         
-        $query = $this->EE->db->query($sql = "SELECT * FROM exp_upload_prefs WHERE id = '".$this->EE->db->escape_str($pref_id)."'");
-
-        if ($query->num_rows() > 0)
+        $upload_pref = $this->get_upload_pref($pref_id);
+        
+        if ($upload_pref)
         {
-            $dir = $query->row();
             // see http://codeigniter.com/user_guide/libraries/file_uploading.html for more on options we can set here
             // for now just do the minimum to get it to upload a file
             $config = array(
-                'upload_path' => $dir->server_path,
+                'upload_path' => $upload_pref->server_path,
                 'allowed_types' => '*',
-                'file_name' => $this->make_unique_filename($_FILES[$field]['name'], $dir->server_path),
+                'file_name' => $this->make_unique_filename($_FILES[$field]['name'], $upload_pref->server_path),
                 //'max_filename' => '',
                 //'encrypt_name' => 'y',
                 //'remove_spaces' => 'y',
                 //'overwrite' => '',
-                'max_size' => $dir->max_size,
-                'max_width' => $dir->max_width,
-                'max_height' => $dir->max_height
+                'max_size' => $upload_pref->max_size,
+                'max_width' => $upload_pref->max_width,
+                'max_height' => $upload_pref->max_height
             );
 
             $this->EE->load->library('upload', $config);
@@ -184,38 +178,38 @@ class PL_uploads {
      * @param  int $id       Specific ID of upload destination to return
      * @return array         Result array of DB object, possibly merged with custom file upload settings (if on EE 2.4+)
      */
-    // function get_upload_preferences($group_id = NULL, $id = NULL)
-    // {
-    //  if (version_compare(APP_VER, '2.4', '>='))
-    //  {
-    //      $this->EE->load->model('file_upload_preferences_model');
-    //      return $this->EE->file_upload_preferences_model->get_file_upload_preferences($group_id, $id);
-    //  }
-    // 
-    //  if (version_compare(APP_VER, '2.1.5', '>='))
-    //  {
-    //      $this->EE->load->model('file_upload_preferences_model');
-    //      $result = $this->EE->file_upload_preferences_model->get_upload_preferences($group_id, $id);
-    //  }
-    //  else
-    //  {
-    //      $this->EE->load->model('tools_model');
-    //      $result = $this->EE->tools_model->get_upload_preferences($group_id, $id);
-    //  }
-    // 
-    //  // If an $id was passed, just return that directory's preferences
-    //  if ( ! empty($id))
-    //  {
-    //      return $result->row_array();
-    //  }
-    // 
-    //  // Use upload destination ID as key for row for easy traversing
-    //  $return_array = array();
-    //  foreach ($result->result_array() as $row)
-    //  {
-    //      $return_array[$row['id']] = $row;
-    //  }
-    // 
-    //  return $return_array;
-    // }
+    private function _get_upload_preferences($group_id = NULL, $id = NULL)
+    {
+        if (version_compare(APP_VER, '2.4', '>='))
+        {
+            $this->EE->load->model('file_upload_preferences_model');
+            return $this->EE->file_upload_preferences_model->get_file_upload_preferences($group_id, $id);
+        }
+
+        if (version_compare(APP_VER, '2.1.5', '>='))
+        {
+            $this->EE->load->model('file_upload_preferences_model');
+            $result = $this->EE->file_upload_preferences_model->get_upload_preferences($group_id, $id);
+        }
+        else
+        {
+            $this->EE->load->model('tools_model');
+            $result = $this->EE->tools_model->get_upload_preferences($group_id, $id);
+        }
+
+        // If an $id was passed, just return that directory's preferences
+        if ( ! empty($id))
+        {
+            return $result->row();
+        }
+
+        // Use upload destination ID as key for row for easy traversing
+        $return_array = array();
+        foreach ($result->result() as $row)
+        {
+            $return_array[$row['id']] = $row;
+        }
+
+        return $return_array;
+    }
 }
