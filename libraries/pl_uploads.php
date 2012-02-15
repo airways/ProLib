@@ -207,7 +207,7 @@ class PL_uploads {
         $return_array = array();
         foreach ($result->result() as $row)
         {
-            $return_array[$row['id']] = $row;
+            $return_array[$row->id] = $row;
         }
 
         return $return_array;
