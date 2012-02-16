@@ -354,6 +354,11 @@ class PL_RowInitialized
         }
     }
     
+    function save()
+    {
+        $this->__mgr->save($this);
+    }
+    
     function dump() 
     {
         echo "<b>" . get_class($this)  . "</b><br/>";

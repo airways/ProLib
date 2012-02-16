@@ -39,7 +39,7 @@ class PL_uploads {
         $prefs = $this->_get_upload_preferences();
         foreach($prefs as $upload_pref)
         {
-            $result[$row->id] = $upload_pref->name; 
+            $result[$upload_pref->id] = $upload_pref->name; 
         }
         return $result;
     }
