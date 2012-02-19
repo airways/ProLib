@@ -18,7 +18,14 @@
  *
  **/
 
-require_once(APPPATH.'../codeigniter/system/libraries/Form_validation.php');
+if(file_exists(APPPATH.'../codeigniter/system/libraries/Form_validation.php'))
+{
+    // ExpressionEngine
+    require_once(APPPATH.'../codeigniter/system/libraries/Form_validation.php');
+} else {
+    // CodeIgniter
+    require_once(APPPATH.'../system/libraries/Form_validation.php');
+}
 
 /**
  * Form Validation Class with custom callbacks
@@ -58,12 +65,10 @@ class PL_validation extends CI_Form_validation {
     
     function __construct()
     {
+        global $PROLIB;
         $this->EE = &get_instance();
         
-        if ($this->EE->extensions->active_hook('prolib_register_callbacks_lang') === TRUE)
-        {
-            $this->EE->extensions->call('prolib_register_callbacks_lang', $this);
-        }
+        $PROLIB->pl_hooks->hook('prolib_register_callbacks_lang', $this);
         
         parent::__construct();
     }
