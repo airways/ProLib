@@ -17,13 +17,28 @@
  *
  **/
 
-/**
- * Wrapper to write log entries to files or the database.
- *
- */
-class PL_debug {
-    function log($str)
+require_once 'sfYaml/sfYaml.php';
+require_once 'sfYaml/sfYamlDumper.php';
+require_once 'sfYaml/sfYamlInline.php';
+require_once 'sfYaml/sfYamlParser.php';
+
+function yaml_unserialize($source)
+{
+    try
     {
-        
+        $parser = new sfYamlParser();
+        return $parser->parse($source);
+    } catch(InvalidArgumentException $e)
+    {
+        error_log($e->getMessage());
+        return FALSE;
     }
+}
+
+function yaml_serialize($object, $array_level=1)
+{
+    $dumper = new sfYamlDumper();
+    $yaml = $dumper->dump($object, $array_level);
+    return $yaml;
+
 }

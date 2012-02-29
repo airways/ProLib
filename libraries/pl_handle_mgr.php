@@ -117,7 +117,13 @@ class PL_handle_mgr
         }
 
         if(!$object && $show_error) {
-            exit('Object not found: ' . $this->class . ' #' . $handle);
+            if(function_exists('xdebug_print_function_stack'))
+            {
+                xdebug_print_function_stack('Object not found: ' . $this->class . ' #' . $handle);
+                exit;
+            } else {
+                exit('<b>Object not found: ' . $this->class . ' #' . $handle . '</b>');
+            }
         } else {
             // if(!is_object($object) OR get_class($object) == 'stdClass')
             // {
@@ -214,13 +220,13 @@ class PL_handle_mgr
                 $object->$field = serialize($object->$field);
             }
         }
+                
+        $o = $this->remove_transitory($object);
         
         if(method_exists($object, 'pre_save'))
         {
-            $object->pre_save($this);
+            $object->pre_save($this, $o);
         }
-        
-        $o = $this->remove_transitory($object);
 
         // $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'});
         //  if($where) $this->EE->db->where($where);
@@ -260,7 +266,7 @@ class PL_handle_mgr
 
         if(method_exists($object, 'post_save'))
         {
-            $object->post_save($this);
+            $object->post_save($this, $o);
         }
                 
         return $object;
