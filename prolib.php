@@ -34,6 +34,7 @@ require_once 'libraries/pl_celltypes.php';
 require_once 'libraries/pl_validation.php';
 require_once 'libraries/pl_channel_fields.php';
 require_once 'libraries/pl_encryption.php';
+require_once 'libraries/pl_hooks.php';
 
 function prolib(&$object, $package_name="")
 {
@@ -46,11 +47,13 @@ function prolib(&$object, $package_name="")
     if(!isset($PROLIB))
     {
         $PROLIB = new Prolib();
+        $PROLIB->init();
     }
     
     $object->prolib         = $PROLIB;
     $PROLIB->setup($object, $package_name);
 
+    $object->EE->pl_hooks           = &$object->prolib->pl_hooks;
     $object->EE->pl_debug           = &$object->prolib->pl_debug;
     $object->EE->pl_email           = &$object->prolib->pl_email;
     $object->EE->pl_parser          = &$object->prolib->pl_parser;
@@ -73,7 +76,7 @@ class Prolib {
     var $package_name = FALSE;
     var $caches = array();
     
-    function __construct()
+    function init()
     {
         $this->EE = &get_instance();
         
@@ -81,6 +84,7 @@ class Prolib {
         // objects are treated as singletons and attached to whatever objects
         // need to use them through their $this->prolib, initialized by prolib()
         
+        $this->pl_hooks             = new PL_Hooks();
         $this->pl_debug             = new PL_debug();
         $this->pl_email             = new PL_email();
         $this->pl_parser            = new PL_parser();
@@ -92,13 +96,12 @@ class Prolib {
         $this->pl_channel_fields    = new PL_channel_fields();
         $this->pl_encryption        = new PL_Encryption();
 
-        $this->EE = &get_instance();
-
         // random fun stuff
         if(isset($this->EE->uri->page_query_string))
         {
         $this->query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
         }
+
         if(isset($this->EE->session))
         {
             $this->dst_enabled = ($this->EE->session->userdata('daylight_savings') == 'y' ? TRUE : FALSE);
