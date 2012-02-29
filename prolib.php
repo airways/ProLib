@@ -21,6 +21,7 @@ require_once 'config.php';
 require_once 'helpers/array_helper.php';
 require_once 'helpers/icons_helper.php';
 require_once 'helpers/krumo_helper.php';
+require_once 'helpers/yaml_helper.php';
 require_once 'libraries/pl_callback_interface.php';
 require_once 'libraries/pl_debug.php';
 require_once 'libraries/pl_email.php';
@@ -34,12 +35,13 @@ require_once 'libraries/pl_validation.php';
 require_once 'libraries/pl_channel_fields.php';
 require_once 'libraries/pl_encryption.php';
 
-function prolib(&$object, $package_name)
+function prolib(&$object, $package_name="")
 {
     
     global $PROLIB;
     
     $object->EE = &get_instance();
+    $object->CI = &get_instance();
     
     if(!isset($PROLIB))
     {
@@ -93,8 +95,16 @@ class Prolib {
         $this->EE = &get_instance();
 
         // random fun stuff
+        if(isset($this->EE->uri->page_query_string))
+        {
         $this->query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
-        $this->dst_enabled = ($this->EE->session->userdata('daylight_savings') == 'y' ? TRUE : FALSE);
+        }
+        if(isset($this->EE->session))
+        {
+            $this->dst_enabled = ($this->EE->session->userdata('daylight_savings') == 'y' ? TRUE : FALSE);
+        } else {
+            $this->dst_enabled = FALSE;
+        }
         
         // initialize caches
         $this->cache['get_fields'] = array();
