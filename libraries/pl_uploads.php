@@ -39,7 +39,7 @@ class PL_uploads {
         $prefs = $this->_get_upload_preferences();
         foreach($prefs as $upload_pref)
         {
-            $result[$upload_pref->id] = $upload_pref->name; 
+            $result[$upload_pref['id']] = $upload_pref['name']; 
         }
         return $result;
     }
@@ -99,16 +99,16 @@ class PL_uploads {
             // see http://codeigniter.com/user_guide/libraries/file_uploading.html for more on options we can set here
             // for now just do the minimum to get it to upload a file
             $config = array(
-                'upload_path' => $upload_pref->server_path,
+                'upload_path' => $upload_pref['server_path'],
                 'allowed_types' => '*',
-                'file_name' => $this->make_unique_filename($_FILES[$field]['name'], $upload_pref->server_path),
+                'file_name' => $this->make_unique_filename($_FILES[$field]['name'], $upload_pref['server_path']),
                 //'max_filename' => '',
                 //'encrypt_name' => 'y',
                 //'remove_spaces' => 'y',
                 //'overwrite' => '',
-                'max_size' => $upload_pref->max_size,
-                'max_width' => $upload_pref->max_width,
-                'max_height' => $upload_pref->max_height
+                'max_size' => $upload_pref['max_size'],
+                'max_width' => $upload_pref['max_width'],
+                'max_height' => $upload_pref['max_height']
             );
 
             $this->EE->load->library('upload', $config);
@@ -200,14 +200,14 @@ class PL_uploads {
         // If an $id was passed, just return that directory's preferences
         if ( ! empty($id))
         {
-            return $result->row();
+            return $result->row_array();
         }
 
         // Use upload destination ID as key for row for easy traversing
         $return_array = array();
-        foreach ($result->result() as $row)
+        foreach ($result->result_array() as $row)
         {
-            $return_array[$row->id] = $row;
+            $return_array[$row['id']] = $row;
         }
 
         return $return_array;
