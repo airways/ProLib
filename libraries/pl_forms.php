@@ -33,7 +33,7 @@ class PL_forms {
                         $form[] = array('lang_field' => $key, 'control' => htmlentities(strip_tags($value)));
                         break;
                     case 'static':
-                        $form[] = array('lang_field' => $key, 'control' => $options);
+                        $form[] = array('lang_field' => $key, 'control' => $value);
                         break;
                     case 'read_only_checkbox':
                         $form[] = array('lang_field' => $key, 'control' => '<b>'.($value == 'y' ? 'On' : 'Off') . '</b>: ' . $options/*.'<br/><br/>'.form_checkbox(array('name' => $key, 'value' => 'y', 'checked' => $value == 'y', 'disabled' => 'disabled'))*/);

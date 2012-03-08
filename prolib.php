@@ -324,6 +324,11 @@ class Prolib {
     
     function copy_values(&$from, &$to)
     {
+        if(!is_array($from) AND !is_object($from))
+        {
+            xdebug_print_function_stack('Invalid $from supplied to copy_values!');
+            var_dump($from);
+        }
         foreach($from as $key => $value)
         {
             if(!is_array($value) 

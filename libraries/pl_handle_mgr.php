@@ -57,6 +57,14 @@ class PL_handle_mgr
                 $data[$field] = serialize($data[$field]);
             }
         }
+        
+        foreach($data as $k => $v)
+        {
+            if(is_array($v) OR $v == 'Array')
+            {
+                xdebug_print_function_stack('Attempting to save array as field value: '.$k);
+            }
+        }
 
         $this->EE->db->insert($this->table, $data);
         $insert_id = $this->EE->db->insert_id();

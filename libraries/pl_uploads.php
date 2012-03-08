@@ -36,6 +36,7 @@ class PL_uploads {
      */
     function get_upload_prefs()
     {
+        $result = array();
         $prefs = $this->_get_upload_preferences();
         foreach($prefs as $upload_pref)
         {

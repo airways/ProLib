@@ -123,6 +123,18 @@ class PL_Encryption {
     } // function decrypt_values()    
 }
 
+/**
+ * Vault API
+ *
+ * Store data in a temporary table, with a SHA1 hash representing it. Note that this
+ * class should not be considered secure storage unless the application using it
+ * forces the encrypt library to be loaded and forces a unique encryption_key to
+ * be set.
+ *
+ * If encryption is not available, the values of objects stored in the vault will
+ * simply be Base64 encoded.
+ **/
+
 class PL_Vault {
     public function __construct($package)
     {
@@ -131,12 +143,6 @@ class PL_Vault {
         $this->create_table();
     }
     
-    /* ------------------------------------------------------------
-     * Vault API
-     *
-     * Store data in a temporary table, with a SHA1 hash representing it
-     * ------------------------------------------------------------ */
-
     private function create_table()
     {
         $this->table = $this->package.'_vault';
@@ -173,7 +179,12 @@ class PL_Vault {
      */
     function put($data, $expires=TRUE)
     {
-        $data = base64_encode($this->EE->encrypt->encode(serialize($data)));
+        if(isset($this->EE->encrypt))
+        {
+            $data = base64_encode($this->EE->encrypt->encode(serialize($data)));
+        } else {
+            $data = base64_encode(serialize($data));
+        }
         
         $hash = sha1($data);
         if($expires)
@@ -199,7 +210,12 @@ class PL_Vault {
         if($query->num_rows() > 0)
         {
             $data = $query->row();
-            $data = unserialize($this->EE->encrypt->decode(base64_decode($data->data)));
+            if(isset($this->EE->encrypt))
+            {
+                $data = unserialize($this->EE->encrypt->decode(base64_decode($data->data)));
+            } else {
+                $data = unserialize(base64_decode($data->data));
+            }
             return $data;
         } else {
             return FALSE;
