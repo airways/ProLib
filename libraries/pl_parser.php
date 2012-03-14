@@ -94,12 +94,7 @@ class PL_parser {
         }
         
         // prep basic conditionals
-        $conditionals = array();
-        foreach($row_vars as $k => $v)
-        {
-            $conditionals[$variable_prefix.$k] = $v;
-        }
-        $rowdata = $this->EE->functions->prep_conditionals($rowdata, $conditionals);
+        $rowdata = $this->EE->functions->prep_conditionals($rowdata, $this->_make_conditionals($row_vars));
 
         $custom_date_fields = array();
         $this->date_vars_params = array();
@@ -152,7 +147,6 @@ class PL_parser {
                 if(strpos($key, $var_pair) === 0)
                 {
                     $count = preg_match_all($pattern = "/".LD.$variable_prefix.$key.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
-                    #echo $pattern.'<br/>';
 
                     // if we got some matches
                     if($count > 0)
@@ -185,7 +179,7 @@ class PL_parser {
                                         $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.'row', $data, $pair_row_data);
                                     }
                                 } else {
-                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
+                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($data));
                                     $prepped_conditionals = array();
                                     
                                     foreach($data as $k => $v) {
@@ -262,7 +256,7 @@ class PL_parser {
                                                 {
                                                     $pair_row_data  = $this->_swap_var_single($variable_prefix.$k, $v, $pair_row_data);
                                                     if (in_array($k, $reparse_vars)) {
-                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $prepped_conditionals);
+                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($prepped_conditionals));
                                                     }
                                                 }
                                             }
@@ -301,6 +295,16 @@ class PL_parser {
             $key = substr($key, strlen($this->variable_prefix), strlen($key));
         }
         return $key;
+    }
+    
+    function _make_conditionals($row_vars)
+    {
+        $conditionals = array();
+        foreach($row_vars as $k => $v)
+        {
+            $conditionals[$this->variable_prefix.$k] = $v;
+        }
+        return $conditionals;
     }
     
     function _swap_var_single($key, &$val, &$data)
