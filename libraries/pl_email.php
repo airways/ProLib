@@ -7,7 +7,7 @@
  * Because the core EE_Email class does not support smtp_port, it has to be modified to get it to work with
  * GMail or other TLS-only SMTP services. This class makes sure that we can support TLS without requiring a
  * hacked core file.
- * 
+ *
  */
 
 
@@ -69,7 +69,7 @@ class PL_email extends CI_Email {
 	{
 	    $this->PL_initialize();
 	}
-	
+
 	function PL_initialize($mailtype='html')
 	{
 		$config = array(
@@ -81,9 +81,9 @@ class PL_email extends CI_Email {
             'smtp_port'		=> $this->EE->config->item('smtp_port') ? $this->EE->config->item('smtp_port') : 25,
             'mailtype'      => $mailtype,
 		);
-        
+
         $this->mailtype = $mailtype;
-        
+
 		/* -------------------------------------------
 		/*	Hidden Configuration Variables
 		/*	- email_newline => Default newline.
@@ -106,7 +106,7 @@ class PL_email extends CI_Email {
 	    } else {
 	        $this->useragent = "EE UPGRADE";
 	    }
-	    
+
 	    $this->initialize($config);
     }
 
@@ -140,13 +140,13 @@ class PL_email extends CI_Email {
             {
                 $alt = entities_to_ascii($alt);
             }
-            
+
             // remove {if html_email}, leaving {if plain_email}
             $alt = preg_replace('/\{if\s+html_email\}.+?\{\/if\}/si', '', $alt);
             $alt = preg_replace('/\{if\s+plain_email\}(.+?)\{\/if\}/si', '\\1', $alt);
     		$this->set_alt_message($this->EE->functions->insert_action_ids($alt));
-    		
-    		
+
+
 		}
 	}
 

@@ -59,16 +59,16 @@ class PL_validation extends CI_Form_validation {
         'parse_url'                     => array('label' => 'Parse URL Component (filter)', 'flags' => 'has_param',
                                                  'help' => 'scheme, host, port, user, pass, path, or query'),
     );
-    
+
     var $available_filters = array(
     );
-    
+
     function __construct()
     {
         global $PROLIB;
         $this->EE = &get_instance();
-        
-        if(isset($this->EE->extensions)) 
+
+        if(isset($this->EE->extensions))
         {
             if($this->EE->extensions->active_hook('prolib_register_callbacks_lang') === TRUE)
             {
@@ -77,15 +77,15 @@ class PL_validation extends CI_Form_validation {
         } else {
             $PROLIB->pl_hooks->hook('prolib_register_callbacks_lang', $this);
         }
-        
+
         parent::__construct();
     }
-    
+
     function set_error_messages($new_messages)
     {
         $this->_error_messages = array_merge($this->_error_messages, $new_messages);
     }
-    
+
     /**
      * Executes the Validation routines
      **/
@@ -100,14 +100,14 @@ class PL_validation extends CI_Form_validation {
         // save the real CI object, replace with our custom callback class
         $temp_CI = $this->CI;
         $this->CI = $this->CI_callback;
-        
+
         // call the real method
         $this->_execute_extended($row, $rules, $postdata, $cycles);
-        
+
         // restore the original CI object
         $this->CI = $temp_CI;
     }
-    
+
 
     /**
 	 * Executes the Validation routines
@@ -362,10 +362,10 @@ class PL_validation extends CI_Form_validation {
  **/
 class PL_forms_validation_callbacks {
     var $callbacks = array();
-    
+
     function __construct($CI) {
         $this->EE = &get_instance();
-        
+
         // we need to copy the properties from CI that are used
         // in _execute()
         $this->lang = $CI->lang;
@@ -376,22 +376,22 @@ class PL_forms_validation_callbacks {
             $this->EE->extensions->call('prolib_register_validation_callbacks', $this);
         }
     }
-    
+
     function generic_callback($rule, $postdata, $param, &$handled)
     {
         if(array_key_exists($rule, $this->callbacks))
         {
-            // call the callback - this can be a global function or an array(class, method) 
+            // call the callback - this can be a global function or an array(class, method)
             // or an array(instance, method)
             $value = call_user_func($this->callbacks[$rule], $postdata, $param);
-            
+
             $handled = TRUE;
             return $value;
         }
-        
+
         $handled = FALSE;
     }
-    
+
     function matches_value($value, $param)
     {
         if($value === $param)
@@ -402,7 +402,7 @@ class PL_forms_validation_callbacks {
             return FALSE;
         }
     }
-    
+
     function numeric_dash($value, $param)
     {
         if(preg_match('/^[1-9\-]*$/', $value))

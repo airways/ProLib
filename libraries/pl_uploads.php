@@ -23,7 +23,7 @@
  */
 class PL_uploads {
     var $errors = array();
-    
+
     function PL_uploads()
     {
         $this->EE = &get_instance();
@@ -40,7 +40,7 @@ class PL_uploads {
         $prefs = $this->_get_upload_preferences();
         foreach($prefs as $upload_pref)
         {
-            $result[$upload_pref['id']] = $upload_pref['name']; 
+            $result[$upload_pref['id']] = $upload_pref['name'];
         }
         return $result;
     }
@@ -62,7 +62,7 @@ class PL_uploads {
      *
      * @param $pref_id - id of exp_upload_prefs record to upload file to
      * @param $field - name of POST field to upload file from
-     *  
+     *
      * @return FALSE if the operation failed (errors in $this->errors), or an array containing data on the upload:
      *               Array
      *               (
@@ -85,16 +85,16 @@ class PL_uploads {
     function handle_upload($pref_id, $field='userfile', $required=TRUE)
     {
         $this->errors = array();
-        
+
         if(!isset($_FILES[$field]['name']) || !$_FILES[$field]['name']) {
             // file not provided
             if(!$required) {
                 return TRUE;
             }
         }
-        
+
         $upload_pref = $this->get_upload_pref($pref_id);
-        
+
         if ($upload_pref)
         {
             // see http://codeigniter.com/user_guide/libraries/file_uploading.html for more on options we can set here
@@ -151,14 +151,14 @@ class PL_uploads {
 
         return $result;
     }
-    
+
     /**
      * Sanitize filename and add a unique time based integer to it.
      */
     function make_unique_filename($filename, $path)
     {
         if(substr($path, -1) != '/') $path .= '/';
-        
+
         $uniq = floor((time() + rand(1, 500)) / rand(1024, 3897)) + rand(1, 10000);
 
         $info = pathinfo($filename);
@@ -169,10 +169,10 @@ class PL_uploads {
         {
             $uniq += rand(1,100);
         }
-        
+
         return $filename.'_'.$uniq.'.'.$ext;
     }
-    
+
     /**
      * Get Upload Preferences (Cross-compatible between ExpressionEngine 2.0 and 2.4)
      * @param  int $group_id Member group ID specified when returning allowed upload directories only for that member group

@@ -24,6 +24,6 @@
 class PL_debug {
     function log($str)
     {
-        
+
     }
 }

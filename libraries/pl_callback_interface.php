@@ -2,9 +2,9 @@
 interface Pl_Callback_Interface {
     /**
      * Get simple callback data
-     * 
+     *
      * Used for conditional prepping.
-     * 
+     *
      * @abstract
      * @returns string
      */

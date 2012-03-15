@@ -20,15 +20,15 @@
 if(!class_exists('PL_prefs')) {
 class PL_prefs extends PL_handle_mgr {
     /* ------------------------------------------------------------
-     * Preferences manager interface 
+     * Preferences manager interface
      * Wraps PL_handle_mgr for this module's preference values.
-     * 
+     *
      * Initialize this class in your main library with the table name
      * you wish to use for your module's preferences.
      * ------------------------------------------------------------ */
 
     var $default_prefs = array();
-    
+
     function __construct($table = FALSE, $class = FALSE, $default_prefs = FALSE)
     {
         $singular = "preference";
@@ -36,15 +36,15 @@ class PL_prefs extends PL_handle_mgr {
         {
             $class = "PL_Preference";
         }
-        
+
         if($default_prefs)
         {
             $this->default_prefs = $default_prefs;
         }
-        
+
         parent::__construct($table, $singular, $class);
     }
-    
+
     function new_preference($data)
     {
         return $this->new_object($data);
@@ -63,9 +63,9 @@ class PL_prefs extends PL_handle_mgr {
             echo "<div>Error: get_preference() cannot be called with an ID - name param must not be numeric.</div>";
             return FALSE;
         }
-        
+
         $result = $this->get_object($name, FALSE);
-        
+
         // if there is no result, check for a default preference value
         if(!$result)
         {
@@ -82,7 +82,7 @@ class PL_prefs extends PL_handle_mgr {
     /**
      * Get a preference setting from the database, or return the default if the preference
      * is not found. Alias for get().
-     * 
+     *
      * @param  $key
      * @param bool $default
      * @return mixed
@@ -91,11 +91,11 @@ class PL_prefs extends PL_handle_mgr {
     {
         return $this->get($key, $default);
     }
-    
+
     /**
      * Get a preference setting from the database, or return the default if the preference
      * is not found.
-     * 
+     *
      * @param $key
      * @param $default
      * @return mixed
@@ -107,7 +107,7 @@ class PL_prefs extends PL_handle_mgr {
             echo "<div>Error: ini() or get() cannot be called with an ID - key param must not be numeric.</div>";
             return FALSE;
         }
-        
+
         $result = $this->get_preference($key);
 
         if($result) {
@@ -118,10 +118,10 @@ class PL_prefs extends PL_handle_mgr {
 
         return $result;
     }
-    
+
     /**
      * Set a preference to a given value
-     * 
+     *
      * @param $key
      * @param $value
      * @return PL_Preference or FALSE
@@ -145,26 +145,26 @@ class PL_prefs extends PL_handle_mgr {
             // new_preference returns the new PL_Preference object or FALSE on failure
             $pref = $this->new_preference($data);
         }
-        
+
         // return PL_Preference object or FALSE
         return $pref;
     }
-    
+
     /**
      * Get a map of all preference values from the database, including default preference values
      * if they are not already set in the database table.
-     * 
+     *
      * @return array(preference_name => value)
      */
     function get_preferences()
-    { 
+    {
         // get a map of preference objects, collapse into a single key/value array
         $prefs = $this->get_objects(FALSE, 'name');
         foreach($prefs as $k => $v)
         {
             $prefs[$k] = $v->value;
         }
-        
+
         // check for default values, if they are not set - add them to the results
         foreach($this->default_prefs as $k => $v)
         {
@@ -173,19 +173,19 @@ class PL_prefs extends PL_handle_mgr {
                 $prefs[$k] = $this->default_prefs[$k];
             }
         }
-        
+
         if(count($this->default_prefs) > 0)
         {
             $prefs = array_presort($prefs, array_keys($this->default_prefs));
         }
-        
+
         return $prefs;
     }
-    
+
     function save_preference($object) {
         return $this->save_object($object);
     }
-    
+
     function save_preferences($prefs)
     {
         // get existing preference objects, map new values
@@ -194,7 +194,7 @@ class PL_prefs extends PL_handle_mgr {
         {
             $objects[$k] = $v;
         }
-        
+
         // check for default values, if they are not set - add them to the objects to save
         foreach($this->default_prefs as $k => $v)
         {
@@ -205,7 +205,7 @@ class PL_prefs extends PL_handle_mgr {
         }
         return $this->save_objects($objects);
     }
-    
+
     function delete_preference($object) {
         return $this->delete_object($object);
     }

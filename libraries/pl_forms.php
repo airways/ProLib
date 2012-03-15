@@ -5,17 +5,17 @@ class PL_forms {
     {
         $form = array();
 
-        
+
         foreach($object as $key => $value)
         {
             if(substr($key, 0, 2) != "__") {
-                
+
                 if(array_key_exists($key, $types)) {
                     $type = $types[$key];
                 } else {
                     $type = "input";
                 }
-                
+
                 if(is_array($type)) {
                     if(count($type) == 3)
                         $option_settings = $type[2];
@@ -26,7 +26,7 @@ class PL_forms {
                 } else {
                     $options = array();
                 }
-                
+
                 switch($type)
                 {
                     case 'read_only':
@@ -46,7 +46,7 @@ class PL_forms {
                         foreach($option_settings as $k => $settings)
                         {
                             $control .= '<div id="'.$key.'_'.$k.'" class="edit_settings">';
-                            
+
                             if(!isset($object->settings))
                             {
                                 echo 'No settings array exists for object of type ' . get_class($object);
@@ -73,7 +73,7 @@ class PL_forms {
                                         $control .= form_input($key.'_'.$settings_field['name'], $setting_value);
                                         break;
                                     case 'dropdown':
-                                        $control .= form_dropdown($key.'_'.$settings_field['name'], 
+                                        $control .= form_dropdown($key.'_'.$settings_field['name'],
                                                     isset($settings_field['options']) ? $settings_field['options'] : array(),
                                                     $setting_value);
                                         break;
@@ -88,9 +88,9 @@ class PL_forms {
                         $field = array('lang_field' => $key, 'control' => $this->render_grid($key, $options['headings'], $options['options'], $value));
                         if(array_key_exists('flags', $options) && strpos($options['flags'], 'has_param'))
                         {
-                            
+
                         }
-                        
+
                         $form[] = $field;
                         break;
                     case 'checkbox':
@@ -100,7 +100,7 @@ class PL_forms {
                         $form[] = array('lang_field' => $key, 'control' => form_input($key, $value));
                         break;
                 } // switch($type)
-                
+
                 if(array_key_exists('after', $extra) AND array_key_exists($key, $extra['after']))
                 {
                     foreach($extra['after'][$key] as $after)
@@ -110,10 +110,10 @@ class PL_forms {
                 }
             }
         }
-        
+
         return $form;
     } // function _create_cp_form
-    
+
     function simple_select_options($options)
     {
         $result = array();
@@ -123,11 +123,11 @@ class PL_forms {
         }
         return $result;
     }
-    
+
     function render_grid($key, $headings, $options, $value)
     {
         $out = '';
-        
+
         $dropdown_options = array();
         $help = array();
         foreach($options as $option => $opts)
@@ -141,36 +141,36 @@ class PL_forms {
             }
         }
         $dropdown = form_dropdown('addgridrow_'.$key, $dropdown_options, array(), 'id="'.'addgridrow_'.$key.'"');
-        
+
         $out .= '<div id="field_'.$key.'" class="pl_grid" data-key="'.$key.'">';
-        
+
         $out .= '<table id="gridrow_'.$key.'" class="plain"><tbody><tr>';
-        
+
         foreach($headings as $heading)
         {
             $out .= '<th>'.$heading.'</th>';
         }
         $out .= '</tr>';
-        
+
         $rows = explode('|', $value);
         $i = 1;
         $grid = array();
-        
+
         foreach($rows as $row)
         {
             $cells = explode('[',$row);
-            
+
             if(count($cells) > 1)
             {
                 $cells[1] = str_replace(']', '', $cells[1]);
             }
-            
+
             if($cells[0] != 'none' && $cells[0] != '')
             {
                 $grid[] = $cells;
-                
+
                 $out .= '<tr class="grid_row"><td>'.$options[$cells[0]]['label'].'</td>';
-                
+
                 if(isset($options[$cells[0]]['flags']) && strpos($options[$cells[0]]['flags'], 'has_param') !== FALSE)
                 {
                     $out .=  '<td><input data-key="'.$key.'" data-opt="'.$cells[0].'" class="grid_param" type="text" size="5" value="'.(isset($cells[1])?$cells[1]:'').'"/><span class="help">'
@@ -179,22 +179,22 @@ class PL_forms {
                     $out .= '<td>&nbsp;<span class="help">'
                         .(isset($options[$cells[0]]['flags']['help']) ? $options[$cells[0]]['flags']['help'] : '').'</span></td>';
                 }
-                
+
                 // $out .= '<td>'.form_button('remove_'.$key.'_'.$i, 'X', 'class="remove_grid_row" data-key="'.$key.'" data-opt="'.$cells[0].'" ').'</tr>';
                 $out .= '<td><a href="#" class="remove_grid_row" name="remove_'. $key .'_'. $i .'" data-key="'. $key .'" data-opt="'.$cells[0].'">X</a></td></tr>';
             }
-            
+
             $i++;
         }
-        
+
         $out .= '</tbody></table>';
 
         // $out .= '<h4>Add another rule</h4><br/>'.$dropdown.' '.form_button('addgridrow_'.$key, 'Add', 'id="addgridrow_'.$key.'" class="add_grid_row"');
         $out .= '<h4>Add another rule</h4>'.$dropdown;
         $out .= '<a href="#" name="addgridrow_'. $key .' id="addgridrow_'.$key.' class="add_grid_row">Add</a>';
-        
+
         $out .= '<input type="hidden" name="'.$key.'" value="'.$value.'" />';
-        
+
         $out .= '<script type="text/javascript">';
         $out .= 'pl_grid.options["'.$key.'"] = ' . json_encode($options) . ';';
         $out .= 'pl_grid.help["'.$key.'"] = ' . json_encode($help) . ';';
@@ -214,7 +214,7 @@ class PL_forms {
         $out .= '};';*/
         $out .= 'pl_grid.bind_events("'.$key.'", "gridrow_'.$key.'");</script>';
         $out .= '</div>';
-        
+
         return $out;
     } // function _render_grid
 
