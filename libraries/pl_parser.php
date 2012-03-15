@@ -18,13 +18,11 @@
  **/
 
 class PL_parser {
-    var $dst_enabled = FALSE;
-    
     function __construct()
     {
         $this->EE = &get_instance();
     }
-    
+
     function fetch_param_group($group_name, $default=array())
     {
         $result = $default;
@@ -38,50 +36,75 @@ class PL_parser {
         }
         return $result;
     }
-    
-    function parse_variables($rowdata, &$row_vars, $pairs, $backspace = 0, 
+
+    function parse_variables($rowdata, &$row_vars, $pairs, $backspace = 0,
         $options = array(), $reparse_vars = array())
     {
         // sadly we cannot use parse_variables_row because it only parses each tag_pair once! WTF!
         // we *have* to have multiple tag pairs support so that you can have fun stuff like a row
         // of headers for a table, as well as each row of data, powered by {fields}...{/fields}.
 
-        // fill in default options if they are not provided
-        $default_options = array(
-            'dst_enabled' => FALSE
+        return $this->parse_variables_ex(array(
+            'rowdata'       => $rowdata,
+            'row_vars'      => &$row_vars,
+            'pairs'         => $pairs,
+            'backspace'     => $backspace,
+            'options'       => $options,
+            'reparse_vars'  => $reparse_vars,
+        ));
+    }
+
+    function parse_variables_ex($params=array())
+    {
+        // Setup default parameters
+        $param_defaults = array(
+            'rowdata'           => '',
+            'row_vars'          => '',
+            'pairs'             => array(),
+            'backspace'         => 0,
+            'options'           => array(),
+            'reparse_vars'      => array(),
+            'dst_enabled'       => FALSE,
+            'variable_prefix'   => '',
         );
-        
-        foreach($default_options as $k => $v)
+
+        // Check for invalid parameters
+        foreach($params as $k => $v)
         {
-            if(!array_key_exists($k, $options))
+            if(!array_key_exists($k, $param_defaults))
             {
-                $options[$k] = $default_options[$k];
+                exit('Invalid parameter provided to parse_variables_ex: '.$k);
             }
         }
-        
-        // set options as given
-        foreach($options as $key => $val)
+
+        // Load parameters from combined defaults and provided values
+        $params = array_merge($param_defaults, $params);
+
+        foreach($params as $k => $v)
         {
-            $this->$key = $val;
+            $this->$k = $v;
         }
-        
+
+        // Load into local variables
+        extract($params);
+
         if(is_object($row_vars))
         {
             $row_vars = (array)$row_vars;
         }
-        
+
         // prep basic conditionals
-        $rowdata = $this->EE->functions->prep_conditionals($rowdata, $row_vars);
+        $rowdata = $this->EE->functions->prep_conditionals($rowdata, $this->_make_conditionals($row_vars));
 
         $custom_date_fields = array();
         $this->date_vars_params = array();
-        
+
 
         foreach($row_vars as $key => $val)
         {
             //if (strpos($rowdata, LD.$key) !== FALSE)
             //{
-                if (preg_match_all("/".LD.$key."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
+                if (preg_match_all("/".LD.$variable_prefix.$key."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
                 {
                     for ($j = 0; $j < count($matches[0]); $j++)
                     {
@@ -92,10 +115,12 @@ class PL_parser {
                 }
             //}
         }
-        
+
         // parse single variables
         foreach ($this->EE->TMPL->var_single as $key => $val)
         {
+            $key = $this->_remove_prefix($key);
+
             // prevent array to string errors
             if(array_search($key, $pairs) === FALSE)
             {
@@ -105,27 +130,33 @@ class PL_parser {
                 {
                     if(is_object($row_vars[$var]) AND is_callable($row_vars[$var]))
                     {
-                        $rowdata = $this->_swap_var_single($key, $row_vars[$var]($row_vars), $rowdata);
+                        $rowdata = $this->_swap_var_single($variable_prefix.$key, $row_vars[$var]($row_vars), $rowdata);
                     } else {
-                        $rowdata = $this->_swap_var_single($key, $row_vars[$var], $rowdata);
+                        $rowdata = $this->_swap_var_single($variable_prefix.$key, $row_vars[$var], $rowdata);
                     }
                 }
             }
         }
 
+        // If a variable is not parsing, remember to add it to the list of valid var pairs!
         foreach($pairs as $var_pair)
         {
             foreach ($this->EE->TMPL->var_pair as $key => $val)
             {
+                $key = $this->_remove_prefix($key);
+
+                // If the found variable pair key starts with the declared variable pair - then it is probably the variable pair,
+                // possibly with some arguments.
                 if(strpos($key, $var_pair) === 0)
                 {
-                    $count = preg_match_all($pattern = "/".LD.$key.RD."(.*?)".LD."\/".$var_pair.RD."/s", $rowdata, $matches);
+                    // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
+                    // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
+                    // turned off - that is the basic formula for finding tags with parameters.
+                    $count = preg_match_all($pattern = "/".LD.$variable_prefix.$key.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
 
                     // if we got some matches
                     if($count > 0)
                     {
-                        // echo $key.'<br/>';
-                                            
                         // $matches[0] is an array of the full pattern matches
                         // $matches[1] is an array of the contents of the inside of each variable pair
                         for($i = 0; $i < count($matches[0]); $i++)
@@ -144,17 +175,17 @@ class PL_parser {
                                     {
                                         $data = $data($row_vars[$var_pair], $data_key, $pair_row_data);
                                     } else {
-                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('key' => $data_key));
-                                        $pair_row_data  = $this->EE->TMPL->swap_var_single('key', $data_key, $pair_row_data);
+                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.'key' => $data_key));
+                                        $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.'key', $data_key, $pair_row_data);
 
-                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array('row' => $data));
-                                    
-                                        $pair_row_data  = $this->EE->TMPL->swap_var_single('row', $data, $pair_row_data);
+                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.'row' => $data));
+
+                                        $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.'row', $data, $pair_row_data);
                                     }
                                 } else {
-                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $data);
+                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($data));
                                     $prepped_conditionals = array();
-                                    
+
                                     foreach($data as $k => $v) {
                                         if(is_object($v) AND is_callable($v)) {
                                             if ($v instanceof PL_Callback_Interface) {
@@ -167,7 +198,7 @@ class PL_parser {
                                         }
                                         $prepped_conditionals[$k] = $value;
                                     }
-                                    
+
                                     foreach($data as $k => $v)
                                     {
                                         // handle data callback
@@ -181,7 +212,7 @@ class PL_parser {
                                             // $f_matches[1] is an array of segments for each tag
                                             // $f_matches[2] is an array of the parameters for each tag
                                             // $f_matches[3] is an array of the contents of the inside of each variable pair
-                                            
+
                                             // did we find any pairs for the tag?
                                             // find matches on this subpair (this is used for celltype substitution in mason, for instance)
                                             if($f_count != 0)
@@ -195,12 +226,12 @@ class PL_parser {
                                                     $f_pair_params = $f_matches[2][$fi];
                                                     $f_pair_params = $this->parse_params($f_pair_params);
                                                     $f_pair_data = $f_matches[3][$fi];
-                                                    
+
                                                     //echo $k.'='.$v->celltype->name.'<br/>';
                                                     $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data, $f_pair_params, $f_segments), $pair_row_data);
                                                 }
                                             }
-                                                                  
+
                                             // find single tags, not mutually exclusive
 
                                             $f_count = preg_match_all($f_pattern = "/".LD.$k."(:[^ ]+?)?(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."/s", $pair_row_data, $f_matches);
@@ -216,33 +247,33 @@ class PL_parser {
                                                     $f_segments = $this->parse_segments($f_segments);
                                                     $f_params = $f_matches[2][$fi];
                                                     $f_params = $this->parse_params($f_params);
-                                                    
-                                                    //echo $k.'='.$v->celltype->name.'<br/>';                                   
+
+                                                    //echo $k.'='.$v->celltype->name.'<br/>';
                                                     $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match, $f_params, $f_segments), $pair_row_data);
                                                 }
                                             }
                                         } else {
                                             if(is_array($v)) {
-                                                $pair_row_data = $this->parse_variables($pair_row_data, $data, array($k));
+                                                $pair_row_data = $this->parse_variables_ex(array_merge($params, array('rowdata' => $pair_row_data, 'row_vars' => $data, 'pairs' => array($k))));
                                             } else {
                                                 if(array_key_exists($k, $row_vars) === FALSE)
                                                 {
-                                                    $pair_row_data  = $this->_swap_var_single($k, $v, $pair_row_data);
+                                                    $pair_row_data  = $this->_swap_var_single($variable_prefix.$k, $v, $pair_row_data);
                                                     if (in_array($k, $reparse_vars)) {
-                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $prepped_conditionals);
+                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($prepped_conditionals));
                                                     }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                                
+
                                 if(isset($this->row_callback))
                                 {
                                     $callback = &$this->row_callback;
                                     $pair_row_data = $callback($pair_row_data);
                                 }
-                                
+
                                 $pair_data .= $pair_row_data;
                             }
 
@@ -258,9 +289,27 @@ class PL_parser {
         {
             $rowdata = substr($rowdata, 0, - $backspace);
         }
-        
+
         return $rowdata;
     } // function parse_variables
+
+    function _remove_prefix($key)
+    {
+        if(substr($key, 0, strlen($this->variable_prefix)) == $this->variable_prefix) {
+            $key = substr($key, strlen($this->variable_prefix), strlen($key));
+        }
+        return $key;
+    }
+
+    function _make_conditionals($row_vars)
+    {
+        $conditionals = array();
+        foreach($row_vars as $k => $v)
+        {
+            $conditionals[$this->variable_prefix.$k] = $v;
+        }
+        return $conditionals;
+    }
 
     function _swap_var_single($key, &$val, &$data)
     {
@@ -280,23 +329,23 @@ class PL_parser {
             //    $localize = TRUE;
             //    if ($row['field_dt_'.$dval] != '')
             //    {
-                if($this->dst_enabled)
+                if($dst_enabled)
                 {
                     $temp_val = $this->EE->localize->simpl_offset($temp_val, $row['field_dt_'.$dval]);
                     $localize = FALSE;
                 }
             //}
             */
-            
+
             // convert to a timestamp
             $time = strtotime($temp_val);
-            
+
             $val = str_replace($this->date_vars_params[$key], $this->EE->localize->convert_timestamp($this->date_vars_params[$key], $time, $localize, FALSE), $this->date_vars_vals[$key]);
         }
-        
+
         return $this->EE->TMPL->swap_var_single($key, $val, $data);
     }
-    
+
     function parse_variables_legacy($rowdata, &$row_vars, $backspace = 0)
     {
         $rowdata = $this->EE->TMPL->parse_variables($rowdata, $row_vars);
@@ -308,17 +357,17 @@ class PL_parser {
 
         return $rowdata;
     }
-    
+
     /**
      * Parse segments from matched tag
-     * 
+     *
      * @param $code
      * @return array
      */
     function parse_segments($code)
     {
         $result = array();
-                
+
         if(strlen($code) == 0 || strpos($code,':') === false) {
             return $result;
         }
@@ -328,17 +377,17 @@ class PL_parser {
         }
         return explode(':', $matches[1]);
     }
-    
+
     function parse_params($code)
     {
         $result = array();
-        
+
         if(strlen($code) == 0) {
             return $result;
         }
-        
+
         $code .= ' '; // add extra space to trigger name adding so we only have to do it when state 1 switches to state 0
-        
+
         $name = '';
         $value = '';
         $state = 0;
@@ -381,7 +430,7 @@ class PL_parser {
                             $value .= $c;
                             break;
                     }
-                    
+
                     // done with the value?
                     if($state == 0 OR $i == strlen($code)-1)
                     {
@@ -402,7 +451,7 @@ class PL_parser {
                     break;
             }
         }
-        
+
         return $result;
     }
 }

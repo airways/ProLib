@@ -28,7 +28,7 @@ class PL_channel_fields {
 
     /**
      * Get all custom fields defined for a particular field group and site
-     * 
+     *
      * @param $group_id
      * @param  $site_id
      * @return array(field_id => field_object)
@@ -39,29 +39,29 @@ class PL_channel_fields {
         {
             $site_id = $this->EE->config->item('site_id');
         }
-        
+
         $result = array();
-        
+
         if($group_id)
         {
             $this->EE->db->where('group_id', $group_id);
         }
-        
+
         $fields_query = $this->EE->db
                             ->where('site_id', $site_id)
                             ->get('exp_channel_fields');
-        
+
         foreach($fields_query->result() as $field)
         {
             $result[$field->field_id] = new PL_ChannelField($field);
         }
-        
+
         return $result;
     }
 
     /**
      * Get field
-     * 
+     *
      * @param $group_id
      * @param $field_name
      * @param $site_id
@@ -73,32 +73,32 @@ class PL_channel_fields {
         {
             $site_id = $this->EE->config->item('site_id');
         }
-        
+
         $result = FALSE;
-        
+
         if($group_id)
         {
             $this->EE->db->where('group_id', $group_id);
         }
-        
+
         $fields_query = $this->EE->db
                             ->where('site_id', $site_id)
                             ->where('field_name', $field_name)
                             ->get('exp_channel_fields');
-        
+
         if($fields_query->num_rows() > 0)
         {
             $result = new PL_ChannelField($fields_query->row());
         }
-        
+
         return $result;
     }
 
 
-    
+
     /**
      * Create a new custom field in the given group
-     * 
+     *
      * @param $group_id
      * @param  $data field data with keys matching the fields of PL_ChannelField
      * @param $site_id
@@ -110,44 +110,44 @@ class PL_channel_fields {
         {
             $site_id = $this->EE->config->item('site_id');
         }
-        
+
         // Create new field object
         $result = new PL_ChannelField($data);
         $result->group_id = $group_id;
         $result->site_id = $site_id;
-        
+
         // Remove the field_id so we won't try to insert a record with a bad ID
         unset($result->field_id);
-        
+
         // Insert the new field record
         $this->EE->db->insert('exp_channel_fields', $result);
-        
+
         if($this->EE->db->affected_rows() == 1)
         {
             // Save the inserted row ID
             $result->field_id = $this->EE->db->insert_id();
-            
+
             // Create the needed columns on the exp_channel_data table for this new custom field
             $fields = array(
                 'field_id_'.$result->field_id => array('type' => 'text'),
                 'field_ft_'.$result->field_id => array('type' => 'tinytext'),
             );
-            
+
             $this->EE->load->dbforge();
             $forge = &$this->EE->dbforge;
-            
+
             $forge->add_column('channel_data', $fields);
-            
+
         } else {
             $result = FALSE;
         }
-        
+
         return $result;
     }
-    
+
     /**
      * Check if a field with the given name exists in the field group
-     * 
+     *
      * @param $group_id
      * @param $field_name
      * @return TRUE/FALSE
@@ -156,7 +156,7 @@ class PL_channel_fields {
     {
         return $this->EE->db->where(array('group_id' => $group_id, 'field_name' => $field_name))->count_all_results('exp_channel_fields');
     }
-    
+
 }
 
 class PL_ChannelField {
@@ -186,7 +186,7 @@ class PL_ChannelField {
     var $field_order = FALSE;
     var $field_content_type = FALSE;
     var $field_settings = FALSE;
-    
+
     /**
      * Class constructor
      *
@@ -203,10 +203,10 @@ class PL_ChannelField {
             }
         }
     }
-    
+
     /**
      * Save the field object back to it's database table
-     * 
+     *
      * @return void
      */
     function save()
@@ -215,10 +215,10 @@ class PL_ChannelField {
         // the database class from getting confused
         $EE = &$this->EE;
         unset($this->EE);
-        
+
         // Update the record in the database
         $EE->db->update('exp_channel_fields', $this, array('field_id' => $this->field_id));
-        
+
         // Restore the EE object reference
         $this->EE = &$EE;
     }

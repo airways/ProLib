@@ -38,18 +38,18 @@ require_once 'libraries/pl_hooks.php';
 
 function prolib(&$object, $package_name="")
 {
-    
+
     global $PROLIB;
-    
+
     $object->EE = &get_instance();
     $object->CI = &get_instance();
-    
+
     if(!isset($PROLIB))
     {
         $PROLIB = new Prolib();
         $PROLIB->init();
     }
-    
+
     $object->prolib         = $PROLIB;
     $PROLIB->setup($object, $package_name);
 
@@ -75,15 +75,15 @@ function prolib(&$object, $package_name="")
 class Prolib {
     var $package_name = FALSE;
     var $caches = array();
-    
+
     function init()
     {
         $this->EE = &get_instance();
-        
+
         // create "library" classes - only called once per-request, these
         // objects are treated as singletons and attached to whatever objects
         // need to use them through their $this->prolib, initialized by prolib()
-        
+
         $this->pl_hooks             = new PL_Hooks();
         $this->pl_debug             = new PL_debug();
         $this->pl_email             = new PL_email();
@@ -108,7 +108,7 @@ class Prolib {
         } else {
             $this->dst_enabled = FALSE;
         }
-        
+
         // initialize caches
         $this->cache['get_fields'] = array();
     }
@@ -117,20 +117,20 @@ class Prolib {
     {
         // attaches the library to a particular package, call every time
         // prolib() is called.
-        
+
         $this->package_name = $package_name;
-        
+
         $theme = $this->EE->config->item('theme_folder_url');
         if(substr($theme, -1) != '/') $theme .= '/';
         $object->theme_url = $theme.'third_party/'.$package_name.'/';
-        
+
         if(defined('BASE'))
         {
             defined('ACTION_BASE') OR define('ACTION_BASE', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name);
             defined('TAB_ACTION') OR define('TAB_ACTION', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('CP_ACTION') OR define('CP_ACTION', 'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP.'method=');
         }
-        
+
         return $this;
     }
 
@@ -141,11 +141,11 @@ class Prolib {
          *   1 - show debug info only to super admins
          *   2 - show debug info to everyone
          */
-        
+
         return ($this->EE->config->item('debug') == 1 AND $this->EE->session->userdata['group_id'] == 1)
              OR $this->EE->config->item('debug') == 2;
     }
-    
+
     function cp_sub_page($page, $added_title = '')
     {
         if(isset($this->_package_name))
@@ -157,16 +157,16 @@ class Prolib {
         $this->EE->cp->set_breadcrumb(ACTION_BASE.AMP.'module=pl_forms'.AMP, $this->EE->lang->line($package_name.'_module_name'));
         $this->EE->cp->set_variable('cp_page_title', lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
     }
-    
+
     function cp_start_edit($mcp, $op, $field_types, $id_field, $method_stub, $class, &$lib)
     {
         // Automatically get an object to edit and dispatch process_edit_* or process_new_* if request is a POST
         $this->EE->load->library('table');
-        
+
         // usage:
         //   list($done, $block_type_id, $block, $vars) = $this->prolib->cp_start_edit($this, $editing, 'block_type_id', 'block_type', 'Mason_block');
         //   if($done) return;
-        
+
         // find checkboxes and set their values to "n" if not present
         foreach($field_types as $field => $type)
         {
@@ -178,11 +178,11 @@ class Prolib {
                 }
             }
         }
-        
+
         if($op != 'new')
         {
             $object_id = (int)$this->EE->input->get_post($method_stub.'_id');
-            
+
             $object = $lib->{'get_'.$method_stub}($object_id);
             #$this->debug($object, TRUE);
         } else {
@@ -200,16 +200,16 @@ class Prolib {
             //    if($mcp->{'process_new_'.$method_stub}($object_id, $object)) $done = TRUE;
             //}
         }
-        
+
         $vars = array(
             $method_stub.'_id' => $object_id,
             //'action_url' => CP_ACTION.($editing?'edit_':'new_').$method_stub.AMP.($editing?$method_stub.'_id='.$object_id:'')
             'action_url' => CP_ACTION.$op.'_'.$method_stub.AMP.($op!='new'?$method_stub.'_id='.$object_id:'')
         );
-        
+
         return array($done, $object_id, $object, $vars);
     }
-    
+
     function copy_post(&$object, $class = FALSE)
     {
         if(!$class) $class = get_class($object);
@@ -227,7 +227,7 @@ class Prolib {
         }
         return $object;
     }
-    
+
     function copy_data(&$to_object, $class, $data)
     {
         foreach($this->get_fields($class) as $k)
@@ -244,7 +244,7 @@ class Prolib {
         }
         return $to_object;
     }
-    
+
     function get_fields($class)
     {
         if(!isset($this->cache['get_fields'][$class]))
@@ -257,7 +257,7 @@ class Prolib {
                 $this->cache['get_fields'][$class][] = $k;
             }
         }
-        
+
         return $this->cache['get_fields'][$class];
     }
 
@@ -271,7 +271,7 @@ class Prolib {
         }
         return $result;
     }
-    
+
     /**
      * Shorthand to call hooks implemented by the module. Don't include the package name - it is
      * prefixed automatically. So, calling prolib($this, 'mason')->hook('parse'); would trigger
@@ -280,15 +280,15 @@ class Prolib {
     function hook($hook, $data = FALSE)
     {
         $hook = ($this->package_name ? $this->package_name.'_' : '').$hook;
-        
+
         if ($this->EE->extensions->active_hook($hook) === TRUE)
         {
             return $this->EE->extensions->call($hook, $data);
         }
-        
+
         return $data;
     }
-    
+
     /**
      * Generic debug dumper that can use krumo if installed, otherwise prints a
      * <pre> wrapped print_r() outpuit for the given variable. Optionally exits
@@ -321,26 +321,31 @@ class Prolib {
         }
         return $result;
     }
-    
+
     function copy_values(&$from, &$to)
     {
+        if(!is_array($from) AND !is_object($from))
+        {
+            xdebug_print_function_stack('Invalid $from supplied to copy_values!');
+            var_dump($from);
+        }
         foreach($from as $key => $value)
         {
-            if(!is_array($value) 
+            if(!is_array($value)
                 AND !is_object($value)
                 AND substr($key, 0, 2) != '__')
             {
                 $to[$key] = $value;
             }
         }
-        
+
     }
-    
+
     function is_cp()
     {
         return REQ == 'CP';
     }
-    
+
     function is_safecracker()
     {
         if(REQ == 'PAGE')
@@ -356,7 +361,7 @@ class Prolib {
 
         return false;
     }
-    
+
     private function ee_saef_css()
     {
         $files[] = PATH_THEMES.'cp_themes/default/css/file_browser.css';
@@ -417,7 +422,7 @@ class Prolib {
             padding:                3px;
         }';
 
-        $cp_theme  = $this->EE->config->item('cp_theme'); 
+        $cp_theme  = $this->EE->config->item('cp_theme');
         $cp_theme_url = $this->EE->config->slash_item('theme_folder_url').'cp_themes/'.$cp_theme.'/';
 
         $out = str_replace('../images', $this->EE->config->slash_item('theme_folder_url') .'jquery_ui/'. $cp_theme .'/images', $out);

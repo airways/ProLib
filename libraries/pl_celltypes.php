@@ -71,7 +71,7 @@ class PL_celltypes {
                 var_dump($fieldtype);
                 exit;
             }
-            
+
             if($celltype->valid)
             {
                 if($full)
@@ -81,7 +81,7 @@ class PL_celltypes {
                     $result[$celltype->name] = $celltype->name;
                 }
             }
-            
+
             //echo $celltype->name.': '.$celltype->provider.'<br/>';
         }
         return $result;
@@ -111,13 +111,13 @@ class PL_celltypes {
         $path = PATH_THIRD.$name.'/';
 
         $EE->load->add_package_path($path);
-        
+
         // Check for a language file in the package
         if(file_exists(PATH_THIRD.$name.'/language/english/lang.'.$name.EXT))
         {
             $EE->lang->load($name, '', FALSE, FALSE, PATH_THIRD.$name.'/');
         }
-        
+
         // // save the current ci_view_path so we can get it back later
         // array_push(PL_CellTypes::$_ci_view_paths, $EE->load->_ci_view_path);
         // $EE->load->_ci_view_path = $path.'views/';
@@ -146,7 +146,7 @@ class PL_CellType {
     var $settings = FALSE;
     var $instance = FALSE;
     var $_apply_mason_shim = TRUE;
-    
+
     static $mason_celltypes = array('simple_text', 'simple_file');
     static $matrix_celltypes = array('text', 'date');
 
@@ -216,7 +216,7 @@ class PL_CellType {
         {
             $settings['entry_id'] = $entry_id;
         }
-        
+
         $settings['field_id'] = $field_id;
         $settings['field_name'] = $field_name;
         $settings['row_id'] = $row_id;
@@ -229,20 +229,20 @@ class PL_CellType {
         $this->instance->field_name = $field_name;
         $this->instance->row_id = $row_id;
         $this->instance->col_id = $col_id;
-        
+
         $this->instance->cell_name = 'mason_'.$field_name.'_column_'.$col_id.'['.$row_id.']';
         // if(!isset($settings['playa']))
         // {
         //     // Playa always adds a [] to the end of it's field_name, so we don't want to double add it
         //     $this->instance->cell_name .= '[]';
         // }
-        
+
     }
-    
+
     /**
-     * Return whether the field type instance contains a 
+     * Return whether the field type instance contains a
      * callable method beginning with $methodPrefix
-     * 
+     *
      * @param string $methodPrefix
      * @return bool
      */
@@ -256,24 +256,24 @@ class PL_CellType {
         }
         return false;
     }
-    
+
     function has_method($method)
     {
         return method_exists($this->instance, $method);
     }
-    
+
     function display_cell($field_id, $field_name, $row_id, $col_id, $settings, $data, $template=FALSE)
     {
         $this->_settings($field_id, $field_name, $row_id, $col_id, $settings);
-        
+
         if($this->matrix_celltype)
         {
             $this->EE->session->cache['matrix']['theme_url'] = $this->EE->config->slash_item('theme_folder_url').'third_party/matrix/';
         }
 
-        
+
         PL_celltypes::push_package_path($this->instance);
-        
+
         if(method_exists($this->instance, 'display_cell'))
         {
             $result = $this->instance->display_cell($data);
@@ -286,7 +286,7 @@ class PL_CellType {
             $result = array('data' => $result);
         }
         PL_celltypes::pop_package_path();
-        
+
         unset($settings['__EE']);
         unset($settings['__mgr']);
 
@@ -302,14 +302,14 @@ class PL_CellType {
             //echo "result:".$result['data'];
             //exit;
         }
-        
+
         return $result;
     }
 
     function save_cell($field_id, $field_name, $row_id, $col_id, $settings, $data, $apply_shim = FALSE)
     {
         $this->_settings($field_id, $field_name, $row_id, $col_id, $settings);
-        
+
         $this->instance->settings = $this->settings;
         if(method_exists($this->instance, 'save_cell'))
         {
@@ -322,11 +322,11 @@ class PL_CellType {
             return $data;
         }
     }
-    
+
     function post_save_cell($entry_id, $field_id, $field_name, $row_id, $col_id, $settings, $data, $apply_shim = FALSE)
     {
         $this->_settings($field_id, $field_name, $row_id, $col_id, $settings, $entry_id);
-        
+
         $this->instance->settings = $this->settings;
         if(method_exists($this->instance, 'post_save_cell'))
         {
@@ -371,7 +371,7 @@ class PL_CellType {
             show_error('Unable to save settings for cell type '.$this->name);*/
         }
     }
-    
+
     function pre_process(&$entry_row, $field_id, $row_id, $col_id, $data, $params = array(), $tagdata = FALSE)
     {
         if (method_exists($this->instance, 'pre_process'))
@@ -385,15 +385,15 @@ class PL_CellType {
             return $data;
         }
     }
-    
+
     function replace_tag(&$entry_row, $field_id, $row_id, $col_id, $data, $params = array(), $tagdata = FALSE)
     {
         return $this->replaceType('replace_tag', $entry_row, $field_id, $row_id, $col_id, $data, $params, $tagdata);
     }
-    
+
     /**
      * Support method for additional replace tag methods
-     * 
+     *
      * @param string $replaceMethod
      * @param $entry_row
      * @param $field_id

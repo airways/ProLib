@@ -18,43 +18,51 @@
  **/
 
 if(!class_exists('PL_handle_mgr')) {
-class PL_handle_mgr 
+class PL_handle_mgr
 {
     var $table = "";
     var $singular = "";
     var $class = "";
     var $serialized = array('settings');
-    
+
     function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE)
     {
         $this->EE = &get_instance();
         $this->EE->db->cache_off();
-        
+
         if($table) $this->table = $table;
         if($singular) $this->singular = $singular;
         if($class) $this->class = $class;
         if($serialized) $this->serialized = $serialized;
     }
-    
+
     function count()
     {
         return $this->EE->db->count_all($this->table);
     }
-    
+
     function create($data)
     {
         return $this->new_object($data);
     }
-    
+
     function new_object($data)
     {
         // Create new table for the form
         $this->EE->load->dbforge();
         $forge = &$this->EE->dbforge;
-        
+
         foreach($this->serialized as $field) {
             if(isset($data[$field])) {
                 $data[$field] = serialize($data[$field]);
+            }
+        }
+
+        foreach($data as $k => $v)
+        {
+            if(is_array($v) OR $v == 'Array')
+            {
+                xdebug_print_function_stack('Attempting to save array as field value: '.$k);
             }
         }
 
@@ -66,10 +74,10 @@ class PL_handle_mgr
         {
             $object->init($this);
         }
-        
+
         return $object;
     }
-    
+
     function get($handle, $show_error = TRUE)
     {
         return $this->get_object($handle, $show_error);
@@ -79,29 +87,29 @@ class PL_handle_mgr
     {
         $template = FALSE;
         $object = FALSE;
-        
-        if(is_numeric($handle)) 
+
+        if(is_numeric($handle))
         {
             $query = $this->EE->db->select('*')
                                   ->where($this->singular . '_id', $handle)
                                   ->get($this->table);
-        } 
+        }
         else
         {
             $query = $this->EE->db->select('*')
                                   ->where($this->singular . '_name', $handle)
                                   ->get($this->table);
         }
-        
-        if($query->num_rows > 0) 
+
+        if($query->num_rows > 0)
         {
             $class = $this->class;
             // echo '<b>____ new '.$class.'</b> '.$handle.'<br/>';
             $object = new $class($query->row());
             // echo get_class($object).'<br/>';
             // var_dump($query->row());
-            
-            
+
+
             $object_id = $object->{$this->singular . '_id'};
 
             foreach($this->serialized as $field) {
@@ -137,7 +145,7 @@ class PL_handle_mgr
                 $object->__mgr = $this;
             }
         }
-        
+
         if(method_exists($object, 'post_get'))
         {
             $object->post_get($this);
@@ -150,22 +158,22 @@ class PL_handle_mgr
     {
         return $this->get_objects($where, $array_type, $order, $offset, $perpage);
     }
-    
+
     function get_objects($where = FALSE, $array_type = FALSE, $order = FALSE, $offset = FALSE, $perpage = FALSE)
     {
         $result = array();
-        
+
         $this->EE->db->select("{$this->singular}_id");
-        
+
         if($where && is_array($where))
         {
             $this->EE->db->where($where);
         }
-        
+
         if($order)
         {
             if(!is_array($order)) $order = array($order);
-            
+
             foreach($order as $field)
             {
                 if(is_array($field))
@@ -177,21 +185,21 @@ class PL_handle_mgr
             }
 
         }
-        
+
         if($offset || $perpage)
         {
             $this->EE->db->limit($perpage, $offset);
         }
-        
+
         $query = $this->EE->db->get($this->table);
 
         if($query->num_rows > 0)
         {
-            foreach($query->result() as $row) 
+            foreach($query->result() as $row)
             {
-                
+
                 $obj = $this->get_object($row->{$this->singular . '_id'});
-                
+
                 switch($array_type)
                 {
                     case 'handle':
@@ -207,22 +215,22 @@ class PL_handle_mgr
         }
         return $result;
     }
-    
-    function save($object, $where = false) 
+
+    function save($object, $where = false)
     {
         return $this->save_object($object, $where);
     }
-    
-    function save_object($object, $where = false) 
+
+    function save_object($object, $where = false)
     {
         foreach($this->serialized as $field) {
             if(isset($object->$field)) {
                 $object->$field = serialize($object->$field);
             }
         }
-                
+
         $o = $this->remove_transitory($object);
-        
+
         if(method_exists($object, 'pre_save'))
         {
             $object->pre_save($this, $o);
@@ -231,7 +239,7 @@ class PL_handle_mgr
         // $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'});
         //  if($where) $this->EE->db->where($where);
         //  $query = $this->EE->db->update($this->table, $o);
-        
+
         // First see if what we are about to update
         $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'});
         if($where) $this->EE->db->where($where);
@@ -268,10 +276,10 @@ class PL_handle_mgr
         {
             $object->post_save($this, $o);
         }
-                
+
         return $object;
     }
-    
+
     function save_objects($objects)
     {
         $result = TRUE;
@@ -282,12 +290,12 @@ class PL_handle_mgr
         return $result;
     }
 
-    function delete($object) 
+    function delete($object)
     {
         return $this->delete_object($object);
     }
-    
-    function delete_object($object) 
+
+    function delete_object($object)
     {
         $result = FALSE;
         $abort = FALSE;
@@ -295,13 +303,13 @@ class PL_handle_mgr
         {
             $abort = $object->pre_delete($this);
         }
-        
+
         if(!$abort)
         {
             $result = $query = $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'})
                                             ->delete($this->table);
         }
-        
+
         if(method_exists($object, 'post_delete'))
         {
             $object->post_delete($this);
@@ -330,22 +338,22 @@ class PL_handle_mgr
                     $data_array[$field] = $value;
             }
         }
-        
+
         if(method_exists($object, 'post_remove_transitory'))
         {
             $data_array = $object->post_remove_transitory($data_array);
         }
-        
+
         return $data_array;
     }
-    
+
 }} // class PL_handle_mgr
 
 if(!class_exists('PL_RowInitialized')) {
-class PL_RowInitialized 
+class PL_RowInitialized
 {
     var $__mgr = NULL;
-    
+
     function __construct($row, &$mgr=NULL)
     {
         $this->__EE = &get_instance();
@@ -353,22 +361,22 @@ class PL_RowInitialized
         $this->__mgr = &$mgr;
         if($row)
         {
-            foreach($row as $key => $value) 
+            foreach($row as $key => $value)
             {
                 $this->$key = $value;
             }
         }
     }
-    
+
     function save()
     {
         $this->__mgr->save($this);
     }
-    
-    function dump() 
+
+    function dump()
     {
         echo "<b>" . get_class($this)  . "</b><br/>";
-        foreach($this as $key => $value) 
+        foreach($this as $key => $value)
         {
             echo '&nbsp;&nbsp;-&nbsp;&nbsp;'.$key.'='.(is_object($value) ? 'OBJECT: ' . get_class($value) : $value).'<br/>';
         }

@@ -19,23 +19,23 @@
  **/
 
 class PL_Encryption {
-    
+
     var $field_encryption_disabled = array();
-    
+
     /* ------------------------------------------------------------
      * Encryption API
      *
      * Ensures uniform use of the encrypt library
      * ------------------------------------------------------------ */
-    
+
     function __construct()
     {
         $this->EE = &get_instance();
     }
-    
+
     /**
      * Encrypt an array of values through the CI encrypt class.
-     * 
+     *
      * @param  $data - simple string values to encrypt
      * @return array
      */
@@ -70,10 +70,10 @@ class PL_Encryption {
         }
         return $result;
     } // function encrypt_values()
-    
+
     /**
      * Decrypt an array of values through the CI encrypt class.
-     * 
+     *
      * @param  $data - simple string values to decrypt
      * @return array
      */
@@ -85,7 +85,7 @@ class PL_Encryption {
         } else {
             $result = new stdClass();
         }
-        
+
         $this->EE->load->library('encrypt');
         $mcrypt_installed = function_exists('mcrypt_encrypt');
         foreach($data as $k => $v)
@@ -120,8 +120,20 @@ class PL_Encryption {
             }
         }
         return $result;
-    } // function decrypt_values()    
+    } // function decrypt_values()
 }
+
+/**
+ * Vault API
+ *
+ * Store data in a temporary table, with a SHA1 hash representing it. Note that this
+ * class should not be considered secure storage unless the application using it
+ * forces the encrypt library to be loaded and forces a unique encryption_key to
+ * be set.
+ *
+ * If encryption is not available, the values of objects stored in the vault will
+ * simply be Base64 encoded.
+ **/
 
 class PL_Vault {
     public function __construct($package)
@@ -130,17 +142,11 @@ class PL_Vault {
         $this->package = $package;
         $this->create_table();
     }
-    
-    /* ------------------------------------------------------------
-     * Vault API
-     *
-     * Store data in a temporary table, with a SHA1 hash representing it
-     * ------------------------------------------------------------ */
 
     private function create_table()
     {
         $this->table = $this->package.'_vault';
-        
+
         if(!$this->EE->db->table_exists($this->table))
         {
             $this->EE->load->dbforge();
@@ -164,17 +170,22 @@ class PL_Vault {
         $this->EE->db->where(array('expire <' => time(), 'expire !=' => 0))->delete($this->table);
 
     }
-    
+
     /**
      * Store a data object in the vault.
-     * 
+     *
      * @param  $data - array of simple strings to store
      * @return $string
      */
     function put($data, $expires=TRUE)
     {
-        $data = base64_encode($this->EE->encrypt->encode(serialize($data)));
-        
+        if(isset($this->EE->encrypt))
+        {
+            $data = base64_encode($this->EE->encrypt->encode(serialize($data)));
+        } else {
+            $data = base64_encode(serialize($data));
+        }
+
         $hash = sha1($data);
         if($expires)
         {
@@ -183,13 +194,13 @@ class PL_Vault {
             $expire = 0;
         }
         $this->EE->db->insert($this->table, array('hash' => $hash, 'data' => $data, 'expire' => $expire));
-        
+
         return $hash;
     }
 
     /**
      * Get an object from the store.
-     * 
+     *
      * @param  $hash - hash of data to get
      * @return array / FALSE
      */
@@ -199,16 +210,21 @@ class PL_Vault {
         if($query->num_rows() > 0)
         {
             $data = $query->row();
-            $data = unserialize($this->EE->encrypt->decode(base64_decode($data->data)));
+            if(isset($this->EE->encrypt))
+            {
+                $data = unserialize($this->EE->encrypt->decode(base64_decode($data->data)));
+            } else {
+                $data = unserialize(base64_decode($data->data));
+            }
             return $data;
         } else {
             return FALSE;
         }
     }
-    
+
     /**
      * Delete an object from the store.
-     * 
+     *
      * @param  $hash - hash of data to get
      * @return none
      */
