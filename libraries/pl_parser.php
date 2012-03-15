@@ -138,21 +138,25 @@ class PL_parser {
             }
         }
 
+        // If a variable is not parsing, remember to add it to the list of valid var pairs!
         foreach($pairs as $var_pair)
         {
             foreach ($this->EE->TMPL->var_pair as $key => $val)
             {
                 $key = $this->_remove_prefix($key);
                 
+                // If the found variable pair key starts with the declared variable pair - then it is probably the variable pair,
+                // possibly with some arguments.
                 if(strpos($key, $var_pair) === 0)
                 {
+                    // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
+                    // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
+                    // turned off - that is the basic formula for finding tags with parameters.
                     $count = preg_match_all($pattern = "/".LD.$variable_prefix.$key.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
 
                     // if we got some matches
                     if($count > 0)
                     {
-                        // echo $key.'<br/>';
-                                            
                         // $matches[0] is an array of the full pattern matches
                         // $matches[1] is an array of the contents of the inside of each variable pair
                         for($i = 0; $i < count($matches[0]); $i++)
