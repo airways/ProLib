@@ -39,3 +39,30 @@ if(!function_exists('array_presort'))
         return $result;
     }
 }
+
+if(!function_exists('array_filter_values'))
+{
+    /**
+     * Remove a set of values from an array.
+     */
+    function array_filter_values($array, $values)
+    {
+        // If we only got one value, wrap it in an array.
+        if(!is_array($values))
+        {
+            $values = array($values);
+        }
+        
+        // Loop over the provided values, finding their position in the array.
+        foreach($values as $value)
+        {
+            // Find the value in the array, and remove it. Repeat until the
+            // value can't be found any more.
+            while(($n = array_search($value, $array)) !== FALSE)
+            {
+                unset($array[$n]);
+            }
+        }
+        return $array;
+    }
+}
