@@ -508,4 +508,9 @@ class PL_Parser_ArrayWrapper {
         $this->key_var_name = $key_var_name;
         $this->row_var_name = $row_var_name;
     }
+    
+    public function __toString() {
+        xdebug_print_function_stack('PL_Parser_ArrayWrapper::__toString()!');
+        exit;
+    }
 }
