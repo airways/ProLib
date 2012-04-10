@@ -329,11 +329,11 @@ class PL_handle_mgr
         }
     }
 
-    function remove_transitory($object)
+    function remove_transitory(&$object)
     {
         $data_array = array();
         foreach($object as $field => $value) {
-            if(strpos($field, '__') !== 0) {
+            if(strpos($field, '__') !== 0 AND $field != 'EE') {
                 if(!is_object($value))
                     $data_array[$field] = $value;
             }
@@ -356,6 +356,7 @@ class PL_RowInitialized
 
     function __construct($row, &$mgr=NULL)
     {
+        $this->EE = &get_instance();
         $this->__EE = &get_instance();
         $this->__CI = &get_instance();
         $this->__mgr = &$mgr;
@@ -372,7 +373,18 @@ class PL_RowInitialized
     {
         $this->__mgr->save($this);
     }
+    
+    
+    function delete()
+    {
+        $this->__mgr->delete($this);
+    }
 
+    function data_array()
+    {
+        return $this->__mgr->remove_transitory($this);
+    }
+    
     function dump()
     {
         echo "<b>" . get_class($this)  . "</b><br/>";

@@ -351,13 +351,13 @@ class PL_CellType {
             {
                 $result = array(array('', $result));
             }
-
+            
             PL_celltypes::pop_package_path();
 
             if(!is_array($result)) exit('fail: display_cell_settings not returning an array');
             return $result;
         } else {
-            //show_error('Unable to display settings for cell type '.$this->name);
+            // echo 'Unable to display settings for cell type '.$this->name.'</br>';
             return array(array('', ''));
         }
     }

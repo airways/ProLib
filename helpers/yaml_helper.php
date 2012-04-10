@@ -42,3 +42,11 @@ function yaml_serialize($object, $array_level=1)
     return $yaml;
 
 }
+
+function yaml_parse($text, $array_level=1)
+{
+    $parser = new sfYamlParser();
+    $object = $parser->parse($text);
+    return $object;
+
+}

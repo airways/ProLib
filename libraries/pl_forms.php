@@ -8,6 +8,8 @@ class PL_forms {
 
         foreach($object as $key => $value)
         {
+            if(is_object($value)) continue;
+            
             if(substr($key, 0, 2) != "__") {
 
                 if(array_key_exists($key, $types)) {
