@@ -22,6 +22,7 @@ require_once 'helpers/array_helper.php';
 require_once 'helpers/icons_helper.php';
 require_once 'helpers/krumo_helper.php';
 require_once 'helpers/yaml_helper.php';
+require_once 'helpers/string_helper.php';
 require_once 'libraries/pl_callback_interface.php';
 require_once 'libraries/pl_debug.php';
 require_once 'libraries/pl_email.php';
@@ -65,6 +66,8 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_channel_fields  = &$object->prolib->pl_channel_fields;
     $object->EE->pl_encryption      = &$object->prolib->pl_encryption;
 
+    $object->site_id = $PROLIB->EE->config->item('site_id');
+    
     return $PROLIB;
 }
 
@@ -205,6 +208,54 @@ class Prolib {
             $method_stub.'_id' => $object_id,
             //'action_url' => CP_ACTION.($editing?'edit_':'new_').$method_stub.AMP.($editing?$method_stub.'_id='.$object_id:'')
             'action_url' => CP_ACTION.$op.'_'.$method_stub.AMP.($op!='new'?$method_stub.'_id='.$object_id:'')
+        );
+
+        return array($done, $object_id, $object, $vars);
+    }
+
+    function cp_start_edit_mgr(&$mcp, &$mgr, $op, $field_types)
+    {
+        // Automatically get an object to edit and dispatch process_edit_* or process_new_* if request is a POST
+
+        // find checkboxes and set their values to "n" if not present
+        foreach($field_types as $field => $type)
+        {
+            if($type == 'checkbox' or is_array($type) and $type[0] == 'checkbox')
+            {
+                if(!$this->EE->input->get_post($field))
+                {
+                    $_POST[$field] = 'n';
+                }
+            }
+        }
+
+        $object = FALSE;
+        if($op != 'new')
+        {
+            $object_id = (int)$this->EE->input->get_post($mgr->singular.'_id');
+            if($object_id)
+            {
+                $object = $mgr->get($object_id);
+            }
+        }
+        
+        if(!$object)
+        {
+            $object_id = 0;
+            $row = FALSE;
+            $class = $mgr->class;
+            $object = new $class($row, $mgr);
+        }
+
+        $done = FALSE;
+        if($_SERVER['REQUEST_METHOD'] == 'POST')
+        {
+            if($mcp->{'process_'.$op.'_'.$mgr->singular}($object_id, $object)) $done = TRUE;
+        }
+
+        $vars = array(
+            $mgr->singular.'_id' => $object_id,
+            'action_url' => CP_ACTION.$op.'_'.$mgr->singular.AMP.($op!='new' ? $mgr->singular.'_id='.$object_id : '')
         );
 
         return array($done, $object_id, $object, $vars);

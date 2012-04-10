@@ -48,7 +48,7 @@ class PL_validation extends CI_Form_validation {
         'is_natural_no_zero'            => array('label' => 'Natural Number other than zero'),
         'valid_email'                   => array('label' => 'Valid E-mail Address'),
         'valid_emails'                  => array('label' => 'Valid E-mail Addresses separated by commas'),
-        'valid_id'                      => array('label' => 'Valid IP Address'),
+        'valid_ip'                      => array('label' => 'Valid IP Address'),
         'valid_base64'                  => array('label' => 'Valid Base 64 Encoded Value'),
         'strip_tags'                    => array('label' => 'Strip HTML (filter)'),
         'trim'                          => array('label' => 'Trim (filter)'),
