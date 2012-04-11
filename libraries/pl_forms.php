@@ -32,7 +32,7 @@ class PL_forms {
                 switch($type)
                 {
                     case 'read_only':
-                        $form[] = array('lang_field' => $key, 'control' => htmlentities(strip_tags($value)));
+                        $form[] = array('lang_field' => $key, 'control' => nl2br(htmlentities(strip_tags($value))));
                         break;
                     case 'static':
                         $form[] = array('lang_field' => $key, 'control' => $value);
