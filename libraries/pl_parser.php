@@ -116,10 +116,13 @@ class PL_parser {
             //}
         }
 
+//         echo '<b>var_single:</b>';
+//         var_dump($this->EE->TMPL->var_single);
         // parse single variables
-        foreach ($this->EE->TMPL->var_single as $key => $val)
+//         foreach ($this->EE->TMPL->var_single as $key => $val)
+        foreach($row_vars as $key => $val)
         {
-            $key = $this->_remove_prefix($key);
+            //$key = $this->_remove_prefix($key);
 
             // prevent array to string errors
             if(array_search($key, $pairs) === FALSE)
@@ -141,21 +144,36 @@ class PL_parser {
             }
         }
 
+// Determine which of our pairs are actually in use
+//         echo "<pre><b>search</b><br/>";
+//         #ini_set("error_log","/Users/iraway/log/ee231.err");
+//         #ini_set('log_errors',1);
+// 
+//         error_log($rowdata);
+//         
+//         preg_match_all($pattern = "/".LD."(".$variable_prefix.".*?)".RD."(.*?)".LD.'\/\1'.RD."/ms", $rowdata, $all_matches);
+//         var_dump($pattern);
+//         echo '<b>actual pairs in use:</b>';
+//         var_dump($all_matches);
+//         
+//         echo '<b>var_pair:</b>';
+//         var_dump($this->EE->TMPL->var_pair);exit;
         // If a variable is not parsing, remember to add it to the list of valid var pairs!
         foreach($pairs as $var_pair)
         {
-            foreach ($this->EE->TMPL->var_pair as $key => $val)
-            {
-                $key = $this->_remove_prefix($key);
+            
+//             foreach ($this->EE->TMPL->var_pair as $key => $val)
+//             {
+//                 $key = $this->_remove_prefix($key);
 
                 // If the found variable pair key starts with the declared variable pair - then it is probably the variable pair,
                 // possibly with some arguments.
-                if(strpos($key, $var_pair) === 0)
-                {
+//                 if(strpos($key, $var_pair) === 0)
+//                 {
                     // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
                     // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
                     // turned off - that is the basic formula for finding tags with parameters.
-                    $count = preg_match_all($pattern = "/".LD.$variable_prefix.$key.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
+                    $count = preg_match_all($pattern = "/".LD.$variable_prefix.$var_pair.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
 
                     // if we got some matches
                     if($count > 0)
@@ -317,8 +335,8 @@ class PL_parser {
                         }
                     }
 
-                }
-            }
+//                }
+//             }
         }
 
         if($backspace)
