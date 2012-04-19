@@ -99,27 +99,20 @@ class PL_parser {
         $custom_date_fields = array();
         $this->date_vars_params = array();
 
-
+        // parse single variables
         foreach($row_vars as $key => $val)
         {
-            //if (strpos($rowdata, LD.$key) !== FALSE)
-            //{
-                if (preg_match_all("/".LD.$variable_prefix.$key."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
+            if (preg_match_all("/".LD.$variable_prefix.$key."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
+            {
+                for ($j = 0; $j < count($matches[0]); $j++)
                 {
-                    for ($j = 0; $j < count($matches[0]); $j++)
-                    {
-                        $matches[0][$j] = str_replace(array(LD,RD), '', $matches[0][$j]);
-                        $this->date_vars_params[$matches[0][$j]] = $this->EE->localize->fetch_date_params($matches[1][$j]);
-                        $this->date_vars_vals[$matches[0][$j]] = $matches[1][$j];
-                    }
+                    $matches[0][$j] = str_replace(array(LD,RD), '', $matches[0][$j]);
+                    $this->date_vars_params[$matches[0][$j]] = $this->EE->localize->fetch_date_params($matches[1][$j]);
+                    $this->date_vars_vals[$matches[0][$j]] = $matches[1][$j];
                 }
-            //}
+            }
         }
 
-//         echo '<b>var_single:</b>';
-//         var_dump($this->EE->TMPL->var_single);
-        // parse single variables
-//         foreach ($this->EE->TMPL->var_single as $key => $val)
         foreach($row_vars as $key => $val)
         {
             //$key = $this->_remove_prefix($key);
@@ -144,199 +137,174 @@ class PL_parser {
             }
         }
 
-// Determine which of our pairs are actually in use
-//         echo "<pre><b>search</b><br/>";
-//         #ini_set("error_log","/Users/iraway/log/ee231.err");
-//         #ini_set('log_errors',1);
-// 
-//         error_log($rowdata);
-//         
-//         preg_match_all($pattern = "/".LD."(".$variable_prefix.".*?)".RD."(.*?)".LD.'\/\1'.RD."/ms", $rowdata, $all_matches);
-//         var_dump($pattern);
-//         echo '<b>actual pairs in use:</b>';
-//         var_dump($all_matches);
-//         
-//         echo '<b>var_pair:</b>';
-//         var_dump($this->EE->TMPL->var_pair);exit;
         // If a variable is not parsing, remember to add it to the list of valid var pairs!
         foreach($pairs as $var_pair)
         {
             
-//             foreach ($this->EE->TMPL->var_pair as $key => $val)
-//             {
-//                 $key = $this->_remove_prefix($key);
+            // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
+            // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
+            // turned off - that is the basic formula for finding tags with parameters.
+            $count = preg_match_all($pattern = "/".LD.$variable_prefix.$var_pair.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
 
-                // If the found variable pair key starts with the declared variable pair - then it is probably the variable pair,
-                // possibly with some arguments.
-//                 if(strpos($key, $var_pair) === 0)
-//                 {
-                    // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
-                    // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
-                    // turned off - that is the basic formula for finding tags with parameters.
-                    $count = preg_match_all($pattern = "/".LD.$variable_prefix.$var_pair.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
+            // if we got some matches
+            if($count > 0)
+            {
+                // $matches[0] is an array of the full pattern matches
+                // $matches[1] is an array of the contents of the inside of each variable pair
+                for($i = 0; $i < count($matches[0]); $i++)
+                {
+                    $pair_tag = &$matches[0][$i];
+                    $pair_row_template = &$matches[1][$i];
 
-                    // if we got some matches
-                    if($count > 0)
+                    $pair_data = '';
+                    
+                    // The PL_Parser_ArrayWrapper class allows us to wrap some meta info around an array so we don't need to do
+                    // any special parsing for simple cases such as changing {row} to {rule}
+                    if($row_vars[$var_pair] instanceof PL_Parser_ArrayWrapper)
                     {
-                        // $matches[0] is an array of the full pattern matches
-                        // $matches[1] is an array of the contents of the inside of each variable pair
-                        for($i = 0; $i < count($matches[0]); $i++)
+                        $key_var_name = $row_vars[$var_pair]->key_var_name;
+                        $row_var_name = $row_vars[$var_pair]->row_var_name;
+                        $parse_pair   = &$row_vars[$var_pair]->array;
+                    } else {
+                        // If we just have a real array or an object, set the default parsing variable names and parse it
+                        // normally.
+                        $key_var_name = 'key';
+                        $row_var_name = 'row';
+                        $parse_pair   = &$row_vars[$var_pair];
+                    }
+                    
+                    // Loop over the data in the variable pair, and parse it into our template code
+                    foreach($parse_pair as $data_key => $data)
+                    {
+                        $pair_row_data = $pair_row_template;
+
+                        if(!is_array($data))
                         {
-                            $pair_tag = &$matches[0][$i];
-                            $pair_row_template = &$matches[1][$i];
-
-                            $pair_data = '';
-                            
-                            // The PL_Parser_ArrayWrapper class allows us to wrap some meta info around an array so we don't need to do
-                            // any special parsing for simple cases such as changing {row} to {rule}
-                            if($row_vars[$var_pair] instanceof PL_Parser_ArrayWrapper)
+                            if(is_object($data) AND is_callable($data))
                             {
-                                $key_var_name = $row_vars[$var_pair]->key_var_name;
-                                $row_var_name = $row_vars[$var_pair]->row_var_name;
-                                $parse_pair   = &$row_vars[$var_pair]->array;
+                                $data = $data($row_vars[$var_pair], $data_key, $pair_row_data);
                             } else {
-                                // If we just have a real array or an object, set the default parsing variable names and parse it
-                                // normally.
-                                $key_var_name = 'key';
-                                $row_var_name = 'row';
-                                $parse_pair   = &$row_vars[$var_pair];
+                                // The array item is a string which we want to repalce into the template
+                                
+                                // Replace and process conditionals for the key variable - often literally {key} - with the array
+                                // index we are currently at in the variable pair
+                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$key_var_name => $data_key));
+                                $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$key_var_name, $data_key, $pair_row_data);
+
+                                // Replace and process conditionals for the value variable - usually {row} - with the value at
+                                // this position
+                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$row_var_name => $data));
+                                $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$row_var_name, $data, $pair_row_data);
                             }
-                            
-                            // Loop over the data in the variable pair, and parse it into our template code
-                            foreach($parse_pair as $data_key => $data)
-                            {
-                                $pair_row_data = $pair_row_template;
+                        } else {
+                            $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($data));
+                            $prepped_conditionals = array();
 
-                                if(!is_array($data))
-                                {
-                                    if(is_object($data) AND is_callable($data))
-                                    {
-                                        $data = $data($row_vars[$var_pair], $data_key, $pair_row_data);
+                            foreach($data as $k => $v) {
+                                if(is_object($v) AND is_callable($v)) {
+                                    if ($v instanceof PL_Callback_Interface) {
+                                        $value = $v->getData();
                                     } else {
-                                        // The array item is a string which we want to repalce into the template
-                                        
-                                        // Replace and process conditionals for the key variable - often literally {key} - with the array
-                                        // index we are currently at in the variable pair
-                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$key_var_name => $data_key));
-                                        $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$key_var_name, $data_key, $pair_row_data);
-
-                                        // Replace and process conditionals for the value variable - usually {row} - with the value at
-                                        // this position
-                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$row_var_name => $data));
-                                        $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$row_var_name, $data, $pair_row_data);
+                                        $value = true;
                                     }
                                 } else {
-                                    $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($data));
-                                    $prepped_conditionals = array();
-
-                                    foreach($data as $k => $v) {
-                                        if(is_object($v) AND is_callable($v)) {
-                                            if ($v instanceof PL_Callback_Interface) {
-                                                $value = $v->getData();
-                                            } else {
-                                                $value = true;
-                                            }
-                                        } else {
-                                            $value = $v;
-                                        }
-                                        $prepped_conditionals[$k] = $value;
-                                    }
-
-                                    foreach($data as $k => $v)
-                                    {
-                                        // handle data callback
-                                        if(is_object($v) AND is_callable($v))
-                                        {
-                                            // find matches on this subpair (this is used for celltype substitution in mason, for instance)
-                                            //match pair, preventing matches like
-                                            //{file:ul} ...{/file}
-                                            $f_count = preg_match_all($f_pattern = 
-                                                "/".LD.$k."((?::[^ ]+?)?)(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."(.*?)".LD."\/".$k.'\1'.RD."/s",
-                                                $pair_row_data, $f_matches);
-                                            // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
-                                            // $f_matches[1] is an array of segments for each tag
-                                            // $f_matches[2] is an array of the parameters for each tag
-                                            // $f_matches[3] is an array of the contents of the inside of each variable pair
-
-                                            // did we find any pairs for the tag?
-                                            // find matches on this subpair (this is used for celltype substitution in mason, for instance)
-                                            if($f_count != 0)
-                                            {
-                                                //parse tag pairs
-                                                for($fi = 0; $fi < count($f_matches[0]); $fi++)
-                                                {
-                                                    $f_pair_match = $f_matches[0][$fi];
-                                                    $f_segments = $f_matches[1][$fi];
-                                                    $f_segments = $this->parse_segments($f_segments);
-                                                    $f_pair_params = $f_matches[2][$fi];
-                                                    $f_pair_params = $this->parse_params($f_pair_params);
-                                                    $f_pair_data = $f_matches[3][$fi];
-
-                                                    //echo $k.'='.$v->celltype->name.'<br/>';
-                                                    $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data, $f_pair_params, $f_segments), $pair_row_data);
-                                                }
-                                            }
-
-                                            // find single tags, not mutually exclusive
-
-                                            $f_count = preg_match_all($f_pattern = 
-                                                "/".LD.$k."(:[^ ]+?)?(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."/s",
-                                                $pair_row_data, $f_matches);
-                                            // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
-                                            // $f_matches[1] is an array of segments for each tag
-                                            // $f_matches[2] is an array of the parameters for each tag
-                                            if($f_count > 0)
-                                            {
-                                                for($fi = 0; $fi < count($f_matches[0]); $fi++)
-                                                {
-                                                    $f_var_match = $f_matches[0][$fi];
-                                                    $f_segments = $f_matches[1][$fi];
-                                                    $f_segments = $this->parse_segments($f_segments);
-                                                    $f_params = $f_matches[2][$fi];
-                                                    $f_params = $this->parse_params($f_params);
-
-                                                    //echo $k.'='.$v->celltype->name.'<br/>';
-                                                    $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match, $f_params, $f_segments), $pair_row_data);
-                                                }
-                                            }
-                                        } else {
-                                            if(is_array($v) OR $v instanceof PL_Parser_ArrayWrapper) {
-                                                $pair_row_data = $this->parse_variables_ex(array_merge(
-                                                    $params,
-                                                    array(
-                                                        'rowdata' => $pair_row_data,
-                                                        'row_vars' => $data,
-                                                        'pairs' => array($k)
-                                                    )
-                                                ));
-                                            } else {
-                                                if(array_key_exists($k, $row_vars) === FALSE)
-                                                {
-                                                    $pair_row_data  = $this->_swap_var_single($variable_prefix.$k, $v, $pair_row_data);
-                                                    if (in_array($k, $reparse_vars)) {
-                                                        $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($prepped_conditionals));
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
+                                    $value = $v;
                                 }
-
-                                if(isset($this->row_callback))
-                                {
-                                    $callback = &$this->row_callback;
-                                    $pair_row_data = $callback($pair_row_data);
-                                }
-
-                                $pair_data .= $pair_row_data;
+                                $prepped_conditionals[$k] = $value;
                             }
 
-                            $rowdata = str_replace($pair_tag, $pair_data, $rowdata);
+                            foreach($data as $k => $v)
+                            {
+                                // handle data callback
+                                if(is_object($v) AND is_callable($v))
+                                {
+                                    // find matches on this subpair (this is used for celltype substitution in mason, for instance)
+                                    //match pair, preventing matches like
+                                    //{file:ul} ...{/file}
+                                    $f_count = preg_match_all($f_pattern = 
+                                        "/".LD.$k."((?::[^ ]+?)?)(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."(.*?)".LD."\/".$k.'\1'.RD."/s",
+                                        $pair_row_data, $f_matches);
+                                    // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
+                                    // $f_matches[1] is an array of segments for each tag
+                                    // $f_matches[2] is an array of the parameters for each tag
+                                    // $f_matches[3] is an array of the contents of the inside of each variable pair
+
+                                    // did we find any pairs for the tag?
+                                    // find matches on this subpair (this is used for celltype substitution in mason, for instance)
+                                    if($f_count != 0)
+                                    {
+                                        //parse tag pairs
+                                        for($fi = 0; $fi < count($f_matches[0]); $fi++)
+                                        {
+                                            $f_pair_match = $f_matches[0][$fi];
+                                            $f_segments = $f_matches[1][$fi];
+                                            $f_segments = $this->parse_segments($f_segments);
+                                            $f_pair_params = $f_matches[2][$fi];
+                                            $f_pair_params = $this->parse_params($f_pair_params);
+                                            $f_pair_data = $f_matches[3][$fi];
+
+                                            //echo $k.'='.$v->celltype->name.'<br/>';
+                                            $pair_row_data = str_replace($f_pair_match, $v($k, $f_pair_data, $f_pair_params, $f_segments), $pair_row_data);
+                                        }
+                                    }
+
+                                    // find single tags, not mutually exclusive
+
+                                    $f_count = preg_match_all($f_pattern = 
+                                        "/".LD.$k."(:[^ ]+?)?(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."/s",
+                                        $pair_row_data, $f_matches);
+                                    // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
+                                    // $f_matches[1] is an array of segments for each tag
+                                    // $f_matches[2] is an array of the parameters for each tag
+                                    if($f_count > 0)
+                                    {
+                                        for($fi = 0; $fi < count($f_matches[0]); $fi++)
+                                        {
+                                            $f_var_match = $f_matches[0][$fi];
+                                            $f_segments = $f_matches[1][$fi];
+                                            $f_segments = $this->parse_segments($f_segments);
+                                            $f_params = $f_matches[2][$fi];
+                                            $f_params = $this->parse_params($f_params);
+
+                                            //echo $k.'='.$v->celltype->name.'<br/>';
+                                            $pair_row_data = str_replace($f_var_match, $v($k, $f_var_match, $f_params, $f_segments), $pair_row_data);
+                                        }
+                                    }
+                                } else {
+                                    if(is_array($v) OR $v instanceof PL_Parser_ArrayWrapper) {
+                                        $pair_row_data = $this->parse_variables_ex(array_merge(
+                                            $params,
+                                            array(
+                                                'rowdata' => $pair_row_data,
+                                                'row_vars' => $data,
+                                                'pairs' => array($k)
+                                            )
+                                        ));
+                                    } else {
+                                        if(array_key_exists($k, $row_vars) === FALSE)
+                                        {
+                                            $pair_row_data  = $this->_swap_var_single($variable_prefix.$k, $v, $pair_row_data);
+                                            if (in_array($k, $reparse_vars)) {
+                                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($prepped_conditionals));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
+
+                        if(isset($this->row_callback))
+                        {
+                            $callback = &$this->row_callback;
+                            $pair_row_data = $callback($pair_row_data);
+                        }
+
+                        $pair_data .= $pair_row_data;
                     }
 
-//                }
-//             }
+                    $rowdata = str_replace($pair_tag, $pair_data, $rowdata);
+                }
+            }
         }
 
         if($backspace)
