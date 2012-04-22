@@ -33,7 +33,7 @@
 class Prolib_mcp {
     private $debug_str = '';
     var $lib = null;                // Must be set to a subclass of PL_base_lib
-    var $singular = null;
+    var $type = null;
     var $managers = null;
     var $mgr = null;
 
@@ -46,22 +46,22 @@ class Prolib_mcp {
         // If there isn't a G parameter in the URL - the subclass MUST call find_manager,
         // or almost nothing in here will work properly (this applies mainly to
         // mapping the index() action to a listing).
-        if($this->EE->input->get_post('G'))
+        if($this->EE->input->get_post('type'))
         {
-            $this->find_manager($this->EE->input->get_post('G'));
+            $this->find_manager($this->EE->input->get_post('type'));
         }
 
 
     }
     
-    public function find_manager($G)
+    public function find_manager($type)
     {
-        $this->singular = $G;
+        $this->type = $type;
         $this->managers = $this->lib->get_managers();
         
         foreach($this->managers as $mgr)
         {
-            if($this->singular == $mgr->singular)
+            if($this->type == $mgr->singular)
             {
                 $this->mgr = $mgr;
                 break;
@@ -70,7 +70,7 @@ class Prolib_mcp {
         
         if(!$this->mgr)
         {
-            throw new Exception('Invalid manager specified: '.htmlentities($G));
+            throw new Exception('Invalid manager specified: '.htmlentities($type));
         }
     }
 
@@ -105,23 +105,23 @@ class Prolib_mcp {
 //         throw new Exception('Undefined method called: '.$method);
 //     }
 
-    public function __call($method, $params)
-    {
-        if($method == 'list') return $this->listing();
-        throw new Exception('Undefined method called: '.$method);
-    }
-
 
     public function listing()
     {
+        if(!isset($this->type)) throw new Exception('Type not specified in URL or logic');
         $items = $this->mgr->get_all();
 
         $vars = array(
-            'items' => $items,
+            'type'          => $this->type,
+            'mgr'           => $this->mgr,
+            'items'         => $items,
+            'edit_url'      => ACTION_BASE.AMP.'method=edit'.AMP.'type='.$this->type.AMP.'item_id=%s',
+            'delete_url'      => ACTION_BASE.AMP.'method=delete'.AMP.'type='.$this->type.AMP.'item_id=%s',
         );
 
         $this->get_flashdata($vars);
-        return $this->EE->load->view($this->mgr->plural.'/list', $vars, TRUE);
+
+        return $this->auto_view('listing', $vars);
     }
 
 
@@ -141,8 +141,8 @@ class Prolib_mcp {
         $item = $this->mgr->create($data);
 
         // Go back to the list of item
-        $this->EE->session->set_flashdata('message', $this->lang($this->mgr, 'msg_item_created'));
-        $this->EE->functions->redirect(ACTION_BASE.AMP.'method=list'.AMP.'G='.$this->singular);
+        $this->EE->session->set_flashdata('message', $this->lang('msg_item_created'));
+        $this->EE->functions->redirect(ACTION_BASE.AMP.'method=listing'.AMP.'type='.$this->type);
 
         return TRUE;
     }
@@ -150,10 +150,12 @@ class Prolib_mcp {
 
     public function edit($editing=TRUE, $vars=array())
     {
+        $op = $editing ? 'edit' : 'create';
+        
         // Initialize the editing form, and handle process_ dispatch on POST
         list($done, $item_id, $item, $vars) =
             $this->init_edit(
-                $editing ? 'edit' : 'new',
+                $editing ? 'edit' : 'create',
                 $types = array(
                 )
         );
@@ -161,30 +163,30 @@ class Prolib_mcp {
         // Nothing left to do - process_ was dispatched and save was successful
         if($done) return;
 
-
         $vars = array(
-            'hidden_fields'     => array('item_id', 'settings'),
-            'form'              => $this->prolib->pl_forms->create_cp_form($block_type->data_array(), $types),
-            'fields'            => $block_type->fields(),
-            'action_url'        => FORM_ACTION_BASE.'method='.($editing ? 'edit'.AMP.'item_id='.$item_id : 'new')
+            'type'              => $this->type,
+            'mgr'               => $this->mgr,
+            'hidden_fields'     => array($this->mgr->singular.'_id', 'item_id', 'settings'),
+            'form'              => $this->prolib->pl_forms->create_cp_form($item->data_array(), $types),
+            'action_url'        => FORM_ACTION_BASE.'method='.($editing ? 'edit'.AMP.'item_id='.$item_id : 'create').AMP.'type='.$this->type
         );
 
 
-        if(is_callable(array($this, 'pre_edit_view_'.$this->singular)))
+        if(is_callable(array($this, 'pre_edit_view_'.$this->type)))
         {
-            $result = $this->{'pre_edit_view_'.$this->singular()};
+            $result = $this->{'pre_edit_view_'.$this->type()};
             if(isset($result) && $result)
             {
                 return $result;
             }
         }
 
-        if(isset($this->type_vars[$this->class][$op]))
+        if(isset($this->type_vars[$this->type][$op]))
         {
-            $vars += $this->type_vars[$this->class][$op];
+            $vars += $this->type_vars[$this->type][$op];
         }
 
-        return $this->EE->load->view($this->singular.'/edit', $vars, TRUE);
+        return $this->EE->load->view('generic/edit', $vars, TRUE);
     }
 
 
@@ -199,9 +201,9 @@ class Prolib_mcp {
         $this->prolib->copy_post($item, $this->mgr->class);
         $item->save();
 
-        // Go back to the list of block types
+        // Go back to the listing of items
         $this->EE->session->set_flashdata('message', $this->lang('msg_item_edited'));
-        $this->EE->functions->redirect(ACTION_BASE.AMP.'method=list'.AMP.'G='.$this->singular);
+        $this->EE->functions->redirect(ACTION_BASE.AMP.'method=listing'.AMP.'type='.$this->type);
 
         return TRUE;
     }
@@ -217,11 +219,13 @@ class Prolib_mcp {
         $item_id = $this->EE->input->get('item_id');
         $item = $this->mgr->get($item_id);
 
-        $vars = array();
-        $vars['action_url'] = FORM_ACTION_BASE.'method=delete'.AMP.'G='.$this->singular.AMP.'item_id='.$item_id;
-        $vars['object_type'] = $this->singular;
-        $vars['object_name'] = $item->{$this->singular.'_name'} ? $item->{$this->singular.'_name'} : $this->singular . ' ' . $item->{$this->singular.'_id'};
-        $vars['hidden'] = array('item_id' => $item->{$this->singular.'_id'});
+        $vars = array(
+            'type'          => $this->type,
+            'mgr'           => $this->mgr,
+            'action_url'    => FORM_ACTION_BASE.'method=delete'.AMP.'type='.$this->type.AMP.'item_id='.$item_id,
+            'object_name'   => $item->{$this->type.'_name'} ? $item->{$this->type.'_name'} : $this->type . ' ' . $item->{$this->type.'_id'},
+            'hidden'        => array('type' => $this->type, 'item_id' => $item->{$this->type.'_id'}),
+        );
 
         return $this->EE->load->view('delete', $vars, TRUE);
     }
@@ -236,9 +240,9 @@ class Prolib_mcp {
             $item = $this->mgr->get($item_id);
             $item->delete();
 
-            // Go back to the list of items
+            // Go back to the listing of items
             $this->EE->session->set_flashdata('message', $this->lang('msg_item_deleted'));
-            $this->EE->functions->redirect(ACTION_BASE.AMP.'method=list'.AMP.'G='.$this->singular);
+            $this->EE->functions->redirect(ACTION_BASE.AMP.'method=listing'.AMP.'type='.$this->type);
             return TRUE;
         }
         else
@@ -249,9 +253,9 @@ class Prolib_mcp {
     }
 
 
-    public function lang($mgr, $msg)
+    public function lang($msg)
     {
-        $item_msg = str_replace('item', $mgr->singular, $msg);
+        $item_msg = str_replace('item', $this->mgr->singular, $msg);
         if(lang($item_msg) != $item_msg)
         {
             return lang($item_msg);
@@ -263,7 +267,7 @@ class Prolib_mcp {
 
     function init_edit($op, $field_types)
     {
-        // Automatically get an object to edit and dispatch process_edit or process_new if request is a POST
+        // Automatically get an object to edit and dispatch process_edit or process_create if request is a POST
 
         // find checkboxes and set their values to "n" if not present
         foreach($field_types as $field => $type)
@@ -278,35 +282,64 @@ class Prolib_mcp {
         }
 
         $object = FALSE;
-        if($op != 'new')
+        if($op != 'create')
         {
-            $object_id = (int)$this->EE->input->get_post('item_id');
-            if($object_id)
+            $item_id = (int)$this->EE->input->get_post('item_id');
+            if($item_id)
             {
-                $object = $this->mgr->get($object_id);
+                $object = $this->mgr->get($item_id);
             }
         }
 
         if(!$object)
         {
-            $object_id = 0;
+            $item_id = 0;
             $row = FALSE;
             $class = $this->mgr->class;
-            $object = new $class($row, $mgr);
+            $object = new $class($row, $this->mgr);
         }
 
         $done = FALSE;
         if($_SERVER['REQUEST_METHOD'] == 'POST')
         {
-            if($mcp->{'process_'.$op}($object_id, $object)) $done = TRUE;
+            if($this->{'process_'.$op}($item_id, $object)) $done = TRUE;
         }
 
         $vars = array(
-            'item_id' => $object_id,
-            'action_url' => CP_ACTION.$op.AMP.'G='.$this->class.AMP.($op!='new' ? 'item_id='.$object_id : '')
+            'type'          => $this->type,
+            'mgr'           => $this->mgr,
+            'item_id'       => $item_id,
+            'action_url'    => CP_ACTION.$op.AMP.'type='.$this->type.AMP.($op!='create' ? 'item_id='.$item_id : '')
         );
 
-        return array($done, $object_id, $object, $vars);
+        return array($done, $item_id, $object, $vars);
+    }
+
+
+    public function auto_view($action, $vars)
+    {
+        $path = PATH_THIRD.$this->prolib->package_name.'/views/'.$this->mgr->plural.'/'.$action.'.php';
+        if(file_exists($path))
+        {
+            return $this->EE->load->view($this->mgr->plural.'/'.$action, $vars, TRUE);
+            //return $this->EE->load->view($path, $vars, TRUE);
+        } else {
+            $path = PATH_THIRD.$this->prolib->package_name.'/views/generic/'.$action.'.php';
+            if(file_exists($path))
+            {
+                return $this->EE->load->view('generic/'.$action, $vars, TRUE);
+                //return $this->EE->load->view($path, $vars, TRUE);
+            } else {
+//                 $path = PATH_THIRD.'prolib/views/generic/'.$action.'.php';
+//                 if(file_exists($path))
+//                 {
+//                     return $this->EE->load->view('generic/'.$action, $vars, TRUE);
+//                     //return $this->EE->load->view($path, $vars, TRUE);
+//                 } else {
+                    throw new Exception('Cannot find view file in any known location: '.htmlentities($action));
+//                 }
+            }
+        }
     }
 
 
@@ -332,7 +365,7 @@ class Prolib_mcp {
     public function sub_page($page, $added_title = '')
     {
         $this->EE->cp->set_breadcrumb(ACTION_BASE.AMP.'module='.$this->prolib->package_name.AMP, $this->EE->lang->line($this->prolib->package_name.'_module_name'));
-        $this->EE->cp->set_variable('cp_page_title', lang($this->prolib->package_name.'_title') . ' ' . lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
+        $this->EE->cp->set_variable('cp_page_title', $this->lang($this->prolib->package_name.'_title') . ' ' . $this->lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
     }
 
 

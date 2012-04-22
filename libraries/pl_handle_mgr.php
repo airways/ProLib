@@ -25,6 +25,9 @@ class PL_handle_mgr
     var $class = "";
     var $serialized = array('settings');
 
+    var $plural = "";
+    var $plural_label = "";
+
     function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE)
     {
         $this->EE = &get_instance();
@@ -387,12 +390,12 @@ class PL_RowInitialized
     
     function get_obj_id()
     {
-        return $this->{$this->mgr->singular.'_id'};
+        return $this->{$this->__mgr->singular.'_id'};
     }
     
     function get_obj_name()
     {
-        return $this->{$this->mgr->singular.'_name'} ? $this->{$this->mgr->singular.'_name'} : $this->mgr->singular . ' #' . $this->get_obj_id();
+        return $this->{$this->__mgr->singular.'_name'} ? $this->{$this->__mgr->singular.'_name'} : $this->__mgr->singular . ' #' . $this->get_obj_id();
     }
     
     function dump()
