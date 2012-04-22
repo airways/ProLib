@@ -36,6 +36,8 @@ require_once 'libraries/pl_validation.php';
 require_once 'libraries/pl_channel_fields.php';
 require_once 'libraries/pl_encryption.php';
 require_once 'libraries/pl_hooks.php';
+require_once 'core/mcp.prolib.php';
+require_once 'core/lib.base.php';
 
 function prolib(&$object, $package_name="")
 {
