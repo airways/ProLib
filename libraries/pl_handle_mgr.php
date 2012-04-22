@@ -385,6 +385,16 @@ class PL_RowInitialized
         return $this->__mgr->remove_transitory($this);
     }
     
+    function get_obj_id()
+    {
+        return $this->{$this->mgr->singular.'_id'};
+    }
+    
+    function get_obj_name()
+    {
+        return $this->{$this->mgr->singular.'_name'} ? $this->{$this->mgr->singular.'_name'} : $this->mgr->singular . ' #' . $this->get_obj_id();
+    }
+    
     function dump()
     {
         echo "<b>" . get_class($this)  . "</b><br/>";
