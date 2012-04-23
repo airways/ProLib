@@ -116,10 +116,12 @@ class Prolib_mcp {
 
         $vars = array(
             'type'          => $this->type,
+            'package_name'  => $this->prolib->package_name,
             'mgr'           => $this->mgr,
             'items'         => $items,
+            'create_item'   => $this->lang('item_create'),
             'edit_url'      => ACTION_BASE.AMP.'method=edit'.AMP.'type='.$this->type.AMP.'item_id=%s',
-            'delete_url'      => ACTION_BASE.AMP.'method=delete'.AMP.'type='.$this->type.AMP.'item_id=%s',
+            'delete_url'    => ACTION_BASE.AMP.'method=delete'.AMP.'type='.$this->type.AMP.'item_id=%s',
         );
 
         $this->get_flashdata($vars);
@@ -136,16 +138,27 @@ class Prolib_mcp {
 
     public function process_create()
     {
+        $return_type = $this->EE->input->get('return_type');
+        $return_item_id = $this->EE->input->get('return_item_id');
+
         // Initialize a data array from the POST values, based on the model object's fields
         $data = array();
         $this->prolib->copy_post($data, $this->mgr->class);
 
+        if($return_type)
+        {
+            $data[$return_type.'_id'] = $return_item_id;
+        }
+
         // Create the model object
         $item = $this->mgr->create($data);
+        
 
         // Go back to the list of item
         $this->EE->session->set_flashdata('message', $this->lang('msg_item_created'));
-        $this->EE->functions->redirect(ACTION_BASE.AMP.'method=listing'.AMP.'type='.$this->type);
+        $this->EE->functions->redirect(ACTION_BASE.AMP
+            .($return_type ? 'method=edit'.AMP.'type='.$return_type.AMP.'item_id='.$return_item_id
+                           : 'method=listing'.AMP.'type='.$this->type));
 
         return TRUE;
     }
@@ -154,6 +167,9 @@ class Prolib_mcp {
     public function edit($editing=TRUE, $vars=array())
     {
         $op = $editing ? 'edit' : 'create';
+        $return_type = $this->EE->input->get('return_type');
+        $return_item_id = $this->EE->input->get('return_item_id');
+
 
         // Initialize the editing form, and handle process_ dispatch on POST
         list($done, $item_id, $item, $vars) =
@@ -163,17 +179,41 @@ class Prolib_mcp {
                 )
         );
 
-        $this->sub_page($this->mgr->singular.'_'.$op, $op == 'edit' ? $item->get_obj_name() : '');
+        $form_name = $this->mgr->singular.'_'.$op;
+        $this->sub_page($form_name, $op == 'edit' ? $item->get_obj_name() : '');
 
         // Nothing left to do - process_ was dispatched and save was successful
         if($done) return;
 
+
+        $child_items = array();
+        $managers = $this->lib->get_managers();
+        if($item_id)
+        {
+            foreach($this->mgr->children as $child_mgr_name)
+            {
+                $child_mgr = $managers[$child_mgr_name];
+                $child_items[$child_mgr_name] = $child_mgr->get_objects(array($this->mgr->singular.'_id' => $item_id));
+            }
+        }
+
+        $this->EE->load->library('table');
+
+        $hidden_fields = array_merge(array($this->mgr->singular.'_id', 'item_id', 'settings'), $this->mgr->edit_hidden);
+
         $vars = array(
+            'form_name'         => $this->lang($form_name),
+            'package_name'      => $this->prolib->package_name,
             'type'              => $this->type,
+            'item_id'           => $item_id,
             'mgr'               => $this->mgr,
-            'hidden_fields'     => array($this->mgr->singular.'_id', 'item_id', 'settings'),
+            'managers'          => $managers,
+            'child_items'       => $child_items,
+            'hidden_fields'     => $hidden_fields,
             'form'              => $this->prolib->pl_forms->create_cp_form($item->data_array(), $types),
             'action_url'        => FORM_ACTION_BASE.'method='.($editing ? 'edit'.AMP.'item_id='.$item_id : 'create').AMP.'type='.$this->type
+                .($return_type ? AMP.'return_type='.$return_type.AMP.'return_item_id='.$return_item_id : '')
+
         );
 
 
@@ -203,12 +243,18 @@ class Prolib_mcp {
         // var_dump($item);
         // exit;
         // Copy new values from the POST, and save it
+        $return_type = $this->EE->input->get('return_type');
+        $return_item_id = $this->EE->input->get('return_item_id');
+
         $this->prolib->copy_post($item, $this->mgr->class);
+
         $item->save();
 
         // Go back to the listing of items
         $this->EE->session->set_flashdata('message', $this->lang('msg_item_edited'));
-        $this->EE->functions->redirect(ACTION_BASE.AMP.'method=listing'.AMP.'type='.$this->type);
+        $this->EE->functions->redirect(ACTION_BASE.AMP
+            .($return_type ? 'method=edit'.AMP.'type='.$return_type.AMP.'item_id='.$return_item_id
+                           : 'method=listing'.AMP.'type='.$this->type));
 
         return TRUE;
     }
@@ -223,12 +269,20 @@ class Prolib_mcp {
 
         $item_id = $this->EE->input->get('item_id');
         $item = $this->mgr->get($item_id);
+        $return_type = $this->EE->input->get('return_type');
+        $return_item_id = $this->EE->input->get('return_item_id');
 
         $vars = array(
             'type'          => $this->type,
             'mgr'           => $this->mgr,
-            'action_url'    => FORM_ACTION_BASE.'method=delete'.AMP.'type='.$this->type.AMP.'item_id='.$item_id,
-            'object_name'   => $item->{$this->type.'_name'} ? $item->{$this->type.'_name'} : $this->type . ' ' . $item->{$this->type.'_id'},
+            'action_url'    => FORM_ACTION_BASE.'method=delete'.AMP.'type='.$this->type.AMP.'item_id='.$item_id
+                .($return_type ? AMP.'return_type='.$return_type.AMP.'return_item_id='.$return_item_id : ''),
+            'object_name'   => 
+                isset($item->{$this->type.'_name'}) 
+                    ? $item->{$this->type.'_name'} 
+                        : isset($item->name)
+                            ? $item->name
+                                : $this->type . ' ' . $item->{$this->type.'_id'},
             'hidden'        => array('type' => $this->type, 'item_id' => $item->{$this->type.'_id'}),
         );
 
@@ -245,9 +299,14 @@ class Prolib_mcp {
             $item = $this->mgr->get($item_id);
             $item->delete();
 
+            $return_type = $this->EE->input->get('return_type');
+            $return_item_id = $this->EE->input->get('return_item_id');
+
             // Go back to the listing of items
             $this->EE->session->set_flashdata('message', $this->lang('msg_item_deleted'));
-            $this->EE->functions->redirect(ACTION_BASE.AMP.'method=listing'.AMP.'type='.$this->type);
+            $this->EE->functions->redirect(ACTION_BASE.AMP
+                .($return_type ? 'method=edit'.AMP.'type='.$return_type.AMP.'item_id='.$return_item_id
+                           : 'method=listing'.AMP.'type='.$this->type));
             return TRUE;
         }
         else

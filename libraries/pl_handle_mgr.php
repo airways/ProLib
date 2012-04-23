@@ -24,11 +24,14 @@ class PL_handle_mgr
     var $singular = "";
     var $class = "";
     var $serialized = array('settings');
+    var $edit_hidden = array();
 
     var $plural = "";
     var $plural_label = "";
+    var $children = array();                    // Names of child managers
+    var $lib = null;
 
-    function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE)
+    function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE, &$lib = NULL)
     {
         $this->EE = &get_instance();
         $this->EE->db->cache_off();
@@ -37,6 +40,7 @@ class PL_handle_mgr
         if($singular) $this->singular = $singular;
         if($class) $this->class = $class;
         if($serialized) $this->serialized = $serialized;
+        if($lib) $this->lib = &$lib;
     }
 
     function count()
@@ -376,8 +380,8 @@ class PL_RowInitialized
     {
         $this->__mgr->save($this);
     }
-    
-    
+
+
     function delete()
     {
         $this->__mgr->delete($this);
@@ -387,17 +391,21 @@ class PL_RowInitialized
     {
         return $this->__mgr->remove_transitory($this);
     }
-    
+
     function get_obj_id()
     {
         return $this->{$this->__mgr->singular.'_id'};
     }
-    
+
     function get_obj_name()
     {
-        return $this->{$this->__mgr->singular.'_name'} ? $this->{$this->__mgr->singular.'_name'} : $this->__mgr->singular . ' #' . $this->get_obj_id();
+        return isset($this->{$this->__mgr->singular.'_name'}) 
+            ? $this->{$this->__mgr->singular.'_name'} 
+                : (isset($this->name)
+                    ? $this->name
+                        : ($this->__mgr->singular . ' #' . $this->get_obj_id()));
     }
-    
+
     function dump()
     {
         echo "<b>" . get_class($this)  . "</b><br/>";
