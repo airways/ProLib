@@ -53,12 +53,12 @@ class Prolib_mcp {
 
 
     }
-    
+
     public function find_manager($type)
     {
         $this->type = $type;
         $this->managers = $this->lib->get_managers();
-        
+
         foreach($this->managers as $mgr)
         {
             if($this->type == $mgr->singular)
@@ -67,7 +67,7 @@ class Prolib_mcp {
                 break;
             }
         }
-        
+
         if(!$this->mgr)
         {
             throw new Exception('Invalid manager specified: '.htmlentities($type));
@@ -77,7 +77,7 @@ class Prolib_mcp {
 //     public function __call($method, $params)
 //     {
 //         $managers = $this->lib->get_managers();
-// 
+//
 //         // Determine what kind of request it is
 //         foreach($managers as $mgr)
 //         {
@@ -109,6 +109,9 @@ class Prolib_mcp {
     public function listing()
     {
         if(!isset($this->type)) throw new Exception('Type not specified in URL or logic');
+
+        $this->sub_page($this->mgr->singular.'_list');
+
         $items = $this->mgr->get_all();
 
         $vars = array(
@@ -151,7 +154,7 @@ class Prolib_mcp {
     public function edit($editing=TRUE, $vars=array())
     {
         $op = $editing ? 'edit' : 'create';
-        
+
         // Initialize the editing form, and handle process_ dispatch on POST
         list($done, $item_id, $item, $vars) =
             $this->init_edit(
@@ -159,6 +162,8 @@ class Prolib_mcp {
                 $types = array(
                 )
         );
+
+        $this->sub_page($this->mgr->singular.'_'.$op, $op == 'edit' ? $item->get_obj_name() : '');
 
         // Nothing left to do - process_ was dispatched and save was successful
         if($done) return;
@@ -227,7 +232,7 @@ class Prolib_mcp {
             'hidden'        => array('type' => $this->type, 'item_id' => $item->{$this->type.'_id'}),
         );
 
-        return $this->EE->load->view('delete', $vars, TRUE);
+        return $this->auto_view('delete', $vars);
     }
 
 
@@ -249,18 +254,6 @@ class Prolib_mcp {
         {
             show_error($this->lang('invalid_item_id').' [10]');
             return FALSE;
-        }
-    }
-
-
-    public function lang($msg)
-    {
-        $item_msg = str_replace('item', $this->mgr->singular, $msg);
-        if(lang($item_msg) != $item_msg)
-        {
-            return lang($item_msg);
-        } else {
-            lang($msg);
         }
     }
 
@@ -362,10 +355,22 @@ class Prolib_mcp {
     }
 
 
+    public function lang($msg)
+    {
+        $item_msg = str_replace('item', $this->mgr->singular, $msg);
+        if(lang($item_msg) != $item_msg)
+        {
+            return lang($item_msg);
+        } else {
+            return lang($msg);
+        }
+    }
+
+
     public function sub_page($page, $added_title = '')
     {
         $this->EE->cp->set_breadcrumb(ACTION_BASE.AMP.'module='.$this->prolib->package_name.AMP, $this->EE->lang->line($this->prolib->package_name.'_module_name'));
-        $this->EE->cp->set_variable('cp_page_title', $this->lang($this->prolib->package_name.'_title') . ' ' . $this->lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
+        $this->EE->cp->set_variable('cp_page_title', $this->lang($this->prolib->package_name.'_title') . ' - ' . $this->lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
     }
 
 
