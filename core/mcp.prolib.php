@@ -280,9 +280,9 @@ class Prolib_mcp {
             'object_name'   => 
                 isset($item->{$this->type.'_name'}) 
                     ? $item->{$this->type.'_name'} 
-                        : isset($item->name)
+                        : (isset($item->name)
                             ? $item->name
-                                : $this->type . ' ' . $item->{$this->type.'_id'},
+                                : $this->type . ' ' . $item->{$this->type.'_id'}),
             'hidden'        => array('type' => $this->type, 'item_id' => $item->{$this->type.'_id'}),
         );
 
