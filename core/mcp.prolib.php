@@ -231,6 +231,7 @@ class Prolib_mcp {
             $vars += $this->type_vars[$this->type][$op];
         }
 
+        $this->get_flashdata($vars);
         return $this->EE->load->view('generic/edit', $vars, TRUE);
     }
 
@@ -317,6 +318,86 @@ class Prolib_mcp {
     }
 
 
+    function preferences()
+    {
+        $this->find_manager('preference');
+        
+        if($_SERVER['REQUEST_METHOD'] == 'POST')
+        {
+            if($this->process_preferences()) return;
+        }
+
+        $vars = array();
+        $this->sub_page('tab_preferences');
+
+        $form = array();
+
+        $prefs = $this->lib->prefs->get_preferences();
+
+        if(is_callable(array($this->lib->prefs, 'prefs_form')))
+        {
+            $types = $this->lib->prefs->prefs_form($prefs);
+            
+            foreach($prefs as $pref => $value)
+            {
+                $f_name = 'pref_' . $pref;
+    
+                if(isset($types[$f_name]))
+                {
+                    $control = $types[$f_name];
+                } else {
+                    $control = form_input($f_name, $value);
+                }
+                
+                $form[] = array('lang_field' => $f_name, 'label' => lang($f_name), 'control' => $control);
+            }
+        }
+
+        $vars = array(
+            'form_name'         => $this->lang('preferences'),
+            'package_name'      => $this->prolib->package_name,
+            'type'              => 'preference',
+            'mgr'               => $this->mgr,
+            'form'              => $form,
+            'action_url'        => FORM_ACTION_BASE.'method=preferences'.AMP.'type=preference',
+            'editing'           => FALSE,
+        );
+
+        $this->get_flashdata($vars);
+        return $this->auto_view('edit', $vars);
+    }
+
+    function process_preferences()
+    {
+        // returns an array of preferences as name => value pairs
+        $prefs = $this->lib->prefs->get_preferences();
+        foreach($prefs as $pref => $existing_value)
+        {
+            $f_name = 'pref_' . $pref;
+            $value = $this->EE->input->post($f_name);
+            if($value != $existing_value)
+            {
+//                 if($value)
+//                 {
+                    $value = $this->EE->input->post($f_name);
+                    $this->lib->prefs->set($pref, $value);
+//                 } else {
+//                     switch($f_name)
+//                     {
+//                         case 'pref_safecracker_integration_on':
+//                         case 'pref_safecracker_separate_channels_on':
+//                             $this->EE->formslib->prefs->set($pref, 'n');
+//                     }
+//                 }
+            }
+        }
+
+        $this->EE->session->set_flashdata('message', $this->lang('msg_preferences_edited'));
+        
+        $this->EE->functions->redirect(ACTION_BASE.AMP.'method=preferences');
+        return TRUE;
+    }
+
     function init_edit($op, $field_types)
     {
         // Automatically get an object to edit and dispatch process_edit or process_create if request is a POST
@@ -370,8 +451,11 @@ class Prolib_mcp {
 
     public function auto_view($action, $vars)
     {
-        $path = PATH_THIRD.$this->prolib->package_name.'/views/'.$this->mgr->plural.'/'.$action.'.php';
-        if(file_exists($path))
+        if(isset($this->mgr))
+        {
+            $path = PATH_THIRD.$this->prolib->package_name.'/views/'.$this->mgr->plural.'/'.$action.'.php';
+        }
+        if(isset($path) && file_exists($path))
         {
             return $this->EE->load->view($this->mgr->plural.'/'.$action, $vars, TRUE);
             //return $this->EE->load->view($path, $vars, TRUE);
@@ -416,7 +500,12 @@ class Prolib_mcp {
 
     public function lang($msg)
     {
-        $item_msg = str_replace('item', $this->mgr->singular, $msg);
+        if(isset($this->mgr))
+        {
+            $item_msg = str_replace('item', $this->mgr->singular, $msg);
+        } else {
+            $item_msg = $msg;
+        }
         if(lang($item_msg) != $item_msg)
         {
             return lang($item_msg);

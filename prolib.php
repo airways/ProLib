@@ -68,7 +68,8 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_channel_fields  = &$object->prolib->pl_channel_fields;
     $object->EE->pl_encryption      = &$object->prolib->pl_encryption;
 
-    $object->site_id = $PROLIB->EE->config->item('site_id');
+    $PROLIB->site_id = $PROLIB->EE->config->item('site_id');
+    $object->site_id = $PROLIB->site_id;
     
     return $PROLIB;
 }
@@ -414,6 +415,28 @@ class Prolib {
         }
 
         return false;
+    }
+    
+    function get_status_groups()
+    {
+        $result = array();
+        $query = $this->EE->db->where(array('site_id' => $this->site_id))->get('status_groups');
+        foreach($query->result() as $group)
+        {
+            $result[$group->group_id] = $group->group_name;
+        }
+        return $result;
+    }
+
+    function get_statuses($group_id)
+    {
+        $result = array();
+        $query = $this->EE->db->where(array('group_id' => $group_id))->get('statuses');
+        foreach($query->result() as $status)
+        {
+            $result[$status->status_id] = $status->status;
+        }
+        return $result;
     }
 
     private function ee_saef_css()
