@@ -43,7 +43,7 @@ class Prolib_mcp {
         $this->EE->load->library('table');
         $this->EE->load->helper('form');
 
-        // If there isn't a G parameter in the URL - the subclass MUST call find_manager,
+        // If there isn't a type parameter in the URL - the subclass MUST call find_manager,
         // or almost nothing in here will work properly (this applies mainly to
         // mapping the index() action to a listing).
         if($this->EE->input->get_post('type'))
@@ -104,6 +104,35 @@ class Prolib_mcp {
 // //
 //         throw new Exception('Undefined method called: '.$method);
 //     }
+
+    public function plugin()
+    {
+//         if(!isset($this->type)) throw new Exception('Type not specified in URL or logic');
+        $this->prolib->pl_plugins->init();
+        
+        $vars = array(
+            'type'          => $this->type,
+            'package_name'  => $this->prolib->package_name,
+            'mgr'           => $this->mgr,
+            'create_item'   => $this->lang('item_create'),
+        );
+
+        $this->get_flashdata($vars);
+        $action = $this->EE->input->get('action');
+        if($action)
+        {
+            $output = $this->prolib->pl_plugins->$action($this, $vars, '');
+            if($output == '')
+            {
+                $output = '<b>Plugin action not found!</b><br/>Be sure you have installed the plugin you are trying to use.';
+            }
+        } else {
+            $output = '<b>Plugin action not specified!</b><br/>The plugin method requires an action parameter.';
+        }
+        return $output;
+    }
+
+
 
 
     public function listing()
@@ -170,13 +199,19 @@ class Prolib_mcp {
         $return_type = $this->EE->input->get('return_type');
         $return_item_id = $this->EE->input->get('return_item_id');
 
+        if(is_callable(array($this->mgr, 'model_form')))
+        {
+            $types = $this->mgr->model_form();
+        } else {
+            $types = array();
+        }
+
 
         // Initialize the editing form, and handle process_ dispatch on POST
         list($done, $item_id, $item, $vars) =
             $this->init_edit(
                 $editing ? 'edit' : 'create',
-                $types = array(
-                )
+                $types
         );
 
         $form_name = $this->mgr->singular.'_'.$op;

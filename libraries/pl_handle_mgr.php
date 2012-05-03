@@ -30,11 +30,15 @@ class PL_handle_mgr
     var $plural_label = "";
     var $children = array();                    // Names of child managers
     var $lib = null;
-
+    var $prolib = null;
+    
     function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE, &$lib = NULL)
     {
+        global $PROLIB;
+        $this->prolib = &$PROLIB;
         $this->EE = &get_instance();
         $this->EE->db->cache_off();
+        
 
         if($table) $this->table = $table;
         if($singular) $this->singular = $singular;
@@ -177,6 +181,11 @@ class PL_handle_mgr
             $this->EE->db->where($where);
         }
 
+        if(!$order && property_exists($this->class, 'order_no'))
+        {
+            $order = 'order_no ASC';
+        }
+        
         if($order)
         {
             if(!is_array($order)) $order = array($order);
