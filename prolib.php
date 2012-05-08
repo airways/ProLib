@@ -17,25 +17,30 @@
  *
  **/
 
-require_once 'config.php';
-require_once 'helpers/array_helper.php';
-require_once 'helpers/icons_helper.php';
-require_once 'helpers/krumo_helper.php';
-require_once 'helpers/yaml_helper.php';
-require_once 'helpers/string_helper.php';
-require_once 'libraries/pl_callback_interface.php';
-require_once 'libraries/pl_debug.php';
-require_once 'libraries/pl_email.php';
-require_once 'libraries/pl_handle_mgr.php';
-require_once 'libraries/pl_parser.php';
-require_once 'libraries/pl_uploads.php';
-require_once 'libraries/pl_forms.php';
-require_once 'libraries/pl_prefs.php';
-require_once 'libraries/pl_celltypes.php';
-require_once 'libraries/pl_validation.php';
-require_once 'libraries/pl_channel_fields.php';
-require_once 'libraries/pl_encryption.php';
-require_once 'libraries/pl_hooks.php';
+require_once PATH_THIRD.'prolib/config.php';
+require_once PATH_THIRD.'prolib/helpers/array_helper.php';
+require_once PATH_THIRD.'prolib/helpers/icons_helper.php';
+require_once PATH_THIRD.'prolib/helpers/krumo_helper.php';
+require_once PATH_THIRD.'prolib/helpers/yaml_helper.php';
+require_once PATH_THIRD.'prolib/helpers/string_helper.php';
+require_once PATH_THIRD.'prolib/libraries/pl_callback_interface.php';
+require_once PATH_THIRD.'prolib/libraries/pl_debug.php';
+require_once PATH_THIRD.'prolib/libraries/pl_email.php';
+require_once PATH_THIRD.'prolib/libraries/pl_handle_mgr.php';
+require_once PATH_THIRD.'prolib/libraries/pl_parser.php';
+require_once PATH_THIRD.'prolib/libraries/pl_uploads.php';
+require_once PATH_THIRD.'prolib/libraries/pl_forms.php';
+require_once PATH_THIRD.'prolib/libraries/pl_prefs.php';
+require_once PATH_THIRD.'prolib/libraries/pl_celltypes.php';
+require_once PATH_THIRD.'prolib/libraries/pl_validation.php';
+require_once PATH_THIRD.'prolib/libraries/pl_channel_fields.php';
+require_once PATH_THIRD.'prolib/libraries/pl_encryption.php';
+require_once PATH_THIRD.'prolib/libraries/pl_hooks.php';
+require_once PATH_THIRD.'prolib/libraries/pl_plugins.php';
+require_once PATH_THIRD.'prolib/libraries/pl_members.php';
+require_once PATH_THIRD.'prolib/core/mcp.prolib.php';
+require_once PATH_THIRD.'prolib/core/lib.base.php';
+require_once PATH_THIRD.'prolib/core/plg.base.php';
 
 function prolib(&$object, $package_name="")
 {
@@ -65,8 +70,11 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_validation      = &$object->prolib->pl_validation;
     $object->EE->pl_channel_fields  = &$object->prolib->pl_channel_fields;
     $object->EE->pl_encryption      = &$object->prolib->pl_encryption;
+    $object->EE->pl_plugins         = &$object->prolib->pl_plugins;
+    $object->EE->pl_members         = &$object->prolib->pl_members;
 
-    $object->site_id = $PROLIB->EE->config->item('site_id');
+    $PROLIB->site_id = $PROLIB->EE->config->item('site_id');
+    $object->site_id = $PROLIB->site_id;
     
     return $PROLIB;
 }
@@ -98,6 +106,8 @@ class Prolib {
         $this->pl_validation        = new PL_Validation();
         $this->pl_channel_fields    = new PL_channel_fields();
         $this->pl_encryption        = new PL_Encryption();
+        $this->pl_plugins           = new PL_Plugins();
+        $this->pl_members           = new PL_Members();
 
         // random fun stuff
         if(isset($this->EE->uri->page_query_string))
@@ -122,14 +132,16 @@ class Prolib {
         // prolib() is called.
 
         $this->package_name = $package_name;
+        $this->package_path = PATH_THIRD.$package_name.'/';
 
         $theme = $this->EE->config->item('theme_folder_url');
         if(substr($theme, -1) != '/') $theme .= '/';
         $object->theme_url = $theme.'third_party/'.$package_name.'/';
-
+        
         if(defined('BASE'))
         {
-            defined('ACTION_BASE') OR define('ACTION_BASE', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name);
+            defined('ACTION_BASE') OR define('ACTION_BASE', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
+            defined('FORM_ACTION_BASE') OR define('FORM_ACTION_BASE', 'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('TAB_ACTION') OR define('TAB_ACTION', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('CP_ACTION') OR define('CP_ACTION', 'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP.'method=');
         }
@@ -411,6 +423,28 @@ class Prolib {
         }
 
         return false;
+    }
+    
+    function get_status_groups()
+    {
+        $result = array();
+        $query = $this->EE->db->where(array('site_id' => $this->site_id))->get('status_groups');
+        foreach($query->result() as $group)
+        {
+            $result[$group->group_id] = $group->group_name;
+        }
+        return $result;
+    }
+
+    function get_statuses($group_id, $key_field = 'status_id')
+    {
+        $result = array();
+        $query = $this->EE->db->where(array('group_id' => $group_id))->get('statuses');
+        foreach($query->result() as $status)
+        {
+            $result[$status->$key_field] = $status->status;
+        }
+        return $result;
     }
 
     private function ee_saef_css()

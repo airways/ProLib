@@ -28,9 +28,12 @@ class PL_prefs extends PL_handle_mgr {
      * ------------------------------------------------------------ */
 
     var $default_prefs = array();
-
-    function __construct($table = FALSE, $class = FALSE, $default_prefs = FALSE)
+    
+    function __construct($table = FALSE, $class = FALSE, $default_prefs = FALSE, $site_id = FALSE)
     {
+        global $PROLIB;
+        $this->prolib = &$PROLIB;
+        
         $singular = "preference";
         if(!$class)
         {
@@ -40,6 +43,11 @@ class PL_prefs extends PL_handle_mgr {
         if($default_prefs)
         {
             $this->default_prefs = $default_prefs;
+        }
+        
+        if($site_id)
+        {
+            $this->site_id = $site_id;
         }
 
         parent::__construct($table, $singular, $class);
@@ -208,6 +216,14 @@ class PL_prefs extends PL_handle_mgr {
 
     function delete_preference($object) {
         return $this->delete_object($object);
+    }
+    
+    /**
+     * Used by the Prolib_mcp::preferences() action to generate a prefs form. Any prefs
+     * not given control markup by this function will get input fields automatically.
+     */
+    function prefs_form($prefs) {
+        return array();
     }
 }} // class PL_prefs
 
