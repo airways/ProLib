@@ -29,7 +29,7 @@ class PL_prefs extends PL_handle_mgr {
 
     var $default_prefs = array();
     
-    function __construct($table = FALSE, $class = FALSE, $default_prefs = FALSE)
+    function __construct($table = FALSE, $class = FALSE, $default_prefs = FALSE, $site_id = FALSE)
     {
         global $PROLIB;
         $this->prolib = &$PROLIB;
@@ -43,6 +43,11 @@ class PL_prefs extends PL_handle_mgr {
         if($default_prefs)
         {
             $this->default_prefs = $default_prefs;
+        }
+        
+        if($site_id)
+        {
+            $this->site_id = $site_id;
         }
 
         parent::__construct($table, $singular, $class);

@@ -184,7 +184,7 @@ class PL_uploads {
         if (version_compare(APP_VER, '2.4', '>='))
         {
             $this->EE->load->model('file_upload_preferences_model');
-            return $this->EE->file_upload_preferences_model->get_file_upload_preferences($group_id, $id);
+            return (array)$this->EE->file_upload_preferences_model->get_file_upload_preferences($group_id, $id);
         }
 
         if (version_compare(APP_VER, '2.1.5', '>='))

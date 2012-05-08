@@ -31,8 +31,9 @@ class PL_handle_mgr
     var $children = array();                    // Names of child managers
     var $lib = null;
     var $prolib = null;
+    var $site_id = FALSE;
     
-    function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE, &$lib = NULL)
+    function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE, &$lib = NULL, $site_id = FALSE)
     {
         global $PROLIB;
         $this->prolib = &$PROLIB;
@@ -45,11 +46,18 @@ class PL_handle_mgr
         if($class) $this->class = $class;
         if($serialized) $this->serialized = $serialized;
         if($lib) $this->lib = &$lib;
+        if($site_id) $this->site_id = $site_id;
     }
 
     function count()
     {
-        return $this->EE->db->count_all($this->table);
+        if($this->site_id)
+        {
+            $result = $this->EE->db->where('site_id', $this->site_id)->count_all_results($this->table);
+        } else {
+            $result = $this->EE->db->count_all($this->table);
+        }
+        return $result;
     }
 
     function create($data)
@@ -75,6 +83,11 @@ class PL_handle_mgr
             {
                 xdebug_print_function_stack('Attempting to save array as field value: '.$k);
             }
+        }
+        
+        if(!isset($data['site_id']))
+        {
+            $data['site_id'] = $this->site_id;
         }
 
         $this->EE->db->insert($this->table, $data);
@@ -102,15 +115,20 @@ class PL_handle_mgr
         if(is_numeric($handle))
         {
             $query = $this->EE->db->select('*')
-                                  ->where($this->singular . '_id', $handle)
-                                  ->get($this->table);
+                                  ->where($this->singular . '_id', $handle);
         }
         else
         {
             $query = $this->EE->db->select('*')
-                                  ->where($this->singular . '_name', $handle)
-                                  ->get($this->table);
+                                  ->where($this->singular . '_name', $handle);
         }
+
+        if($this->site_id)
+        {
+            $this->EE->db->where('site_id', $this->site_id);
+        }
+
+        $query = $this->EE->db->get($this->table);
 
         if($query->num_rows > 0)
         {
@@ -180,6 +198,11 @@ class PL_handle_mgr
         {
             $this->EE->db->where($where);
         }
+        
+        if($this->site_id)
+        {
+            $this->EE->db->where('site_id', $this->site_id);
+        }
 
         if(!$order && property_exists($this->class, 'order_no'))
         {
@@ -246,15 +269,16 @@ class PL_handle_mgr
         }
 
         $o = $this->remove_transitory($object);
+        
+        if((!isset($o['site_id']) || $o['site_id'] == 0) && $this->site_id != 0)
+        {
+            $o['site_id'] = $this->site_id;
+        }
 
         if(method_exists($object, 'pre_save'))
         {
             $object->pre_save($this, $o);
         }
-
-        // $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'});
-        //  if($where) $this->EE->db->where($where);
-        //  $query = $this->EE->db->update($this->table, $o);
 
         // First see if what we are about to update
         $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'});
