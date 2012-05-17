@@ -3,6 +3,8 @@
 class PL_base_plg {
     var $plugin_file;
     var $lang = array();
+    var $type = array();
+    var $meta = array();
     
     public function init()
     {
