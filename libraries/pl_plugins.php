@@ -43,7 +43,7 @@ class PL_Plugins {
     function init()
     {
         if(count($this->plugins)) return;
-        
+
         // find installed plugins - the main library of a plugin
         // always has the same name as the plugin filename + _plg
         $plugins = array();
@@ -59,7 +59,7 @@ class PL_Plugins {
         {
             $plugins = $plugins + $this->load_dir($dir);
         }
-        
+
         // check each plugin for a main class
         foreach($plugins as $plugin => $info)
         {
@@ -85,7 +85,7 @@ class PL_Plugins {
     function load_dir($dir)
     {
         $plugins = array();
-        
+
         if (file_exists($dir) && $dh = opendir($dir))
         {
             while (($file = readdir($dh)) !== false)
@@ -114,13 +114,28 @@ class PL_Plugins {
                 }
             }
         }
-        
+
         return $plugins;
     }
 
     function plugin_is_installed($plugin)
     {
         return array_key_exists($plugin, $this->plugins);
+    }
+
+    function get_plugins($type)
+    {
+        $result = array();
+
+        foreach($this->plugins as $plugin)
+        {
+            if(in_array($type, $plugin->type))
+            {
+                $result[] = $plugin;
+            }
+        }
+
+        return $result;
     }
 
     // handle any call to a method (hook) on this class and try to send it to any plugins
@@ -164,7 +179,10 @@ class PL_Plugins {
 
         // return the last (or only) result we got from a hook method
         return $result;
-    }  // function __class
+    }  // function __call
+
+
+
 }
 
 
