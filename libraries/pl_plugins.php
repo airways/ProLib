@@ -137,10 +137,31 @@ class PL_Plugins {
 
         return $result;
     }
+    
+    function get_plugin($key)
+    {
+        $result = FALSE;
+
+        foreach($this->plugins as $plugin)
+        {
+            if(isset($plugin->meta['key']) && $plugin->meta['key'] == $key)
+            {
+                $result = $plugin;
+                break;
+            }
+        }
+
+        return $result;
+    }
 
     // handle any call to a method (hook) on this class and try to send it to any plugins
     // that provide a definition for it
     function __call($method, $params)
+    {
+        return $this->call(FALSE, $method, $params);
+    }
+    
+    function call($plugin_key, $method, $params=array())
     {
         $CI = &get_instance();
 
@@ -168,12 +189,17 @@ class PL_Plugins {
         // now send the hook to installed plugins
         foreach($this->plugins as $plugin)
         {
-            if(method_exists($plugin, $method))
+            // if we don't care what plugin handles this method, or we found the right one, run the
+            // hook
+            if(!$plugin_key || (isset($plugin->meta['key']) && $plugin->meta['key'] == $plugin_key))
             {
-                // see comments above
-                $params[] = $result;
-                $result = call_user_func_array(array($plugin, $method), $params);
-                array_pop($params);
+                if(method_exists($plugin, $method))
+                {
+                    // see comments above
+                    $params[] = $result;
+                    $result = call_user_func_array(array($plugin, $method), $params);
+                    array_pop($params);
+                }
             }
         }
 
