@@ -105,10 +105,10 @@ class Prolib_mcp {
 //         throw new Exception('Undefined method called: '.$method);
 //     }
 
-    public function plugin()
+    public function driver()
     {
 //         if(!isset($this->type)) throw new Exception('Type not specified in URL or logic');
-        $this->prolib->pl_plugins->init();
+        $this->prolib->pl_drivers->init();
         
         $vars = array(
             'type'          => $this->type,
@@ -121,13 +121,13 @@ class Prolib_mcp {
         $action = $this->EE->input->get('action');
         if($action)
         {
-            $output = $this->prolib->pl_plugins->$action($this, $vars, '');
+            $output = $this->prolib->pl_drivers->$action($this, $vars, '');
             if($output == '')
             {
-                $output = '<b>Plugin action not found!</b><br/>Be sure you have installed the plugin you are trying to use.';
+                $output = '<b>Driver action not found!</b><br/>Be sure you have installed the driver you are trying to use.';
             }
         } else {
-            $output = '<b>Plugin action not specified!</b><br/>The plugin method requires an action parameter.';
+            $output = '<b>Driver action not specified!</b><br/>The driver method requires an action parameter.';
         }
         return $output;
     }
@@ -199,19 +199,10 @@ class Prolib_mcp {
         $return_type = $this->EE->input->get('return_type');
         $return_item_id = $this->EE->input->get('return_item_id');
 
-        if(is_callable(array($this->mgr, 'model_form')))
-        {
-            $types = $this->mgr->model_form();
-        } else {
-            $types = array();
-        }
-
-
         // Initialize the editing form, and handle process_ dispatch on POST
-        list($done, $item_id, $item, $vars) =
+        list($done, $item_id, $item, $vars, $types) =
             $this->init_edit(
-                $editing ? 'edit' : 'create',
-                $types
+                $editing ? 'edit' : 'create'
         );
 
         $form_name = $this->mgr->singular.'_'.$op;
@@ -433,8 +424,23 @@ class Prolib_mcp {
         return TRUE;
     }
 
-    function init_edit($op, $field_types)
+    function init_edit($op, $field_types=array())
     {
+        $object = FALSE;
+        if($op != 'create')
+        {
+            $item_id = (int)$this->EE->input->get_post('item_id');
+            if($item_id)
+            {
+                $object = $this->mgr->get($item_id);
+            }
+        }
+
+        if(is_callable(array($this->mgr, 'model_form')))
+        {
+            $field_types = $field_types + $this->mgr->model_form($object);
+        }
+
         // Automatically get an object to edit and dispatch process_edit or process_create if request is a POST
 
         // find checkboxes and set their values to "n" if not present
@@ -446,16 +452,6 @@ class Prolib_mcp {
                 {
                     $_POST[$field] = 'n';
                 }
-            }
-        }
-
-        $object = FALSE;
-        if($op != 'create')
-        {
-            $item_id = (int)$this->EE->input->get_post('item_id');
-            if($item_id)
-            {
-                $object = $this->mgr->get($item_id);
             }
         }
 
@@ -480,7 +476,7 @@ class Prolib_mcp {
             'action_url'    => CP_ACTION.$op.AMP.'type='.$this->type.AMP.($op!='create' ? 'item_id='.$item_id : '')
         );
 
-        return array($done, $item_id, $object, $vars);
+        return array($done, $item_id, $object, $vars, $field_types);
     }
 
 

@@ -30,8 +30,8 @@
  *
  **/
 
-class PL_Plugins {
-    var $plugins = array();
+class PL_Drivers {
+    var $drivers = array();
 
     function __construct()
     {
@@ -42,26 +42,26 @@ class PL_Plugins {
 
     function init()
     {
-        if(count($this->plugins)) return;
+        if(count($this->drivers)) return;
 
-        // find installed plugins - the main library of a plugin
-        // always has the same name as the plugin filename + _plg
-        $plugins = array();
+        // find installed drivers - the main library of a driver
+        // always has the same name as the driver filename + _plg
+        $drivers = array();
         $fieldtypes = array();
 
-        $plugins_dirs = array(
-            $this->prolib->package_path.'plugins/',
-            $this->prolib->package_path.'../'.$this->prolib->package_name.'_plugins/'
+        $drivers_dirs = array(
+            $this->prolib->package_path.'drivers/',
+            $this->prolib->package_path.'../'.$this->prolib->package_name.'_drivers/'
         );
 
-        $plugins = array();
-        foreach($plugins_dirs as $dir)
+        $drivers = array();
+        foreach($drivers_dirs as $dir)
         {
-            $plugins = $plugins + $this->load_dir($dir);
+            $drivers = $drivers + $this->load_dir($dir);
         }
 
-        // check each plugin for a main class
-        foreach($plugins as $plugin => $info)
+        // check each driver for a main class
+        foreach($drivers as $driver => $info)
         {
             if(file_exists($info['file']) && isset($info['class']))
             {
@@ -69,11 +69,11 @@ class PL_Plugins {
                 $class = $info['class'];
                 if(class_exists($class))
                 {
-                    $this->plugins[strtolower($plugin)] = new $class;
-                    $this->plugins[strtolower($plugin)]->plugin_file = $info['file'];
-                    $this->plugins[strtolower($plugin)]->init();
+                    $this->drivers[strtolower($driver)] = new $class;
+                    $this->drivers[strtolower($driver)]->driver_file = $info['file'];
+                    $this->drivers[strtolower($driver)]->init();
                 } else {
-                    show_error("Plugin exists but class does not exist or does not match filename: ".$info['file']);
+                    show_error("Driver exists but class does not exist or does not match filename: ".$info['file']);
                 }
             }
 
@@ -84,7 +84,7 @@ class PL_Plugins {
 
     function load_dir($dir)
     {
-        $plugins = array();
+        $drivers = array();
 
         if (file_exists($dir) && $dh = opendir($dir))
         {
@@ -94,20 +94,20 @@ class PL_Plugins {
                 {
                     if(is_dir($dir.'/'.$file))
                     {
-                        $plugins = $plugins + $this->load_dir($dir.'/'.$file);
+                        $drivers = $drivers + $this->load_dir($dir.'/'.$file);
                     } else {
-                        if(substr($file, -8) == '_plg.php')
+                        if(substr($file, -11) == '_driver.php')
                         {
-                            $plugins[$file] = array(
+                            $drivers[$file] = array(
                                 'file' => $dir.'/'.$file
                             );
 
-                            $info = pathinfo($plugins[$file]['file']);
+                            $info = pathinfo($drivers[$file]['file']);
                             if(isset($info['extension']))
                             {
                                 // remove the extension from the filename, then uppercase the first letter to get the class name
                                 $class = ucwords(str_replace('.php', '', $info['basename']));
-                                $plugins[$file]['class'] = $class;
+                                $drivers[$file]['class'] = $class;
                             }
                         }
                     }
@@ -115,38 +115,38 @@ class PL_Plugins {
             }
         }
 
-        return $plugins;
+        return $drivers;
     }
 
-    function plugin_is_installed($plugin)
+    function driver_is_installed($driver)
     {
-        return array_key_exists($plugin, $this->plugins);
+        return array_key_exists($driver, $this->drivers);
     }
 
-    function get_plugins($type)
+    function get_drivers($type)
     {
         $result = array();
 
-        foreach($this->plugins as $plugin)
+        foreach($this->drivers as $driver)
         {
-            if(in_array($type, $plugin->type))
+            if(in_array($type, $driver->type))
             {
-                $result[] = $plugin;
+                $result[] = $driver;
             }
         }
 
         return $result;
     }
     
-    function get_plugin($key)
+    function get_driver($key)
     {
         $result = FALSE;
 
-        foreach($this->plugins as $plugin)
+        foreach($this->drivers as $driver)
         {
-            if(isset($plugin->meta['key']) && $plugin->meta['key'] == $key)
+            if(isset($driver->meta['key']) && $driver->meta['key'] == $key)
             {
-                $result = $plugin;
+                $result = $driver;
                 break;
             }
         }
@@ -154,14 +154,14 @@ class PL_Plugins {
         return $result;
     }
 
-    // handle any call to a method (hook) on this class and try to send it to any plugins
+    // handle any call to a method (hook) on this class and try to send it to any drivers
     // that provide a definition for it
     function __call($method, $params)
     {
         return $this->call(FALSE, $method, $params);
     }
     
-    function call($plugin_key, $method, $params=array())
+    function call($driver_key, $method, $params=array())
     {
         $CI = &get_instance();
 
@@ -186,18 +186,18 @@ class PL_Plugins {
             }
         }
 
-        // now send the hook to installed plugins
-        foreach($this->plugins as $plugin)
+        // now send the hook to installed drivers
+        foreach($this->drivers as $driver)
         {
-            // if we don't care what plugin handles this method, or we found the right one, run the
+            // if we don't care what driver handles this method, or we found the right one, run the
             // hook
-            if(!$plugin_key || (isset($plugin->meta['key']) && $plugin->meta['key'] == $plugin_key))
+            if(!$driver_key || (isset($driver->meta['key']) && $driver->meta['key'] == $driver_key))
             {
-                if(method_exists($plugin, $method))
+                if(method_exists($driver, $method))
                 {
                     // see comments above
                     $params[] = $result;
-                    $result = call_user_func_array(array($plugin, $method), $params);
+                    $result = call_user_func_array(array($driver, $method), $params);
                     array_pop($params);
                 }
             }

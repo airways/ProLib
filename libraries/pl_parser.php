@@ -328,7 +328,12 @@ class PL_parser {
         $conditionals = array();
         foreach($row_vars as $k => $v)
         {
-            $conditionals[$this->variable_prefix.$k] = $v;
+            if($v instanceof PL_Parser_ArrayWrapper)
+            {
+                $conditionals[$this->variable_prefix.$k] = count($v->array);
+            } else {
+                $conditionals[$this->variable_prefix.$k] = $v;
+            }
         }
         return $conditionals;
     }

@@ -1,7 +1,7 @@
 <?php
 
-class PL_base_plg {
-    var $plugin_file;
+class PL_base_driver {
+    var $driver_file;
     var $lang = array();
     var $type = array();
     var $meta = array();
@@ -9,7 +9,7 @@ class PL_base_plg {
     public function init()
     {
         $this->EE = &get_instance();
-        $info = pathinfo($this->plugin_file);
+        $info = pathinfo($this->driver_file);
         $this->view_path = $info['dirname'].'/views/';
     }
 
@@ -17,7 +17,7 @@ class PL_base_plg {
     {
         if(!file_exists($this->view_path.$view.'.php'))
         {
-            return "Plugin view file does not exist: ".$view.".php";
+            return "Driver view file does not exist: ".$view.".php";
         }
         
         extract($vars);
