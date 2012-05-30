@@ -36,11 +36,11 @@ require_once PATH_THIRD.'prolib/libraries/pl_validation.php';
 require_once PATH_THIRD.'prolib/libraries/pl_channel_fields.php';
 require_once PATH_THIRD.'prolib/libraries/pl_encryption.php';
 require_once PATH_THIRD.'prolib/libraries/pl_hooks.php';
-require_once PATH_THIRD.'prolib/libraries/pl_plugins.php';
+require_once PATH_THIRD.'prolib/libraries/pl_drivers.php';
 require_once PATH_THIRD.'prolib/libraries/pl_members.php';
 require_once PATH_THIRD.'prolib/core/mcp.prolib.php';
 require_once PATH_THIRD.'prolib/core/lib.base.php';
-require_once PATH_THIRD.'prolib/core/plg.base.php';
+require_once PATH_THIRD.'prolib/core/driver.base.php';
 
 function prolib(&$object, $package_name="")
 {
@@ -70,7 +70,7 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_validation      = &$object->prolib->pl_validation;
     $object->EE->pl_channel_fields  = &$object->prolib->pl_channel_fields;
     $object->EE->pl_encryption      = &$object->prolib->pl_encryption;
-    $object->EE->pl_plugins         = &$object->prolib->pl_plugins;
+    $object->EE->pl_drivers         = &$object->prolib->pl_drivers;
     $object->EE->pl_members         = &$object->prolib->pl_members;
 
     $PROLIB->site_id = $PROLIB->EE->config->item('site_id');
@@ -106,7 +106,7 @@ class Prolib {
         $this->pl_validation        = new PL_Validation();
         $this->pl_channel_fields    = new PL_channel_fields();
         $this->pl_encryption        = new PL_Encryption();
-        $this->pl_plugins           = new PL_Plugins();
+        $this->pl_drivers           = new PL_Drivers();
         $this->pl_members           = new PL_Members();
 
         // random fun stuff
