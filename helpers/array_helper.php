@@ -36,6 +36,15 @@ if(!function_exists('array_presort'))
                 $result[$key] = $array[$key];
             }
         }
+        
+        // Copy remaining items to the end
+        foreach($array as $key => $value)
+        {
+            if(!isset($result[$key]))
+            {
+                $result[$key] = $value;
+            }
+        }
         return $result;
     }
 }
