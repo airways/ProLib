@@ -482,7 +482,7 @@ class PL_parser {
         return $result;
     }
 
-    public function wrap_array(&$array, $key_var_name = 'key', $row_var_name = 'row')
+    public function wrap_array($array, $key_var_name = 'key', $row_var_name = 'row')
     {
         return new PL_Parser_ArrayWrapper($array, $key_var_name, $row_var_name);
     }
