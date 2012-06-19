@@ -140,7 +140,7 @@ class PL_parser {
         // If a variable is not parsing, remember to add it to the list of valid var pairs!
         foreach($pairs as $var_pair)
         {
-            
+
             // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
             // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
             // turned off - that is the basic formula for finding tags with parameters.
@@ -157,7 +157,7 @@ class PL_parser {
                     $pair_row_template = &$matches[1][$i];
 
                     $pair_data = '';
-                    
+
                     // The PL_Parser_ArrayWrapper class allows us to wrap some meta info around an array so we don't need to do
                     // any special parsing for simple cases such as changing {row} to {rule}
                     if($row_vars[$var_pair] instanceof PL_Parser_ArrayWrapper)
@@ -172,7 +172,7 @@ class PL_parser {
                         $row_var_name = 'row';
                         $parse_pair   = &$row_vars[$var_pair];
                     }
-                    
+
                     // Loop over the data in the variable pair, and parse it into our template code
                     foreach($parse_pair as $data_key => $data)
                     {
@@ -185,7 +185,7 @@ class PL_parser {
                                 $data = $data($row_vars[$var_pair], $data_key, $pair_row_data);
                             } else {
                                 // The array item is a string which we want to repalce into the template
-                                
+
                                 // Replace and process conditionals for the key variable - often literally {key} - with the array
                                 // index we are currently at in the variable pair
                                 $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$key_var_name => $data_key));
@@ -221,7 +221,7 @@ class PL_parser {
                                     // find matches on this subpair (this is used for celltype substitution in mason, for instance)
                                     //match pair, preventing matches like
                                     //{file:ul} ...{/file}
-                                    $f_count = preg_match_all($f_pattern = 
+                                    $f_count = preg_match_all($f_pattern =
                                         "/".LD.$k."((?::[^ ]+?)?)(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."(.*?)".LD."\/".$k.'\1'.RD."/s",
                                         $pair_row_data, $f_matches);
                                     // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
@@ -250,7 +250,7 @@ class PL_parser {
 
                                     // find single tags, not mutually exclusive
 
-                                    $f_count = preg_match_all($f_pattern = 
+                                    $f_count = preg_match_all($f_pattern =
                                         "/".LD.$k."(:[^ ]+?)?(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."/s",
                                         $pair_row_data, $f_matches);
                                     // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
@@ -481,10 +481,76 @@ class PL_parser {
 
         return $result;
     }
-    
+
     public function wrap_array(&$array, $key_var_name = 'key', $row_var_name = 'row')
     {
         return new PL_Parser_ArrayWrapper($array, $key_var_name, $row_var_name);
+    }
+
+
+    /**
+     * No Results
+     *
+     * If a tag/class has no results to show, it can call this method.  Any no_results variable in
+     * the tag will be followed.  May be 404 page, content, or even a redirect.
+     *
+     * @return  void
+     */
+    public function parse_no_results_ex($params=array())
+    {
+        // Setup default parameters
+        extract($this->make_params($params, array(
+            'variable_prefix'   => '',
+        )));
+
+        if(preg_match("/".LD."if ".$variable_prefix."no_results".RD."(.*?)".LD.'\/'."if".RD."/s", $this->EE->TMPL->tagdata, $match))
+        {
+            $chunk = $match[0];
+            if (stristr($match[1], LD.'if'))
+            {
+                // There are other conditionals inside the chunk, recursively search to find the matching {/if} for the no_results
+                // conditional.
+                $chunk = $this->EE->functions->full_tag($match[0], $this->EE->TMPL->tagdata, LD.'if', LD.'\/'."if".RD);
+            }
+
+            // Strip off the opening and closing conditional tags. Because of the above madness we can't just use
+            // the inside marked region of the tag.
+            $this->no_results = substr($match[0], strlen(LD."if ".$variable_prefix."no_results".RD), -strlen(LD.'/'."if".RD));
+
+            // Remove the no_results conditional chunk from the template tagdata
+            $this->EE->TMPL->tagdata = str_replace($chunk, '', $this->EE->TMPL->tagdata);
+        } else {
+            $this->no_results = $this->EE->TMPL->no_results;
+        }
+
+
+    }
+
+    public function no_results()
+    {
+        return $this->no_results;
+    }
+
+    public function make_params(&$params, $param_defaults)
+    {
+        // Check for invalid parameters
+        foreach($params as $k => $v)
+        {
+            if(!array_key_exists($k, $param_defaults))
+            {
+                exit('Invalid parameter provided to no_results_ex: '.$k);
+            }
+        }
+
+        // Load parameters from combined defaults and provided values
+        $params = array_merge($param_defaults, $params);
+
+        foreach($params as $k => $v)
+        {
+            $this->$k = $v;
+        }
+
+        return $params;
     }
 }
 
@@ -492,14 +558,14 @@ class PL_Parser_ArrayWrapper {
     var $array = array();
     var $key_var_name = 'key';
     var $row_var_name = 'row';
-    
+
     public function __construct(&$array, $key_var_name, $row_var_name)
     {
         $this->array = &$array;
         $this->key_var_name = $key_var_name;
         $this->row_var_name = $row_var_name;
     }
-    
+
     public function __toString() {
         xdebug_print_function_stack('PL_Parser_ArrayWrapper::__toString()!');
         exit;

@@ -157,6 +157,25 @@ class PL_prefs extends PL_handle_mgr {
         // return PL_Preference object or FALSE
         return $pref;
     }
+    
+    /**
+     * Delete a preference setting from the database.
+     *
+     * @param $key
+     */
+    function del($key)
+    {
+        if(is_numeric($key))
+        {
+            echo "<div>Error: del() cannot be called with an ID - key param must not be numeric.</div>";
+            return FALSE;
+        }
+        $result = $this->get_preference($key);
+        if($result) {
+            $result = $result->delete();
+        }
+    }
+
 
     /**
      * Get a map of all preference values from the database, including default preference values
