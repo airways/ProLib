@@ -344,7 +344,7 @@ class PL_handle_mgr
             $abort = $object->pre_delete($this);
         }
 
-        if(!$abort)
+        if(!$abort && $object->{$this->singular . '_id'} != 0)
         {
             $result = $query = $this->EE->db->where($this->singular . '_id', $object->{$this->singular . '_id'})
                                             ->delete($this->table);

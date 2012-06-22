@@ -82,6 +82,7 @@ class PL_prefs extends PL_handle_mgr {
                 // create a new preference object for the default preference
                 $row = array('preference_name' => $name, 'value' => $this->default_prefs[$name]);
                 $result = new PL_Preference($row);
+                $result->__mgr = $this;
             }
         }
         return $result;
@@ -228,6 +229,7 @@ class PL_prefs extends PL_handle_mgr {
             if(!array_key_exists($k, $objects))
             {
                 $objects[$k] = new PL_Preference(array('preference_name' => $k, 'value' => $this->default_prefs[$k]));
+                $objects[$k]->__mgr = $this;
             }
         }
         return $this->save_objects($objects);
