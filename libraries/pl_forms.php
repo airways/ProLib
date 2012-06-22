@@ -58,9 +58,9 @@ class PL_forms {
 
                             foreach($settings as $settings_field)
                             {
-								if(array_key_exists($key.'_'.$settings_field['name'], $object->settings))
+                                if(array_key_exists($key.'_'.str_replace('[]','',$settings_field['name']), $object->settings))
                                 {
-                                    $setting_value = $object->settings[$key.'_'.$settings_field['name']];
+                                    $setting_value = $object->settings[$key.'_'.str_replace('[]','',$settings_field['name'])];
                                 } else {
                                     $setting_value = '';
                                 }
@@ -76,6 +76,11 @@ class PL_forms {
                                         break;
                                     case 'dropdown':
                                         $control .= form_dropdown($key.'_'.$settings_field['name'],
+                                                    isset($settings_field['options']) ? $settings_field['options'] : array(),
+                                                    $setting_value);
+                                        break;
+                                    case 'multiselect':
+                                        $control .= form_multiselect($key.'_'.$settings_field['name'],
                                                     isset($settings_field['options']) ? $settings_field['options'] : array(),
                                                     $setting_value);
                                         break;
