@@ -1,10 +1,14 @@
 <?php
 
 class PL_forms {
-    function create_cp_form($object, $types, $extra=array())
+    function create_cp_form($object, $types, $extra=array(), $current_settings = false)
     {
         $form = array();
 
+        if($current_settings === false)
+        {
+            $current_settings = $object->settings;
+        }
 
         foreach($object as $key => $value)
         {
@@ -49,7 +53,7 @@ class PL_forms {
                         {
                             $control .= '<div id="'.$key.'_'.$k.'" class="edit_settings">';
 
-                            if(!isset($object->settings))
+                            if($current_settings === false)
                             {
                                 echo 'No settings array exists for object of type ' . get_class($object);
                                 var_dump($object);
@@ -58,9 +62,9 @@ class PL_forms {
 
                             foreach($settings as $settings_field)
                             {
-                                if(array_key_exists($key.'_'.str_replace('[]','',$settings_field['name']), $object->settings))
+                                if(array_key_exists($key.'_'.str_replace('[]','',$settings_field['name']), $current_settings))
                                 {
-                                    $setting_value = $object->settings[$key.'_'.str_replace('[]','',$settings_field['name'])];
+                                    $setting_value = $current_settings[$key.'_'.str_replace('[]','',$settings_field['name'])];
                                 } else {
                                     $setting_value = '';
                                 }

@@ -230,6 +230,7 @@ class PL_handle_mgr
             $this->EE->db->limit($perpage, $offset);
         }
 
+
         $query = $this->EE->db->get($this->table);
 
         if($query->num_rows > 0)
