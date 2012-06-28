@@ -154,6 +154,8 @@ class PL_Vault {
 
             $fields = array(
                 'vault_id'          => array('type' => 'int', 'constraint' => '10', 'unsigned' => TRUE, 'auto_increment' => TRUE),
+                'site_id'           => array('type' => 'int', 'constraint' => '4', 'default' => '1'),
+                'author_id'         => array('type' => 'int', 'constraint' => '11'),
                 'hash'              => array('type' => 'varchar', 'constraint' => '128'),
                 'data'              => array('type' => 'blob'),
                 'expire'            => array('type' => 'int'),
