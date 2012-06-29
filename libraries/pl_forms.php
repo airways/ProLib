@@ -7,7 +7,7 @@ class PL_forms {
 
         if($current_settings === false)
         {
-            $current_settings = $object->settings;
+            $current_settings = isset($object->settings) ? $object->settings : array();
         }
 
         foreach($object as $key => $value)
