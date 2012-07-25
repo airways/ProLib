@@ -38,6 +38,7 @@ require_once PATH_THIRD.'prolib/libraries/pl_encryption.php';
 require_once PATH_THIRD.'prolib/libraries/pl_hooks.php';
 require_once PATH_THIRD.'prolib/libraries/pl_drivers.php';
 require_once PATH_THIRD.'prolib/libraries/pl_members.php';
+require_once PATH_THIRD.'prolib/libraries/pl_script.php';
 require_once PATH_THIRD.'prolib/core/mcp.prolib.php';
 require_once PATH_THIRD.'prolib/core/lib.base.php';
 require_once PATH_THIRD.'prolib/core/driver.base.php';
@@ -52,7 +53,7 @@ function prolib(&$object, $package_name="")
 
     if(!isset($PROLIB))
     {
-        $PROLIB = new Prolib();
+        $PROLIB = new Prolib_core();
         $PROLIB->init();
     }
 
@@ -72,10 +73,11 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_encryption      = &$object->prolib->pl_encryption;
     $object->EE->pl_drivers         = &$object->prolib->pl_drivers;
     $object->EE->pl_members         = &$object->prolib->pl_members;
+    $object->EE->pl_script          = &$object->prolib->pl_script;
 
     $PROLIB->site_id = $PROLIB->EE->config->item('site_id');
     $object->site_id = $PROLIB->site_id;
-    
+
     return $PROLIB;
 }
 
@@ -83,7 +85,7 @@ function prolib(&$object, $package_name="")
  * Generic prolib class - provides helper functions that don't belong in a larger class.
  * Initializes prolib classes and provides them as properties.
  **/
-class Prolib {
+class Prolib_core {
     var $package_name = FALSE;
     var $caches = array();
 
@@ -108,6 +110,7 @@ class Prolib {
         $this->pl_encryption        = new PL_Encryption();
         $this->pl_drivers           = new PL_Drivers();
         $this->pl_members           = new PL_Members();
+        $this->pl_script            = new PL_Script();
 
         // random fun stuff
         if(isset($this->EE->uri->page_query_string))
@@ -137,7 +140,7 @@ class Prolib {
         $theme = $this->EE->config->item('theme_folder_url');
         if(substr($theme, -1) != '/') $theme .= '/';
         $object->theme_url = $theme.'third_party/'.$package_name.'/';
-        
+
         if(defined('BASE'))
         {
             defined('ACTION_BASE') OR define('ACTION_BASE', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
@@ -250,7 +253,7 @@ class Prolib {
                 $object = $mgr->get($object_id);
             }
         }
-        
+
         if(!$object)
         {
             $object_id = 0;
@@ -424,7 +427,7 @@ class Prolib {
 
         return false;
     }
-    
+
     function get_status_groups()
     {
         $result = array();

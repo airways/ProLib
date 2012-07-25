@@ -30,7 +30,7 @@
  *
  **/
 
-class Prolib_mcp {
+class Prolib_base_mcp {
     private $debug_str = '';
     var $lib = null;                // Must be set to a subclass of PL_base_lib
     var $type = null;
