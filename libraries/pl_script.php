@@ -42,7 +42,7 @@ class PL_Script {
         global $PROLIB;
         $this->prolib = &$PROLIB;
 
-        foreach($this->PROLIB->pl_drivers->get_drivers('funclib') as $driver)
+        foreach($this->prolib->pl_drivers->get_drivers('funclib') as $driver)
         {
             $this->register_funclib($driver);
         }
