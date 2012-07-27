@@ -97,32 +97,24 @@ class PL_uploads {
 
         if ($upload_pref)
         {
-            // see http://codeigniter.com/user_guide/libraries/file_uploading.html for more on options we can set here
-            // for now just do the minimum to get it to upload a file
-            $config = array(
-                'upload_path' => $upload_pref['server_path'],
-                'allowed_types' => '*',
-                'file_name' => $this->make_unique_filename($_FILES[$field]['name'], $upload_pref['server_path']),
-                //'max_filename' => '',
-                //'encrypt_name' => 'y',
-                //'remove_spaces' => 'y',
-                //'overwrite' => '',
-                'max_size' => $upload_pref['max_size'],
-                'max_width' => $upload_pref['max_width'],
-                'max_height' => $upload_pref['max_height']
-            );
+            $unique_filename = $this->make_unique_filename($_FILES[$field]['name'], $upload_pref['server_path']);
 
-            $this->EE->load->library('upload', $config);
+            //if(!$this->EE->upload->do_upload($field))
+            $this->EE->load->library('Filemanager');
+            $data = $this->EE->filemanager->upload_file($pref_id, $field);
 
-            if(!$this->EE->upload->do_upload($field))
-            {
-                $this->errors = array_merge($this->errors, $this->EE->upload->error_msg);
+            if (array_key_exists('error', $data))
+			{
+				$this->errors[] = lang(trim(strip_tags($data['error'])));
                 return FALSE;
-            } else {
-                return $this->EE->upload->data();
+			} else {
+                $this->EE->filemanager->rename_file($data['file_id'], $unique_filename);
+                $data['file_name'] = $unique_filename;
+                return $data;
             }
+
         } else {
-            $this->errors[] = "Invalid upload path";
+            $this->errors[] = "Invalid upload directory selected in field configuration.";
             return FALSE;
         }
 
