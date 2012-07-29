@@ -240,7 +240,7 @@ class PL_prefs extends PL_handle_mgr {
     }
     
     /**
-     * Used by the Prolib_mcp::preferences() action to generate a prefs form. Any prefs
+     * Used by the Prolib_base_mcp::preferences() action to generate a prefs form. Any prefs
      * not given control markup by this function will get input fields automatically.
      */
     function prefs_form($prefs) {
