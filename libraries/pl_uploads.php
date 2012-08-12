@@ -154,15 +154,25 @@ class PL_uploads {
         $uniq = floor((time() + rand(1, 500)) / rand(1024, 3897)) + rand(1, 10000);
 
         $info = pathinfo($filename);
-        $filename = preg_replace('/[^A-Za-z0-9]/', '_', $info['filename']);
-        $ext = preg_replace('/[^A-Za-z0-9]/', '_', $info['extension']);
 
-        while(file_exists($path.$filename.'_'.$uniq.'.'.$ext))
+        $filename = '';
+        $ext = '';
+
+        if($info['filename'])           $filename = preg_replace('/[^A-Za-z0-9]/', '_', $info['filename']);
+        if(isset($info['extension']))   $ext = preg_replace('/[^A-Za-z0-9]/', '_', $info['extension']);
+
+        if(!$filename)
+        {
+            // Create a placeholder filename if no filename was provided to the routine
+            $filenmame = '_'.floor((time() + rand(1, 500)) / rand(1024, 3897)) + rand(1, 10000);
+        }
+        
+        while(file_exists($path.$filename.'_'.$uniq.($ext ? '.'.$ext : '')))
         {
             $uniq += rand(1,100);
         }
 
-        return $filename.'_'.$uniq.'.'.$ext;
+        return $filename.'_'.$uniq.($ext ? '.'.$ext : '');
     }
 
     /**
