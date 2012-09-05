@@ -397,9 +397,11 @@ class PL_RowInitialized
 
     function __construct($row, &$mgr=NULL)
     {
+        global $PROLIB;
         $this->EE = &get_instance();
         $this->__EE = &get_instance();
         $this->__CI = &get_instance();
+        $this->__prolib = &$PROLIB;
         $this->__mgr = &$mgr;
         if($row)
         {

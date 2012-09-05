@@ -65,6 +65,9 @@ class PL_forms {
                     case 'static':
                         $form[] = array('lang_field' => $lang_field, 'control' => $value);
                         break;
+                    case 'heading':
+                        $form[] = array('lang_field' => '!heading', 'control' => $options);
+                        break;
                     case 'read_only_checkbox':
                         $form[] = array('lang_field' => $lang_field, 'control' => '<b>'.($value == 'y' ? 'On' : 'Off') . '</b>: ' . $options/*.'<br/><br/>'.form_checkbox(array('name' => $input_name, 'value' => 'y', 'checked' => $value == 'y', 'disabled' => 'disabled'))*/);
                         break;
