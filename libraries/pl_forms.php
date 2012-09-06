@@ -10,8 +10,22 @@ class PL_forms {
             $current_settings = isset($object->settings) ? $object->settings : array();
         }
 
-        foreach($object as $key => $value)
+        if(isset($extra['order']) && $extra['order'] == 'type')
         {
+            $fields = array_keys($types);
+        } else {
+            $fields = array_keys((array)$object);
+        }
+        
+        foreach($fields as $key)
+        {
+            if(is_array($object))
+            {
+                $value = &$object[$key];
+            } else {
+                $value = &$object->$key;
+            }
+            
             if(is_object($value)) continue;
             
             if(substr($key, 0, 2) != "__") {
@@ -33,22 +47,35 @@ class PL_forms {
                     $options = array();
                 }
 
+                $lang_field = $key;
+                $input_name = $key;
+                if(isset($extra['array_name']))
+                {
+                    $input_name = $extra['array_name'].'['.$input_name.']';
+                }
+                
                 switch($type)
                 {
+                    case 'hidden':
+                        $form[] = array('lang_field' => '', 'control' => form_hidden($input_name, $value));
+                        break;
                     case 'read_only':
-                        $form[] = array('lang_field' => $key, 'control' => nl2br(htmlentities(strip_tags($value))));
+                        $form[] = array('lang_field' => $lang_field, 'control' => nl2br(htmlentities(strip_tags($value))));
                         break;
                     case 'static':
-                        $form[] = array('lang_field' => $key, 'control' => $value);
+                        $form[] = array('lang_field' => $lang_field, 'control' => $value);
+                        break;
+                    case 'heading':
+                        $form[] = array('lang_field' => '!heading', 'control' => $options);
                         break;
                     case 'read_only_checkbox':
-                        $form[] = array('lang_field' => $key, 'control' => '<b>'.($value == 'y' ? 'On' : 'Off') . '</b>: ' . $options/*.'<br/><br/>'.form_checkbox(array('name' => $key, 'value' => 'y', 'checked' => $value == 'y', 'disabled' => 'disabled'))*/);
+                        $form[] = array('lang_field' => $lang_field, 'control' => '<b>'.($value == 'y' ? 'On' : 'Off') . '</b>: ' . $options/*.'<br/><br/>'.form_checkbox(array('name' => $input_name, 'value' => 'y', 'checked' => $value == 'y', 'disabled' => 'disabled'))*/);
                         break;
                     case 'textarea':
-                        $form[] = array('lang_field' => $key, 'control' => form_textarea($key, $value));
+                        $form[] = array('lang_field' => $lang_field, 'control' => form_textarea($input_name, $value));
                         break;
                     case 'dropdown':
-                        $control = form_dropdown($key, $options, $value);
+                        $control = form_dropdown($input_name, $options, $value);
                         foreach($option_settings as $k => $settings)
                         {
                             $control .= '<div id="'.$key.'_'.$k.'" class="edit_settings">';
@@ -93,10 +120,10 @@ class PL_forms {
                             }
                             $control .= '</div>';
                         }
-                        $form[] = array('lang_field' => $key, 'control' => $control);
+                        $form[] = array('lang_field' => $lang_field, 'control' => $control);
                         break;
                     case 'grid':
-                        $field = array('lang_field' => $key, 'control' => $this->render_grid($key, $options['headings'], $options['options'], $value));
+                        $field = array('lang_field' => $lang_field, 'control' => $this->render_grid($key, $options['headings'], $options['options'], $value));
                         if(array_key_exists('flags', $options) && strpos($options['flags'], 'has_param'))
                         {
 
@@ -105,10 +132,10 @@ class PL_forms {
                         $form[] = $field;
                         break;
                     case 'checkbox':
-                        $form[] = array('lang_field' => $key, 'control' => form_checkbox($key, 'y', $value == 'y'));
+                        $form[] = array('lang_field' => $lang_field, 'control' => form_checkbox($input_name, 'y', $value == 'y'));
                         break;
                     default:
-                        $form[] = array('lang_field' => $key, 'control' => form_input($key, $value));
+                        $form[] = array('lang_field' => $lang_field, 'control' => form_input($input_name, $value));
                         break;
                 } // switch($type)
 

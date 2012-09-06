@@ -102,7 +102,7 @@ class PL_parser {
         // parse single variables
         foreach($row_vars as $key => $val)
         {
-            if (preg_match_all("/".LD.$variable_prefix.$key."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
+            if (preg_match_all("/".LD.$this->preg_escape($variable_prefix.$key)."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
             {
                 for ($j = 0; $j < count($matches[0]); $j++)
                 {
@@ -144,7 +144,7 @@ class PL_parser {
             // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
             // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
             // turned off - that is the basic formula for finding tags with parameters.
-            $count = preg_match_all($pattern = "/".LD.$variable_prefix.$var_pair.RD."(.*?)".LD."\/".$variable_prefix.$var_pair.RD."/s", $rowdata, $matches);
+            $count = preg_match_all($pattern = "/".LD.$this->preg_escape($variable_prefix.$var_pair).RD."(.*?)".LD."\/".$this->preg_escape($variable_prefix.$var_pair).RD."/s", $rowdata, $matches);
 
             // if we got some matches
             if($count > 0)
@@ -222,7 +222,7 @@ class PL_parser {
                                     //match pair, preventing matches like
                                     //{file:ul} ...{/file}
                                     $f_count = preg_match_all($f_pattern =
-                                        "/".LD.$k."((?::[^ ]+?)?)(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."(.*?)".LD."\/".$k.'\1'.RD."/s",
+                                        "/".LD.$this->preg_escape($k)."((?::[^ ]+?)?)(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."(.*?)".LD."\/".$this->preg_escape($k).'\1'.RD."/s",
                                         $pair_row_data, $f_matches);
                                     // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
                                     // $f_matches[1] is an array of segments for each tag
@@ -251,7 +251,7 @@ class PL_parser {
                                     // find single tags, not mutually exclusive
 
                                     $f_count = preg_match_all($f_pattern =
-                                        "/".LD.$k."(:[^ ]+?)?(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."/s",
+                                        "/".LD.$this->preg_escape($k)."(:[^ ]+?)?(?: ((?:[a-zA-Z0-9_-]+=[\"'].*?[\"'] ?)*?))?".RD."/s",
                                         $pair_row_data, $f_matches);
                                     // $f_matches[0] is an array of the full pattern matches - replace this with the results in the tagdata
                                     // $f_matches[1] is an array of segments for each tag
@@ -503,7 +503,7 @@ class PL_parser {
             'variable_prefix'   => '',
         )));
 
-        if(preg_match("/".LD."if ".$variable_prefix."no_results".RD."(.*?)".LD.'\/'."if".RD."/s", $this->EE->TMPL->tagdata, $match))
+        if(preg_match("/".LD."if ".$this->preg_escape($variable_prefix."no_results").RD."(.*?)".LD.'\/'."if".RD."/s", $this->EE->TMPL->tagdata, $match))
         {
             $chunk = $match[0];
             if (stristr($match[1], LD.'if'))
@@ -551,6 +551,13 @@ class PL_parser {
         }
 
         return $params;
+    }
+    
+    function preg_escape($e)
+    {
+        return str_replace(
+            array('\\','/','$','+','*','(',')','[',']','.','^','{','}','-','<','>','_'),
+            array('\\\\','\\/','\$','\+','\*','\(','\)','\[','\]','\.','\^','\{','\}','\-','\<','\>','\_'), $e);
     }
 }
 

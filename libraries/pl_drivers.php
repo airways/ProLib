@@ -153,6 +153,18 @@ class PL_Drivers {
 
         return $result;
     }
+    
+    function lang($key)
+    {
+        foreach($this->drivers as $driver)
+        {
+            if(isset($driver->lang) && isset($driver->lang[$key]))
+            {
+                return $driver->lang[$key];
+            }
+        }
+        return lang($key);
+    }
 
     // handle any call to a method (hook) on this class and try to send it to any drivers
     // that provide a definition for it
