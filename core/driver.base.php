@@ -75,5 +75,14 @@ class PL_base_driver {
         }
         return FALSE;
     }
+    
+    public function __call($method, $params)
+    {
+        if(method_exists($this, $method))
+        {
+            return call_user_func_array($method, $params);
+        }
+        return FALSE;
+    }
 
 }

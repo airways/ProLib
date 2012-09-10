@@ -177,6 +177,8 @@ class PL_parser {
                     foreach($parse_pair as $data_key => $data)
                     {
                         $pair_row_data = $pair_row_template;
+                        
+                        // TODO: Add {switch} variable
 
                         if(!is_array($data))
                         {
