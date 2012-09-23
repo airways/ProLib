@@ -22,6 +22,7 @@ require_once PATH_THIRD.'prolib/helpers/array_helper.php';
 require_once PATH_THIRD.'prolib/helpers/icons_helper.php';
 require_once PATH_THIRD.'prolib/helpers/krumo_helper.php';
 require_once PATH_THIRD.'prolib/helpers/yaml_helper.php';
+require_once PATH_THIRD.'prolib/helpers/error_helper.php';
 require_once PATH_THIRD.'prolib/helpers/string_helper.php';
 require_once PATH_THIRD.'prolib/libraries/pl_callback_interface.php';
 require_once PATH_THIRD.'prolib/libraries/pl_debug.php';
