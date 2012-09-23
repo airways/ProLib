@@ -611,7 +611,10 @@ class Prolib_base_mcp {
 
     public function get_flashdata(&$vars)
     {
-        $vars['message'] = $this->EE->session->flashdata('message') ? $this->EE->session->flashdata('message') : false;
-        $vars['error'] = $this->EE->session->flashdata('error') ? $this->EE->session->flashdata('error') : false;
+        $message = $this->EE->session->flashdata('message') ? $this->EE->session->flashdata('message') : '';
+        $error = $this->EE->session->flashdata('error') ? $this->EE->session->flashdata('error') : '';
+
+        if(isset($vars['message'])) $vars['message'] .= '<br/>'.$message;
+        if(isset($vars['error'])) $vars['error'] .= '<br/>'.$error;
     }
 }
