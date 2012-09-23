@@ -131,3 +131,31 @@
 #mainContent #publishForm .tab_menu li.addTabButton a {
     color:                  #E11842;
 }
+
+.warning {
+    background: #FFF3D1;
+    border: 1px solid #FFE59C;
+    border-radius: 5px 5px 5px 5px;
+    color: #715300;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.info {
+    background: #E8F6FF;
+    border: 1px solid #B8E2FB;
+    border-radius: 5px 5px 5px 5px;
+    color: #444;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+.warning p,
+.info p {
+    margin-bottom: 0 !important;
+    padding: 5px;
+}
+.warning a,
+.info a {
+    font-weight: bold;
+}
