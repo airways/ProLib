@@ -123,13 +123,13 @@ class PL_Drivers {
         return array_key_exists($driver, $this->drivers);
     }
 
-    function get_drivers($type)
+    function get_drivers($type=false)
     {
         $result = array();
 
         foreach($this->drivers as $driver)
         {
-            if(in_array($type, $driver->type))
+            if($type === false || in_array($type, $driver->type))
             {
                 $result[] = $driver;
             }
