@@ -179,7 +179,7 @@ class PL_Vault {
      * @param  $data - array of simple strings to store
      * @return $string
      */
-    function put($data, $expires=TRUE)
+    function put($data, $expires=TRUE, $hash=FALSE)
     {
         if(isset($this->EE->encrypt))
         {
@@ -188,7 +188,11 @@ class PL_Vault {
             $data = base64_encode(serialize($data));
         }
 
-        $hash = sha1($data);
+        if($hash === FALSE)
+        {
+            $hash = sha1($data);
+        }
+        
         if($expires)
         {
             $expire = strtotime(date("Y-m-d h:i", time()) . " +1 day");
