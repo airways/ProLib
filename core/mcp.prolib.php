@@ -116,6 +116,8 @@ class Prolib_base_mcp {
             'mgr'           => $this->mgr,
             'create_item'   => $this->lang('item_create'),
         );
+        
+        if(isset($this->add_vars)) $vars += $this->add_vars;
 
         $this->get_flashdata($vars);
         $action = $this->EE->input->get('action');
@@ -172,7 +174,7 @@ class Prolib_base_mcp {
         );
 
         $this->get_flashdata($vars);
-
+        
         return $this->auto_view('listing', $vars);
     }
 
@@ -288,10 +290,8 @@ class Prolib_base_mcp {
             }
         }
 
-        if(isset($this->type_vars[$this->type][$op]))
-        {
-            $vars += $this->type_vars[$this->type][$op];
-        }
+        if(isset($this->type_vars[$this->type][$op])) $vars += $this->type_vars[$this->type][$op];
+        if(isset($this->add_vars)) $vars += $this->add_vars;
 
         $this->get_flashdata($vars);
         return $this->EE->load->view('generic/edit', $vars, TRUE);
@@ -524,6 +524,7 @@ class Prolib_base_mcp {
 
     public function auto_view($action, $vars)
     {
+        if(isset($this->add_vars)) $vars += $this->add_vars;
 
         if(isset($this->mgr))
         {
