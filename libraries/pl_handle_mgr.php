@@ -442,6 +442,16 @@ class PL_RowInitialized
                         : ($this->__mgr->singular . ' #' . $this->get_obj_id()));
     }
 
+    function get($key)
+    {
+        if(isset($this->__mgr->dynamic) && in_array($key, $this->__mgr->dynamic))
+        {
+            return $this->$key();
+        } else {
+            return $this->$key;
+        }
+    }
+
     function dump()
     {
         echo "<b>" . get_class($this)  . "</b><br/>";
@@ -451,4 +461,5 @@ class PL_RowInitialized
         }
         echo "<br/>";
     }
+    
 }} // class PL_RowInitialized
