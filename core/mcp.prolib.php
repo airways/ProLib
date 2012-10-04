@@ -36,7 +36,7 @@ class Prolib_base_mcp {
     var $type = null;
     var $managers = null;
     var $mgr = null;
-
+    
     public function __construct()
     {
         $this->EE->load->library('javascript');
@@ -114,6 +114,7 @@ class Prolib_base_mcp {
             'type'          => $this->type,
             'package_name'  => $this->prolib->package_name,
             'mgr'           => $this->mgr,
+            'help'          => $this->get_help($this->type),
             'create_item'   => $this->lang('item_create'),
         );
         
@@ -151,7 +152,10 @@ class Prolib_base_mcp {
         {
             foreach($this->mgr->filters as $field)
             {
-                $filters[$field] = $this->EE->input->get('filter_'.$field);
+                if($value = $this->EE->input->get('filter_'.$field))
+                {
+                    $filters[$field] = $value;
+                }
             }
         }
 
@@ -167,11 +171,14 @@ class Prolib_base_mcp {
             'filters'       => $filters,
             'package_name'  => $this->prolib->package_name,
             'mgr'           => $this->mgr,
+            'help'          => $this->get_help($this->type),
             'items'         => $items,
             'create_item'   => $this->lang('item_create'),
             'edit_url'      => ACTION_BASE.AMP.'method=edit'.AMP.'G='.$this->type.AMP.'item_id=%s',
             'delete_url'    => ACTION_BASE.AMP.'method=delete'.AMP.'G='.$this->type.AMP.'item_id=%s',
         );
+        
+        $vars = $this->EE->pl_drivers->listing_data($vars);
 
         $this->get_flashdata($vars);
         
@@ -206,6 +213,7 @@ class Prolib_base_mcp {
         }
 
         // Create the model object
+        $data = $this->EE->pl_drivers->process_create_data($data);
         $item = $this->mgr->create($data);
 
         // Go back to the list of item
@@ -230,6 +238,11 @@ class Prolib_base_mcp {
                 $editing ? 'edit' : 'create'
         );
 
+        if(!$editing && $return_type)
+        {
+            $item->{$return_type.'_id'} = $return_item_id;
+        }
+        
         $form_name = $this->mgr->singular.'_'.$op;
         $this->sub_page($form_name, $op == 'edit' ? $item->get_obj_name() : '');
 
@@ -243,6 +256,12 @@ class Prolib_base_mcp {
         {
             foreach($this->mgr->children as $child_mgr_name)
             {
+                if(!isset($managers[$child_mgr_name]) || !is_object($managers[$child_mgr_name]))
+                {
+                    var_dump(array_keys($managers));
+                    pl_show_error('Invalid child manager: '.$child_mgr_name);
+                    exit;
+                }
                 $child_mgr = $managers[$child_mgr_name];
                 $child_items[$child_mgr_name] = $child_mgr->get_objects(array($this->mgr->singular.'_id' => $item_id));
             }
@@ -271,9 +290,11 @@ class Prolib_base_mcp {
             'type'              => $this->type,
             'item_id'           => $item_id,
             'mgr'               => $this->mgr,
+            'help'              => $this->get_help($this->type),
             'managers'          => $managers,
             'child_items'       => $child_items,
             'hidden_fields'     => $hidden_fields,
+            'mcp'               => &$this,
             'form'              => $this->prolib->pl_forms->create_cp_form($item->data_array(), $types),
             'action_url'        => FORM_ACTION_BASE.'method='.($editing ? 'edit'.AMP.'item_id='.$item_id : 'create').AMP.'G='.$this->type
                 .($return_type ? AMP.'return_type='.$return_type.AMP.'return_item_id='.$return_item_id : ''),
@@ -294,6 +315,7 @@ class Prolib_base_mcp {
         if(isset($this->add_vars)) $vars += $this->add_vars;
 
         $this->get_flashdata($vars);
+        $vars = $this->EE->pl_drivers->edit_data($vars);
         return $this->EE->load->view('generic/edit', $vars, TRUE);
     }
 
@@ -310,6 +332,8 @@ class Prolib_base_mcp {
         $return_item_id = $this->EE->input->get('return_item_id');
 
         $this->prolib->copy_post($item, $this->mgr->class);
+
+        $item = $this->EE->pl_drivers->process_edit_data($item);
 
         $item->save();
 
@@ -344,6 +368,7 @@ class Prolib_base_mcp {
         $vars = array(
             'type'          => $this->type,
             'mgr'           => $this->mgr,
+            'help'          => $this->get_help($this->type),
             'action_url'    => FORM_ACTION_BASE.'method=delete'.AMP.'G='.$this->type.AMP.'item_id='.$item_id
                 .($return_type ? AMP.'return_type='.$return_type.AMP.'return_item_id='.$return_item_id : ''),
             'object_name'   => 
@@ -355,6 +380,7 @@ class Prolib_base_mcp {
             'hidden'        => array('G' => $this->type, 'item_id' => $item->{$this->type.'_id'}),
         );
 
+        $vars = $this->EE->pl_drivers->delete_data($vars);
         return $this->auto_view('delete', $vars);
     }
 
@@ -366,6 +392,7 @@ class Prolib_base_mcp {
         if(is_numeric($item_id))
         {
             $item = $this->mgr->get($item_id);
+            $this->EE->pl_drivers->process_delete_data($item);
             $item->delete();
 
             $return_type = $this->EE->input->get('return_type');
@@ -426,12 +453,14 @@ class Prolib_base_mcp {
             'package_name'      => $this->prolib->package_name,
             'type'              => 'preference',
             'mgr'               => $this->mgr,
+            'help'              => $this->get_help('preference'),
             'form'              => $form,
             'action_url'        => FORM_ACTION_BASE.'method=preferences'.AMP.'G=preference',
             'editing'           => FALSE,
         );
 
         $this->get_flashdata($vars);
+        $vars = $this->EE->pl_drivers->preferences_data($vars);
         return $this->auto_view('edit', $vars);
     }
 
@@ -460,7 +489,10 @@ class Prolib_base_mcp {
             }
         }
 
+
         $this->EE->session->set_flashdata('message', $this->lang('msg_preferences_edited'));
+        
+        $this->EE->pl_drivers->process_preferences();
         
         $this->EE->functions->redirect(ACTION_BASE.AMP.'method=preferences');
         return TRUE;
@@ -525,7 +557,8 @@ class Prolib_base_mcp {
     public function auto_view($action, $vars)
     {
         if(isset($this->add_vars)) $vars += $this->add_vars;
-
+        $vars['mcp'] = &$this;
+        
         if(isset($this->mgr))
         {
             $path = PATH_THIRD.$this->prolib->package_name.'/views/'.$this->mgr->plural.'/'.$action.'.php';
@@ -533,13 +566,13 @@ class Prolib_base_mcp {
         
         if(isset($path) && file_exists($path))
         {
-            return $this->EE->load->view($this->mgr->plural.'/'.$action, $vars, TRUE);
+            $result = $this->EE->load->view($this->mgr->plural.'/'.$action, $vars, TRUE);
             //return $this->EE->load->view($path, $vars, TRUE);
         } else {
             $path = PATH_THIRD.$this->prolib->package_name.'/views/generic/'.$action.'.php';
             if(file_exists($path))
             {
-                return $this->EE->load->view('generic/'.$action, $vars, TRUE);
+                $result = $this->EE->load->view('generic/'.$action, $vars, TRUE);
                 //return $this->EE->load->view($path, $vars, TRUE);
             } else {
 //                 $path = PATH_THIRD.'prolib/views/generic/'.$action.'.php';
@@ -552,6 +585,9 @@ class Prolib_base_mcp {
 //                 }
             }
         }
+        
+        $result = $this->EE->pl_drivers->auto_view($action, $vars, $result);
+        return $result;
     }
 
 
@@ -574,11 +610,23 @@ class Prolib_base_mcp {
     }
 
 
-    public function lang($msg)
+    public function lang($msg, $type=false)
     {
-        if(isset($this->mgr))
+        if(!$type) $type = $this->type;
+        $mgr = false;
+        if($this->managers)
         {
-            $item_msg = str_replace('item', $this->mgr->singular, $msg);
+            foreach($this->managers as $mgr)
+            {
+                if($type == $mgr->singular)
+                {
+                    break;
+                }
+            }
+        }
+        if($mgr)
+        {
+            $item_msg = str_replace('item', $mgr->singular, $msg);
         } else {
             $item_msg = $msg;
         }
@@ -587,6 +635,17 @@ class Prolib_base_mcp {
             return lang($item_msg);
         } else {
             return lang($msg);
+        }
+    }
+    
+    public function get_help($type)
+    {
+        $help = $this->lang($type.'_help');
+        if($help != $type.'_help')
+        {
+            return $help;
+        } else {
+            return '';
         }
     }
 

@@ -150,6 +150,10 @@
     padding: 10px;
 }
 
+.section.first .info {
+    margin-bottom: 0;
+}
+
 .warning p,
 .info p {
     margin-bottom: 0 !important;
