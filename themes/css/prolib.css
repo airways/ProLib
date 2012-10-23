@@ -163,3 +163,218 @@
 .info a {
     font-weight: bold;
 }
+
+
+.prolib_tab {
+    border: 1px solid #CECECE;
+    background: #FFFFFF;
+    padding: 10px;
+    margin-top: 10px;
+    color: #5F6C74;
+}
+
+.prolib_tab p {
+    margin-left: 0;
+}
+
+.prolib_tab .prolib_fields li {
+    padding-top: 10px;
+    clear: both;
+}
+
+.prolib_tab .prolib_fields li.compact {
+    padding-top: 2px;
+    clear: both;
+}
+
+.prolib_tab label {
+    font-weight: bold;
+    float: left;
+    min-width: 150px;
+    padding-right: 5px;
+    white-space: nowrap;
+}
+
+.prolib_tab label div {
+    font-weight: normal;
+}
+
+.prolib_tab .prolib_fields li.section {
+    padding-top: 20px;
+}
+
+.prolib_tab .top_links {
+    font-weight: normal;
+    float: right;
+}
+
+.prolib_tab .prolib_fields li.first {
+    padding-top: 0;
+}
+
+.prolib_tab .section label {
+    float: none;
+    font-size: 1.1em;
+    font-style: italic;
+    border-bottom: 1px solid #CECECE;
+    color: #515C63;
+}
+
+.prolib_tab label.light {
+    font-weight: normal;
+}
+
+.prolib_tab label.checkbox {
+	float: none;
+	display: inline-block;
+	margin-left: 5px;
+	position: relative;
+	top: -1px;
+	
+}
+
+.prolib_tab .prolib_field {
+    float: left;
+    width: 80%;
+}
+
+.prolib_tab .section .prolib_field {
+    float: none;
+}
+
+.prolib_tab .clear {
+
+}
+
+.prolib_tab .workflow {
+    font-weight: bold;
+    font-style: italic;
+}
+
+.prolib_tab .step {
+    font-weight: bold;
+}
+
+.prolib_tab .user {
+    font-weight: bold;
+}
+
+.prolib_tab .user_group {
+    font-style: italic;
+}
+
+.prolib_tab .user_role {
+    font-style: italic;
+}
+
+.prolib_tab .date {
+    font-style: italic;
+}
+
+.prolib_tab .assignments li {
+    padding: 0 0 5px 0;
+}
+
+.prolib_tab table.prolib_comments,
+.prolib_tab table.prolib_comments tr,
+.prolib_tab table.prolib_comments td {
+    padding: 0;
+    margin: 0;
+}
+
+.prolib_tab table.prolib_comments td {
+    border-bottom: 1px solid #CECECE;
+    padding-top: 5px;
+    padding-bottom: 10px;
+}
+
+.prolib_tab table.prolib_comments .comment {
+    padding-bottom: 10px;
+}
+
+.prolib_tab table.prolib_comments .log {
+    font-style: italic;
+}
+
+.prolib_tab table.prolib_comments tr.new_comment td {
+    padding-top: 10px;
+    border-bottom: 0;
+}
+
+.prolib_tab #prolib_notes,
+.prolib_tab #new_comment {
+    width: 100%;
+}
+
+.prolib_tab button,
+.prolib_tab input,
+.prolib_tab select {
+    width: auto;
+    margin: 0;
+}
+
+.prolib_tab textarea {
+    width: 100%;
+}
+
+.prolib_tab input[type=text],
+.prolib_tab textarea {
+    border: 1px solid #CECECE;
+    background: white;
+    padding: 5px;
+}
+
+.prolib_tab input[type=checkbox] {
+	margin-left: 155px;
+}
+
+.prolib_tab td label,
+.prolib_tab td span {
+    white-space: nowrap;
+}
+.prolib_tab td {
+    vertical-align: top;
+}
+
+/* 
+.prolib_tab .hint {
+    background: #fff3d1;
+    border: 1px solid #ffe59c;
+    color: #715300;
+    padding: 2px;
+    margin-bottom: 5px;
+    -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
+    border-radius: 2px;
+}
+ */
+ 
+ 
+.prolib_tab .generic_edit label {
+    border: 0;
+    font-style: normal;
+}
+
+.prolib_tab .generic_edit input[type=text] {
+    width: 90%;
+}
+
+.prolib_tab .action-list {
+    white-space: nowrap;
+}
+
+.prolib_tab .action-list a {
+/*  text-decoration: underline !important;*/
+    display: inline-block;
+    padding: 0 8px;
+    border-left: 1px solid #555557; 
+}
+
+.prolib_tab .action-item {
+/*  text-decoration: underline !important;  */
+}
+
+.prolib_tab .action-list a:first-child {
+    border-left: 0;
+    padding-left: 0;
+}
