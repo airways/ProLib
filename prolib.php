@@ -24,6 +24,7 @@ require_once PATH_THIRD.'prolib/helpers/krumo_helper.php';
 require_once PATH_THIRD.'prolib/helpers/yaml_helper.php';
 require_once PATH_THIRD.'prolib/helpers/error_helper.php';
 require_once PATH_THIRD.'prolib/helpers/string_helper.php';
+require_once PATH_THIRD.'prolib/helpers/lang_helper.php';
 require_once PATH_THIRD.'prolib/libraries/pl_callback_interface.php';
 require_once PATH_THIRD.'prolib/libraries/pl_debug.php';
 require_once PATH_THIRD.'prolib/libraries/pl_email.php';
@@ -89,7 +90,8 @@ function prolib(&$object, $package_name="")
 class Prolib_core {
     var $package_name = FALSE;
     var $caches = array();
-
+	var $lang = array();
+	
     function init()
     {
         $this->EE = &get_instance();
@@ -119,7 +121,7 @@ class Prolib_core {
             $this->query_string = ($this->EE->uri->page_query_string != '') ? $this->EE->uri->page_query_string : $this->EE->uri->query_string;
         }
 
-        if(isset($this->EE->session))
+        if(isset($this->EE->session) && method_exists($this->EE->session, 'userdata'))
         {
             $this->dst_enabled = ($this->EE->session->userdata('daylight_savings') == 'y' ? TRUE : FALSE);
         } else {
@@ -518,4 +520,19 @@ class Prolib_core {
 
         return preg_replace("/\s+/", " ", str_replace('<?=$cp_theme_url?>', $cp_theme_url, $out));
     }
+	
+    function lang($key)
+    {
+		if(!isset($this->lang[$key]))
+		{
+			return lang($key);
+		} else {
+			return $this->lang[$key];
+		}
+	}
+	
+	function lang_set($key, $value)
+	{
+		$this->lang[$key] = $value;
+	}
 }
