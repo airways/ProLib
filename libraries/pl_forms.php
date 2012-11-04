@@ -135,7 +135,10 @@ class PL_forms {
                         $form[] = array('lang_field' => $lang_field, 'control' => form_checkbox($input_name, 'y', $value == 'y'));
                         break;
                     default:
-                        $form[] = array('lang_field' => $lang_field, 'control' => form_input($input_name, $value));
+                        if(!is_array($value) && !is_object($value))
+                        {
+                            $form[] = array('lang_field' => $lang_field, 'control' => form_input($input_name, $value));
+                        }
                         break;
                 } // switch($type)
 
