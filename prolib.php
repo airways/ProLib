@@ -391,20 +391,25 @@ class Prolib_core {
         return $result;
     }
 
-    function copy_values(&$from, &$to)
+    function copy_values(&$from, &$to, $array_delimiter = '|')
     {
         if(!is_array($from) AND !is_object($from))
         {
             xdebug_print_function_stack('Invalid $from supplied to copy_values!');
             var_dump($from);
         }
+        
         foreach($from as $key => $value)
         {
-            if(!is_array($value)
-                AND !is_object($value)
-                AND substr($key, 0, 2) != '__')
+            if(substr($key, 0, 2) != '__')
             {
-                $to[$key] = $value;
+                if(is_array($value) && $array_delimiter)
+                {
+                    $to[$key] = @implode($array_delimiter, $value);
+                } elseif(!is_object($value))
+                {
+                    $to[$key] = $value;
+                }
             }
         }
 
