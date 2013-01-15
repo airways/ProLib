@@ -92,7 +92,7 @@ class PL_Drivers {
             {
                 if($file[0] != '.')
                 {
-                    if(is_dir($dir.'/'.$file))
+                    if(is_dir($dir.$file))
                     {
                         $drivers = $drivers + $this->load_dir($dir.'/'.$file);
                     } else {
@@ -123,13 +123,13 @@ class PL_Drivers {
         return array_key_exists($driver, $this->drivers);
     }
 
-    function get_drivers($type=false)
+    function get_drivers($types=false)
     {
         $result = array();
-
+        if($types !== false && !is_array($types)) $types = array($types);
         foreach($this->drivers as $driver)
         {
-            if($type === false || in_array($type, $driver->type))
+            if(!$types || count(array_intersect($driver->type, $types)) > 0)
             {
                 $result[] = $driver;
             }
