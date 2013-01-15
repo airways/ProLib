@@ -333,6 +333,10 @@ class PL_parser {
             if($v instanceof PL_Parser_ArrayWrapper)
             {
                 $conditionals[$this->variable_prefix.$k] = count($v->array);
+            } elseif(is_array($v)) {
+                $conditionals[$this->variable_prefix.$k] = count($v);
+            } elseif(is_object($v)) {
+                $conditionals[$this->variable_prefix.$k] = count((array)$v);
             } else {
                 $conditionals[$this->variable_prefix.$k] = $v;
             }
