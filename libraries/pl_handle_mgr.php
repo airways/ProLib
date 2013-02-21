@@ -33,6 +33,12 @@ class PL_handle_mgr
     var $prolib = null;
     var $site_id = FALSE;
     
+    var $object_cache_enabled = false;
+    var $object_cache_prefetch = false;
+    var $object_cache = array();                // Cache of objects with numeric object ID keys mapped to objects
+    var $object_names = array();                // Cache of object names with object name keys mapped to object IDs
+    var $cached_all = false;
+    
     function __construct($table = FALSE, $singular = FALSE, $class = FALSE, $serialized = FALSE, &$lib = NULL, $site_id = FALSE)
     {
         global $PROLIB;
@@ -47,6 +53,16 @@ class PL_handle_mgr
         if($serialized) $this->serialized = $serialized;
         if($lib) $this->lib = &$lib;
         if($site_id) $this->site_id = $site_id;
+        
+        if($this->object_cache_enabled && $this->object_cache_prefetch)
+        {
+            if(is_array($this->object_cache_prefetch))
+            {
+                $this->get_objects($this->object_cache_prefetch);
+            } else {
+                $this->get_all();
+            }
+        }
     }
 
     function count()
@@ -106,19 +122,45 @@ class PL_handle_mgr
     {
         return $this->get_object($handle, $show_error);
     }
-
+    
+    function _load_object($row)
+    {
+        $class = $this->class;
+        $object = new $class($row);
+        $object_id = $object->{$this->singular . '_id'};
+        foreach($this->serialized as $field) {
+            if(isset($object->$field) and $object->$field)
+            {
+                $object->$field = unserialize($object->$field);
+            }
+        }
+        return $object;
+    }
+    
     function get_object($handle, $show_error = TRUE)
     {
+        
+        
         $template = FALSE;
         $object = FALSE;
 
         if(is_numeric($handle))
         {
+            if($this->object_cache_enabled && isset($this->object_cache[$handle]))
+            {
+                return $this->object_cache[$handle];
+            }
+            
             $query = $this->EE->db->select('*')
                                   ->where($this->singular . '_id', $handle);
         }
         else
         {
+            if($this->object_cache_enabled && isset($this->object_names[$handle]) && isset($this->object_cache[$this->object_names[$handle]]))
+            {
+                return $this->object_cache[$this->object_names[$handle]];
+            }
+            
             $query = $this->EE->db->select('*')
                                   ->where($this->singular . '_name', $handle);
         }
@@ -132,25 +174,7 @@ class PL_handle_mgr
 
         if($query->num_rows > 0)
         {
-            $class = $this->class;
-            // echo '<b>____ new '.$class.'</b> '.$handle.'<br/>';
-            $object = new $class($query->row());
-            // echo get_class($object).'<br/>';
-            // var_dump($query->row());
-
-
-            $object_id = $object->{$this->singular . '_id'};
-
-            foreach($this->serialized as $field) {
-                if(isset($object->$field) and $object->$field)
-                {
-                    $object->$field = unserialize($object->$field);
-                //} else {
-                //    $object->$field = array();
-                }
-            }
-
-            //$query = $this->EE->db->get_where($this->table, array($this->singular . '_id' => $object_id));
+            $object = $this->_load_object($query->row());
         }
 
         if(!$object && $show_error) {
@@ -162,13 +186,6 @@ class PL_handle_mgr
                 exit('<b>Object not found: ' . $this->class . ' #' . $handle . '</b>');
             }
         } else {
-            // if(!is_object($object) OR get_class($object) == 'stdClass')
-            // {
-            //     echo 'Invalid object for'.$handle.':';
-            //     var_dump($object);
-            //     exit;
-            // }
-            // var_dump($object);
             if(is_object($object))
             {
                 $object->__mgr = $this;
@@ -180,6 +197,15 @@ class PL_handle_mgr
             $object->post_get($this);
         }
 
+        if($this->object_cache_enabled)
+        {
+            if(is_object($object))
+            {
+                $this->object_cache[$object->{$this->singular . '_id'}] = $object;
+                $this->object_names[$object->{$this->singular . '_name'}] = $object->{$this->singular . '_id'};
+            }
+        }
+        
         return $object;
     }
 
@@ -191,12 +217,31 @@ class PL_handle_mgr
     function get_objects($where = FALSE, $array_type = FALSE, $order = FALSE, $offset = FALSE, $perpage = FALSE)
     {
         $result = array();
-
-        $this->EE->db->select("{$this->singular}_id");
+        
+        if($this->cached_all)
+        {
+            if($array_type == 'handle')
+            {
+                return $this->object_cache;
+            } else {
+                foreach($this->object_cache as $obj)
+                {
+                    $result[$obj->{$this->singular . '_name'}] = $obj;
+                }
+                return $result;
+            }
+        }
+        
+        $this->EE->db->select('*');
 
         if($where && is_array($where))
         {
             $this->EE->db->where($where);
+        } else {
+            if($this->object_cache_enabled)
+            {
+                $this->cached_all = true;
+            }
         }
         
         if($this->site_id)
@@ -237,9 +282,9 @@ class PL_handle_mgr
         {
             foreach($query->result() as $row)
             {
-
-                $obj = $this->get_object($row->{$this->singular . '_id'});
-
+                //$obj = $this->get_object($row->{$this->singular . '_id'});
+                $obj = $this->_load_object($row);
+                
                 switch($array_type)
                 {
                     case 'handle':
@@ -251,6 +296,13 @@ class PL_handle_mgr
                     default:
                         $result[] = $obj;
                 }
+                
+                if($this->object_cache_enabled)
+                {
+                    $this->object_cache[$obj->{$this->singular . '_id'}] = $obj;
+                    $this->object_names[$obj->{$this->singular . '_name'}] = $obj->{$this->singular . '_id'};
+                }
+                
             }
         }
         return $result;
