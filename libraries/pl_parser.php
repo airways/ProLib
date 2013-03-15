@@ -66,6 +66,7 @@ class PL_parser {
             'reparse_vars'      => array(),
             'dst_enabled'       => FALSE,
             'variable_prefix'   => '',
+            'parse_conditionals'=> FALSE,
         );
 
         // Check for invalid parameters
@@ -307,6 +308,11 @@ class PL_parser {
                     $rowdata = str_replace($pair_tag, $pair_data, $rowdata);
                 }
             }
+        }
+
+        if($parse_conditionals)
+        {
+            $this->EE->TMPL->advanced_conditionals($rowdata);
         }
 
         if($backspace)
