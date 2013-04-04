@@ -170,6 +170,8 @@ class PL_parser {
 
                     // The PL_Parser_ArrayWrapper class allows us to wrap some meta info around an array so we don't need to do
                     // any special parsing for simple cases such as changing {row} to {rule}
+                    // If the pair isn't set, this level of the data tree does not have this pair in it
+                    if(!isset($row_vars[$var_pair])) continue;
                     if($row_vars[$var_pair] instanceof PL_Parser_ArrayWrapper)
                     {
                         $key_var_name = $row_vars[$var_pair]->key_var_name;
