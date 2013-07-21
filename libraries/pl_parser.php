@@ -571,6 +571,83 @@ class PL_parser {
             array('\\','/','$','+','*','(',')','[',']','.','^','{','}','-','<','>','_'),
             array('\\\\','\\/','\$','\+','\*','\(','\)','\[','\]','\.','\^','\{','\}','\-','\<','\>','\_'), $e);
     }
+    
+    // functions adopted from http://www.sean-barton.co.uk/2009/03/turning-an-array-or-object-into-xml-using-php/
+
+    public function object_to_xml_doc(stdClass $obj, $node_block='nodes', $node_name='node') {
+        $arr = get_object_vars($obj);
+        return self::array_to_xml_doc($arr, $node_block, $node_name);
+    }
+
+    public function array_to_xml_doc($array, $node_block='nodes', $node_name='node', $exclude_keys = array()) {
+        $xml = '<?xml version="1.0" encoding="UTF-8" ?>';
+
+        $xml .= '<' . $node_block . '>';
+        $serialized = array();
+        $xml .= $this->array_to_xml($array, $node_name, $serialized, $exclude_keys);
+        $xml .= '</' . $node_block . '>';
+
+        return $xml;
+    }
+
+    private function array_to_xml($array, $node_name, &$serialized, $exclude_keys = array(), $depth = 0) {
+        $xml = '';
+
+        if (is_array($array) || is_object($array)) {
+            $serialized[] = $this->hash_value($array);
+            foreach ($array as $key=>$value) {
+                if (is_numeric($key)) {
+                    $key = $node_name;
+                }
+                
+                if(!in_array($key, $exclude_keys))
+                {
+                    if(!$key) $key = 'missing-node';
+                    
+                    $key = trim($key);
+                    $key = preg_replace("/[^A-Za-z0-9\-_]/", '-', $key);
+                    $key = trim($key, '-');
+                    if(is_numeric($key[0])) $key = '_'.$key;
+                    
+                    if(!is_string($value) && !is_numeric($value) && !is_array($value) && in_array($this->hash_value($value), $serialized))
+                    {
+                        $xml .= "\n" . str_repeat(' ', $depth*4).'<' . $key . '>@recursion</' . $key . '>';
+                    } else {
+                        $xml .= "\n" . str_repeat(' ', $depth*4) . '<' . $key . '>' 
+                             .         $this->array_to_xml($value, $node_name, $serialized, $exclude_keys, $depth+1) 
+                             . '</' . $key . '>';
+                        $serialized[] = $this->hash_value($value);
+                    }
+                }
+            }
+            
+            // Whitespace for closing tag
+            if($depth == 0) $depth = 1;
+            $xml .= "\n" . str_repeat(' ', ($depth-1)*4);
+        } else {
+            if(!is_resource($array) && !in_array($node_name, $exclude_keys))
+            {
+                $xml = htmlspecialchars($array, ENT_QUOTES);
+            }
+        }
+
+        return $xml;
+    }
+    
+    private function hash_value($val)
+    {
+        if(is_object($val))
+        {
+            return spl_object_hash($val);
+        } elseif(is_array($val)) {
+            return md5(serialize($val));
+        } elseif(is_resource($val)) {
+            return strval($val);
+        } else {
+            return md5($val);
+        }
+    }
+
 }
 
 class PL_Parser_ArrayWrapper {

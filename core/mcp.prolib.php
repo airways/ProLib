@@ -653,7 +653,7 @@ class Prolib_base_mcp {
     public function sub_page($page, $added_title = '')
     {
         $this->EE->cp->set_breadcrumb(ACTION_BASE.AMP.'module='.$this->prolib->package_name.AMP, $this->EE->lang->line($this->prolib->package_name.'_module_name'));
-        $this->EE->cp->set_variable('cp_page_title', $this->lang($this->prolib->package_name.'_title') . ' - ' . $this->lang($page) . ($added_title != '' ? ' - ' . $added_title : ''));
+        $this->EE->view->cp_page_title = $this->lang($this->prolib->package_name.'_title') . ' - ' . $this->lang($page) . ($added_title != '' ? ' - ' . $added_title : '');
     }
 
 
