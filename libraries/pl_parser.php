@@ -67,6 +67,8 @@ class PL_parser {
             'dst_enabled'       => FALSE,
             'variable_prefix'   => '',
             'parse_conditionals'=> FALSE,
+            'auto_key'          => FALSE,
+            'var_pair_keys'     => array(),
         );
 
         // Check for invalid parameters
@@ -92,6 +94,13 @@ class PL_parser {
         if(is_object($row_vars))
         {
             $row_vars = (array)$row_vars;
+        }
+        foreach($pairs as $var_pair)
+        {
+            if(!isset($var_pair_keys[$var_pair]))
+            {
+                $var_pair_keys[$var_pair] = $var_pair.'_key';
+            }
         }
 
         // prep basic conditionals
@@ -161,6 +170,8 @@ class PL_parser {
 
                     // The PL_Parser_ArrayWrapper class allows us to wrap some meta info around an array so we don't need to do
                     // any special parsing for simple cases such as changing {row} to {rule}
+                    // If the pair isn't set, this level of the data tree does not have this pair in it
+                    if(!isset($row_vars[$var_pair])) continue;
                     if($row_vars[$var_pair] instanceof PL_Parser_ArrayWrapper)
                     {
                         $key_var_name = $row_vars[$var_pair]->key_var_name;
@@ -200,6 +211,10 @@ class PL_parser {
                                 $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$row_var_name, $data, $pair_row_data);
                             }
                         } else {
+                            if($auto_key)
+                            {
+                                $data[$var_pair_keys[$var_pair]] = $data_key;
+                            }
                             $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($data));
                             $prepped_conditionals = array();
 
