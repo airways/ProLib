@@ -33,7 +33,7 @@ if(file_exists(APPPATH.'../codeigniter/system/libraries/Form_validation.php'))
 class PL_validation extends CI_Form_validation {
     var $available_rules = array( /* this works nicely as the 'options' part of a MCP grid control */
         'required'                      => array('label' => 'Always Required'),
-        'matches_value'                 => array('label' => 'Matches Value', 'flags' => 'has_param'),
+        'callback_matches_value'                 => array('label' => 'Matches Value', 'flags' => 'has_param'),
         'matches'                       => array('label' => 'Matches Field', 'flags' => 'has_param'),
         'min_length'                    => array('label' => 'Min Length', 'flags' => 'has_param'),
         'max_length'                    => array('label' => 'Max Length', 'flags' => 'has_param'),
@@ -42,7 +42,7 @@ class PL_validation extends CI_Form_validation {
         'alphanumeric'                  => array('label' => 'Alpha Numeric Characters Only'),
         'alpha_dash'                    => array('label' => 'Alpha Numeric Characters, Underscores and Dashes Only'),
         'numeric'                       => array('label' => 'Numeric Characters Only'),
-        'numeric_dash'                  => array('label' => 'Numeric Characters and Dashes Only'),
+        'callback_numeric_dash'                  => array('label' => 'Numeric Characters and Dashes Only'),
         'integer'                       => array('label' => 'Integer Number'),
         'is_natural'                    => array('label' => 'Natural Number'),
         'is_natural_no_zero'            => array('label' => 'Natural Number other than zero'),
@@ -91,6 +91,8 @@ class PL_validation extends CI_Form_validation {
      **/
     function _execute($row, $rules, $postdata = NULL, $cycles = 0)
     {
+        ee()->lang->loadfile('prolib');
+        
         // create a new object that has our custom callbacks on it
         if(!isset($this->CI_callback) || !$this->CI_callback)
         {
@@ -226,6 +228,8 @@ class PL_validation extends CI_Form_validation {
 			if (substr($rule, 0, 9) == 'callback_')
 			{
 				$rule = substr($rule, 9);
+//				echo "<pre>"; var_dump($rule); echo "</pre>";
+//				exit;
 				$callback = TRUE;
 			}
 
@@ -394,11 +398,14 @@ class PL_forms_validation_callbacks {
 
     function matches_value($value, $param)
     {
+//    	var_dump($value);
+//    	var_dump($param);
+//    	exit;
         if($value === $param)
         {
             return TRUE;
         } else {
-            $this->pl_forms_validation->set_message('matches_value', 'The %s field must be the value "'.$param.'"');
+            $this->pl_validation->set_message('callback_matches_value', $value);
             return FALSE;
         }
     }
@@ -409,7 +416,7 @@ class PL_forms_validation_callbacks {
         {
             return TRUE;
         } else {
-            $this->pl_forms_validation->set_message('numeric_dash', 'The %s field must numbers and dashes only');
+            $this->pl_validation->set_message('callback_numeric_dash', $value);
             return FALSE;
         }
     }
