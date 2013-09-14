@@ -91,7 +91,7 @@ class PL_validation extends CI_Form_validation {
      **/
     function _execute($row, $rules, $postdata = NULL, $cycles = 0)
     {
-        ee()->lang->loadfile('prolib');
+        $this->EE->lang->loadfile('prolib');
         
         // create a new object that has our custom callbacks on it
         if(!isset($this->CI_callback) || !$this->CI_callback)
