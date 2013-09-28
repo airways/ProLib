@@ -6,6 +6,12 @@ var prolib = {
                 return false;
             }
         })
+        
+        $('input.pl_confirm').click(function(event) {
+            if(!confirm($(this).attr('rel'))) {
+                return false;
+            }
+        })
     }
 
 }
