@@ -9,6 +9,7 @@ var prolib = {
         
         $('input.pl_confirm').click(function(event) {
             if(!confirm($(this).attr('data-prompt'))) {
+                event.preventDefault();
                 return false;
             }
         })
