@@ -1,8 +1,8 @@
 <?php
 
-// @version 0.66
+// @version 0.68
 
-define('PROLIB_VERSION', '0.66');
+define('PROLIB_VERSION', '0.68');
 define('PROLIB_NAME', 'Prolib');
 define('PROLIB_CLASS', 'Prolib'); // must match module class name
 define('PROLIB_DESCRIPTION', 'Prolib is a collection of libraries and helpers to make development of ExpressionEngine add-ons easier.');
