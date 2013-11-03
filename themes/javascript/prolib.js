@@ -13,6 +13,12 @@ var prolib = {
                 $('[name=select_all_entries]').val(0);
             
             }
+            
+            if ($('input[name=select_all_entries]').val() == 1)
+            {
+            	$('#pl_select_all_entries_span').hide();
+            	$('#pl_all_entries_selected').show();
+            }
         }, 100);
     },
     
@@ -37,8 +43,7 @@ var prolib = {
 
         $('a#pl_select_all_entries_link').click(function(event) {
             $('[name=select_all_entries]').val(1);
-            $('#pl_select_all_entries_span').hide();
-            $('#pl_all_entries_selected').show();
+            prolib.select_all_check();
             
         })
 
@@ -79,4 +84,5 @@ var prolib = {
 
 $(document).ready(function() {
     prolib.bind_events();
+    prolib.select_all_check();
 });
