@@ -1,6 +1,11 @@
 <?php
 
 class PL_forms {
+    public function PL_forms()
+    {
+        $this->EE = &get_instance();
+    }
+    
     function create_cp_form($object, $types, $extra=array(), $current_settings = false)
     {
         $form = array();
@@ -61,6 +66,17 @@ class PL_forms {
                         break;
                     case 'read_only':
                         $form[] = array('lang_field' => $lang_field, 'control' => nl2br(htmlentities(strip_tags($value))));
+                        break;
+                    case 'read_only_member':
+                        $value = (int)$value;
+                        $query = $this->EE->db->where('member_id', $value)->get('exp_members');
+                        if($query->num_rows() > 0)
+                        {
+                            $link = $query->row()->screen_name;
+                        } else {
+                            $link = '[Unknown Member]';
+                        }
+                        $form[] = array('lang_field' => $lang_field, 'control' => $value.' '.$link);
                         break;
                     case 'static':
                         $form[] = array('lang_field' => $lang_field, 'control' => $value);

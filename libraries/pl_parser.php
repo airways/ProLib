@@ -480,6 +480,8 @@ class PL_parser {
                             $state = 2; // quote
                             $quote = 1;
                             break;
+                        case '\\':
+                            $state = 3; // escape
                         default:
                             $value .= $c;
                             break;
@@ -503,9 +505,23 @@ class PL_parser {
                         $value .= $c;
                     }
                     break;
+                case 3: // escape
+                    $value .= $c;
+                    $state = 1;     // back to value
+                    break;
             }
         }
 
+        return $result;
+    }
+    
+    public function collapse_params($params)
+    {
+        $result = '';
+        foreach($params as $k => $v)
+        {
+            $result .= $k.'="'.addslashes($v).'"';
+        }
         return $result;
     }
 
