@@ -65,7 +65,7 @@ class PL_forms {
                         $form[] = array('lang_field' => '', 'control' => form_hidden($input_name, $value));
                         break;
                     case 'read_only':
-                        $form[] = array('lang_field' => $lang_field, 'control' => nl2br(htmlentities(strip_tags($value))));
+                        $form[] = array('lang_field' => $lang_field, 'control' => nl2br(htmlentities(strip_tags($value), 0, "UTF-8")));
                         break;
                     case 'read_only_member':
                         $value = (int)$value;
