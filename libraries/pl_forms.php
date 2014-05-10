@@ -139,7 +139,10 @@ class PL_forms {
                         $form[] = array('lang_field' => $lang_field, 'control' => $control);
                         break;
                     case 'grid':
-                        $field = array('lang_field' => $lang_field, 'control' => $this->render_grid($key, $options['headings'], $options['options'], $value));
+                        $field = array('lang_field' => $lang_field, 'control' => $this->render_grid($key, $options['headings'], $options['options'], $value, 
+                            isset($options['form']) ? $options['form'] : array(),
+                            isset($options['allow_duplicate']) ? $options['allow_duplicate'] : false
+                        ));
                         if(array_key_exists('flags', $options) && strpos($options['flags'], 'has_param'))
                         {
 
@@ -181,14 +184,21 @@ class PL_forms {
         return $result;
     }
 
-    function render_grid($key, $headings, $options, $value)
+    function render_grid($key, $headings, $options, $value, $form = array(), $allow_duplicate = false)
     {
         $out = '';
-
+        
         $dropdown_options = array();
         $help = array();
         foreach($options as $option => $opts)
         {
+            if(!is_array($opts))
+            {
+                //$option = $opts;
+                $opts = array(
+                    'label' => $opts
+                );
+            }
             $dropdown_options[$option] = $opts['label'];
             if(isset($opts['help']))
             {
@@ -209,38 +219,104 @@ class PL_forms {
         }
         $out .= '</tr>';
 
-        $rows = explode('|', $value);
-        $i = 1;
+        if($value[0] == '[')
+        {
+            // Load new JSON grid syntax
+            $rows = json_decode($value);
+        } else {
+            // Load old CI validation syntax
+            $rows = explode('|', $value);
+        }
+        $i = 0;
         $grid = array();
 
         foreach($rows as $row)
         {
-            $cells = explode('[',$row);
-
-            if(count($cells) > 1)
-            {
-                $cells[1] = str_replace(']', '', $cells[1]);
-            }
-
-            if($cells[0] != 'none' && $cells[0] != '')
-            {
+            if($row) {
+                if(is_object($row)) {
+                    $cells = $row;
+                } else {
+                    // Load old CI validation syntax
+                    if(strpos($row, '[') !== FALSE)
+                    {
+                        $arr = explode('[',$row);
+                    } else {
+                        $arr = array($row);
+                    }
+                    $cells = (object)array();
+                    $cells->_ = $arr[0];
+                    if(count($arr) > 1)
+                    {
+                        $cells['value'] = str_replace(']', '', $arr[1]);
+                    }
+                    if($cells->_ != 'none' || $cells->_ != '') continue;
+                }
+                
                 $grid[] = $cells;
 
-                $out .= '<tr class="grid_row"><td>'.$options[$cells[0]]['label'].'</td>';
+                $out .= '<tr class="grid_row"><td>'.$options[$cells->_]['label'].'</td>';
 
-                if(isset($options[$cells[0]]['flags']) && strpos($options[$cells[0]]['flags'], 'has_param') !== FALSE)
+                if(count($form) > 0)
                 {
-                    $out .=  '<td><input data-key="'.$key.'" data-opt="'.$cells[0].'" class="grid_param" type="text" size="5" value="'.(isset($cells[1])?$cells[1]:'').'"/><span class="help">'
-                        .(isset($options[$cells[0]]['flags']['help']) ? $options[$cells[0]]['flags']['help'] : '').'</span></td>';
+                    $cell_i = 0;
+                    foreach($form as $field_name => $form_field)
+                    {
+                        /*
+                        echo '<b>'.$field_name.'</b><br/>';
+                        var_dump($form_field);
+                        // */
+                        if(is_array($form_field))
+                        {
+                            $field_type = $form_field[0];
+                            $fld_options = isset($form_field['options']) ? $form_field['options'] : (isset($form_field[1]) ? $form_field[1] : array());
+                            $raw_options = array();
+                            foreach($fld_options as $opt_key => $val)
+                            {
+                                if(is_array($val) && isset($val['label'])) $raw_options[$opt_key] = $val['label'];
+                                else $raw_options[$opt_key] = $val;
+                            }
+                        } else {
+                            $field_type = $form_field;
+                            $raw_options = array();
+                        }
+                        
+                        $default = array_pop(array_keys($raw_options));
+                        $extra = 'data-key="'.$key.'" data-opt="'.$field_name.'" data-row="'.$i.'" class="grid_param"';
+                        switch($field_type)
+                        {
+                            case 'textarea':
+                                $out .= '<td>'.form_textarea($key.'_'.$field_name, $cells->$field_name, $extra).'</td>';
+                                break;
+                            case 'input':
+                                $out .= '<td>'.form_input($key.'_'.$field_name, $cells->$field_name, $extra).'</td>';
+                                break;
+                            case 'dropdown':
+                                $out .= '<td>'.form_dropdown($key.'_'.$field_name,
+                                            $raw_options, isset($cells->$field_name) ? $cells->$field_name : $default, $extra).'</td>';
+                                break;
+                            case 'multiselect':
+                                $out .= '<td>'.form_multiselect($key.'_'.$field_name,
+                                            $raw_options, isset($cells->$field_name) ? $cells->$field_name : $default, $extra).'</td>';
+                                break;
+                        }
+                        
+                        $cell_i++;
+                    }
                 } else {
-                    $out .= '<td>&nbsp;<span class="help">'
-                        .(isset($options[$cells[0]]['flags']['help']) ? $options[$cells[0]]['flags']['help'] : '').'</span></td>';
+                    if(isset($options[$cells->_]['flags']) && strpos($options[$cells->_]['flags'], 'has_param') !== FALSE)
+                    {
+                        $out .=  '<td><input data-key="'.$key.'" data-opt="'.$cells->_.'" data-row="'.$i.'" class="grid_param" type="text" size="5" value="'.(isset($cells->{$cells->_})?$cells->{$cells->_}:'').'"/><span class="help">'
+                            .(isset($options[$cells->_]['flags']['help']) ? $options[$cells->_]['flags']['help'] : '').'</span></td>';
+                    } else {
+                        $out .= '<td>&nbsp;<span class="help">'
+                            .(isset($options[$cells->_]['flags']['help']) ? $options[$cells->_]['flags']['help'] : '').'</span></td>';
+                    }
                 }
 
                 // $out .= '<td>'.form_button('remove_'.$key.'_'.$i, 'X', 'class="remove_grid_row" data-key="'.$key.'" data-opt="'.$cells[0].'" ').'</tr>';
-                $out .= '<td><a href="#" class="remove_grid_row" name="remove_'. $key .'_'. $i .'" data-key="'. $key .'" data-opt="'.$cells[0].'">X</a></td></tr>';
+                $out .= '<td><a href="#" class="remove_grid_row" name="remove_'. $key .'_'. $i .'" data-key="'. $key .'" data-opt="'.$cells->_.'" data-row="'.$i.'">X</a></td></tr>';
             }
-
+            
             $i++;
         }
 
@@ -254,8 +330,10 @@ class PL_forms {
 
         $out .= '<script type="text/javascript">';
         $out .= 'pl_grid.options["'.$key.'"] = ' . json_encode($options) . ';';
+        $out .= 'pl_grid.forms["'.$key.'"] = ' . json_encode($form ? $form : false) . ';';
         $out .= 'pl_grid.help["'.$key.'"] = ' . json_encode($help) . ';';
         $out .= 'pl_grid.data["'.$key.'"] = ' . json_encode($grid) . ';';
+        
         /*$out .= 'var options = {';
         foreach($options as $option => $opts)
         {
@@ -269,7 +347,8 @@ class PL_forms {
         }
         $out = substr($out, 0, -1);
         $out .= '};';*/
-        $out .= 'pl_grid.bind_events("'.$key.'", "gridrow_'.$key.'");</script>';
+        
+        $out .= 'pl_grid.bind_events("'.$key.'", "gridrow_'.$key.'", '.json_encode($allow_duplicate).');</script>';
         $out .= '</div>';
 
         return $out;
