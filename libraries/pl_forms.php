@@ -219,7 +219,7 @@ class PL_forms {
         }
         $out .= '</tr>';
 
-        if($value[0] == '[')
+        if($value && $value[0] == '[')
         {
             // Load new JSON grid syntax
             $rows = json_decode($value);
@@ -233,7 +233,7 @@ class PL_forms {
         foreach($rows as $row)
         {
             if($row) {
-                if(is_object($row)) {
+                if(is_object($row) || is_array($row)) {
                     $cells = $row;
                 } else {
                     // Load old CI validation syntax
@@ -247,9 +247,9 @@ class PL_forms {
                     $cells->_ = $arr[0];
                     if(count($arr) > 1)
                     {
-                        $cells['value'] = str_replace(']', '', $arr[1]);
+                        $cells->value = str_replace(']', '', $arr[1]);
                     }
-                    if($cells->_ != 'none' || $cells->_ != '') continue;
+                    if($cells->_ == 'none' || $cells->_ == '') continue;
                 }
                 
                 $grid[] = $cells;
@@ -305,11 +305,11 @@ class PL_forms {
                 } else {
                     if(isset($options[$cells->_]['flags']) && strpos($options[$cells->_]['flags'], 'has_param') !== FALSE)
                     {
-                        $out .=  '<td><input data-key="'.$key.'" data-opt="'.$cells->_.'" data-row="'.$i.'" class="grid_param" type="text" size="5" value="'.(isset($cells->{$cells->_})?$cells->{$cells->_}:'').'"/><span class="help">'
-                            .(isset($options[$cells->_]['flags']['help']) ? $options[$cells->_]['flags']['help'] : '').'</span></td>';
+                        $out .=  '<td><input data-key="'.$key.'" data-opt="'.$cells->_.'" data-row="'.$i.'" class="grid_param" type="text" size="5" value="'.htmlentities(isset($cells->value) ? $cells->value : '').'"/></td>';
+                        //isset($cells->{$cells->_})?$cells->{$cells->_}:''
+                        //<span class="help">'.((is_array($options[$cells->_]['flags']) && isset($options[$cells->_]['flags']['help'])) ? $options[$cells->_]['flags']['help'] : '').'</span>
                     } else {
-                        $out .= '<td>&nbsp;<span class="help">'
-                            .(isset($options[$cells->_]['flags']['help']) ? $options[$cells->_]['flags']['help'] : '').'</span></td>';
+                        $out .= '<td>&nbsp;</td>';
                     }
                 }
 
@@ -332,7 +332,18 @@ class PL_forms {
         $out .= 'pl_grid.options["'.$key.'"] = ' . json_encode($options) . ';';
         $out .= 'pl_grid.forms["'.$key.'"] = ' . json_encode($form ? $form : false) . ';';
         $out .= 'pl_grid.help["'.$key.'"] = ' . json_encode($help) . ';';
-        $out .= 'pl_grid.data["'.$key.'"] = ' . json_encode($grid) . ';';
+        if($form)
+        {
+            $out .= 'pl_grid.data["'.$key.'"] = ' . json_encode($grid) . ';';
+        } else {
+            $old_grid = array();
+            foreach($grid as $grid_key => $grid_row) {
+                $old_row = array($grid_row->_);
+                if(isset($grid_row->value)) $old_row[] = $grid_row->value;
+                $old_grid[] = $old_row;
+            }
+            $out .= 'pl_grid.data["'.$key.'"] = ' . json_encode($old_grid) . ';';
+        }
         
         /*$out .= 'var options = {';
         foreach($options as $option => $opts)
