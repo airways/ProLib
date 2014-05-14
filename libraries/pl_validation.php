@@ -33,7 +33,7 @@ if(file_exists(APPPATH.'../codeigniter/system/libraries/Form_validation.php'))
 class PL_validation extends CI_Form_validation {
     var $available_rules = array( /* this works nicely as the 'options' part of a MCP grid control */
         'required'                      => array('label' => 'Always Required'),
-        'callback_matches_value'                 => array('label' => 'Matches Value', 'flags' => 'has_param'),
+        'callback_matches_value'        => array('label' => 'Matches Value', 'flags' => 'has_param'),
         'matches'                       => array('label' => 'Matches Field', 'flags' => 'has_param'),
         'min_length'                    => array('label' => 'Min Length', 'flags' => 'has_param'),
         'max_length'                    => array('label' => 'Max Length', 'flags' => 'has_param'),
