@@ -112,7 +112,12 @@ class PL_base_driver {
         {
             return call_user_func_array($method, $params);
         }
-        return FALSE;
+        if(count($params) > 0)
+        {
+            return $params[count($params)-1];
+        } else {
+            return FALSE;
+        }
     }
 
 }
