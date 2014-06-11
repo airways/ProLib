@@ -45,5 +45,25 @@ class PL_Members {
         }
         return $result;
     }
+    
+    /**
+     * param $mode full | group_title - full returns full object, group_title (or any 
+     *                                  other field) returns only that field
+     */
+    function get_groups($mode='full')
+    {
+        $result = array();
+        $groups = $this->EE->db->get_where('exp_member_groups');
+        foreach($groups->result() as $group)
+        {
+            if($mode == 'full')
+            {
+                $result[$group->group_id] = $group;
+            } else {
+                $result[$group->group_id] = $group->$mode;
+            }
+        }
+        return $result;
+    }
 }} // class PL_Members
 
