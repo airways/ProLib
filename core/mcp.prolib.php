@@ -105,6 +105,10 @@ class Prolib_base_mcp {
 //         throw new Exception('Undefined method called: '.$method);
 //     }
 
+    /**
+     * Handle a Driver action method
+     * The GET parameter "action" should be the name of a method to call in any driver that defines it.
+     */
     public function driver()
     {
 //         if(!isset($this->type)) throw new Exception('Type not specified in URL or logic');

@@ -90,6 +90,10 @@ class PL_forms {
                     case 'textarea':
                         $form[] = array('lang_field' => $lang_field, 'control' => form_textarea($input_name, $value));
                         break;
+                    case 'multiselect':
+                        $control = form_multiselect($input_name.'[]', $options, $value, 'style="height: 500px;"');
+                        $form[] = array('lang_field' => $lang_field, 'control' => $control);
+                        break;
                     case 'dropdown':
                         $control = form_dropdown($input_name, $options, $value);
                         foreach($option_settings as $k => $settings)
