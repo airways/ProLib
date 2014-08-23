@@ -372,7 +372,12 @@ class PL_forms_validation_callbacks {
 
         // we need to copy the properties from CI that are used
         // in _execute()
-        $this->lang = $CI->lang;
+        //$this->lang = $CI->lang;
+        foreach($CI as $key => $value)
+        {
+        	$this->$key = $CI->$key;
+        }
+        
         $this->pl_validation = $CI->pl_validation;
 
         if (isset($this->EE->extensions) && $this->EE->extensions->active_hook('prolib_register_validation_callbacks') === TRUE)
