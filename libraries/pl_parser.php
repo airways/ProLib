@@ -327,7 +327,7 @@ class PL_parser {
 
         if($parse_conditionals)
         {
-            $this->EE->TMPL->advanced_conditionals($rowdata);
+            $rowdata = $this->EE->TMPL->advanced_conditionals($rowdata);
         }
 
         if($backspace)
