@@ -134,6 +134,7 @@ class PL_handle_mgr
                 $object->$field = unserialize($object->$field);
             }
         }
+        $object->__mgr = $this;
         return $object;
     }
     

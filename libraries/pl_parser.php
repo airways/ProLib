@@ -66,7 +66,7 @@ class PL_parser {
             'reparse_vars'      => array(),
             'dst_enabled'       => FALSE,
             'variable_prefix'   => '',
-            'parse_conditionals'=> FALSE,
+            'parse_conditionals'=> TRUE,  // ignored, conditionnals are always parsed
             'auto_key'          => FALSE,
             'var_pair_keys'     => array(),
         );
@@ -103,9 +103,17 @@ class PL_parser {
             }
         }
 
-        // prep basic conditionals
+        // parse out conditionals
         $rowdata = $this->EE->functions->prep_conditionals($rowdata, $this->_make_conditionals($row_vars));
 
+        //*
+        echo '<pre><hr/>';
+        echo "\n****************************************\n";
+        echo $rowdata;
+        echo "\n\n\n";
+        var_dump($this->_make_conditionals($row_vars));
+        // */
+        
         $custom_date_fields = array();
         $this->date_vars_params = array();
 
@@ -202,13 +210,15 @@ class PL_parser {
 
                                 // Replace and process conditionals for the key variable - often literally {key} - with the array
                                 // index we are currently at in the variable pair
-                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$key_var_name => $data_key));
                                 $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$key_var_name, $data_key, $pair_row_data);
 
                                 // Replace and process conditionals for the value variable - usually {row} - with the value at
                                 // this position
-                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$row_var_name => $data));
                                 $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$row_var_name, $data, $pair_row_data);
+
+                                // Prep and run conditionals
+                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$key_var_name => $data_key, $variable_prefix.$row_var_name => $data));
+
                             }
                         } else {
                             if($auto_key)
@@ -324,15 +334,10 @@ class PL_parser {
                 }
             }
         }
-
-        if($parse_conditionals)
-        {
-            $rowdata = $this->EE->TMPL->advanced_conditionals($rowdata);
-        }
-
+        
         if($backspace)
         {
-            $rowdata = substr($rowdata, 0, - $backspace);
+            $rowdata = substr(rtrim($rowdata), 0, - $backspace);
         }
 
         return $rowdata;
