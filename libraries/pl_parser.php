@@ -106,7 +106,7 @@ class PL_parser {
         // parse out conditionals
         $rowdata = $this->EE->functions->prep_conditionals($rowdata, $this->_make_conditionals($row_vars));
 
-        //*
+        /*
         echo '<pre><hr/>';
         echo "\n****************************************\n";
         echo $rowdata;
