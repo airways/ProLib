@@ -306,8 +306,8 @@ class PL_parser {
                                 } else {
                                     if(is_array($v) OR $v instanceof PL_Parser_ArrayWrapper) {  
                                         // Only parse if the variable pair is in use
-                                        echo '<pre>';
-                                        echo $k.PHP_EOL;
+                                        //echo '<pre>';
+                                        //echo $k.PHP_EOL;
                                         //if(strpos($pair_row_data, LD.$variable_prefix.$k) !== FALSE) {
                                             // Only parse if it has data
                                             if((is_array($v) AND count($v) > 0) OR ($v instanceof PL_Parser_ArrayWrapper AND $v->count() > 0)) {
@@ -328,7 +328,7 @@ class PL_parser {
                             
                             if(count($inner_pair_vars) > 0)
                             {
-                                echo "<pre>)))))))))) CALL parse_variables_ex FOR ".implode(",", $inner_pair_vars)."\n";
+                                //echo "<pre>)))))))))) CALL parse_variables_ex FOR ".implode(",", $inner_pair_vars)."\n";
                                 $pair_row_data = $this->parse_variables_ex(array_merge(
                                     $params,
                                     array(
