@@ -18,6 +18,8 @@
  **/
 
 class PL_parser {
+    public $debug = false;
+
     function __construct()
     {
         $this->EE = &get_instance();
@@ -107,7 +109,9 @@ class PL_parser {
         $custom_date_fields = array();
         $this->date_vars_params = array();
 
-        // parse single variables
+        // *** parse single variables ***
+        
+        // first, parse date format="" parameters
         foreach($row_vars as $key => $val)
         {
             if (preg_match_all("/".LD.$this->preg_escape($variable_prefix.$key)."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
@@ -121,7 +125,7 @@ class PL_parser {
             }
         }
 
-
+        // now parse regular variables
         foreach($row_vars as $key => $val)
         {
             //$key = $this->_remove_prefix($key);
@@ -135,10 +139,12 @@ class PL_parser {
                 {
                     if(is_object($row_vars[$var]) AND is_callable($row_vars[$var]))
                     {
+                        if($this->debug) echo 'Replace CALLBACK '.$variable_prefix.$key.'<br/>';
                         $rowdata = $this->_swap_var_single($variable_prefix.$key, $row_vars[$var]($row_vars), $rowdata);
                     } else {
                         if(!is_object($row_vars[$var]) AND !is_array($row_vars[$var]))
                         {
+                            if($this->debug) echo 'Replace '.$variable_prefix.$key.'<br/>';
                             $rowdata = $this->_swap_var_single($variable_prefix.$key, $row_vars[$var], $rowdata);
                         }
                     }
@@ -149,9 +155,11 @@ class PL_parser {
         // parse out conditionals
         $rowdata = $this->EE->functions->prep_conditionals($rowdata, $this->_make_conditionals($row_vars), 'n');
 
+        if($this->debug) {
+           echo '<pre><hr/>';
+            echo "\n****************************************\n";
+        }
         /*
-        echo '<pre><hr/>';
-        echo "\n****************************************\n";
         echo $rowdata;
         echo "\n\n\n";
         var_dump($this->_make_conditionals($row_vars));
@@ -164,10 +172,10 @@ class PL_parser {
 
             // If the pair isn't set, this level of the data tree does not have this pair in it
             if(!isset($row_vars[$var_pair])) {
-                echo 'No data at this level for '.$var_pair.', skipping!<br/>';
+                if($this->debug) echo 'No data at this level for '.$var_pair.', skipping!<br/>';
                 continue;
             } else {
-                echo '<b>Parsing '.$var_pair.'!</b><br/>';
+                if($this->debug) echo '<b>Parsing '.$var_pair.'!</b><br/>';
             }
             
             
@@ -179,9 +187,7 @@ class PL_parser {
             // if we got some matches
             if($count == 0)
             {
-                echo '<b><u>No matches for '.$variable_prefix.$var_pair.', skipping!</u></b><br/>';
-                //echo '<pre>'.htmlentities($rowdata).'</pre>';
-                //echo '-----<br/>';
+                if($this->debug) echo '<b><u>No matches for '.$variable_prefix.$var_pair.', skipping!</u></b><br/>';
                 if(strpos($rowdata, LD.$variable_prefix.$var_pair)) {
                     show_error('No closing tag found for pair tag '.LD.$variable_prefix.$var_pair.RD);
                 }
@@ -412,12 +418,12 @@ class PL_parser {
             $rowdata = substr(rtrim($rowdata), 0, - $backspace);
         }
         
-        //*
-        echo '<i>--- return from parse_variables_ex ---</i><br/>';
-        echo 'result:</b>';
-        echo '<pre>'.htmlentities($rowdata).'</pre>';
-        echo '-----<br/>';
-        // */        
+        if($this->debug) {
+            echo '<i>--- return from parse_variables_ex ---</i><br/>';
+            echo 'result:</b>';
+            echo '<pre>'.htmlentities($rowdata).'</pre>';
+            echo '-----<br/>';
+        }
         
         return $rowdata;
     } // function parse_variables
