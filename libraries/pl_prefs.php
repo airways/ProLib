@@ -58,6 +58,22 @@ class PL_prefs extends PL_handle_mgr {
         return $this->new_object($data);
     }
 
+    private function decode_value($name, $value) {
+        $result = NULL;
+
+        if(is_object($this->default_prefs[$name])) $result = json_decode($value);
+        else if(is_array($this->default_prefs[$name])) {
+            foreach(json_decode($value) as $k => $v) {
+                if(is_numeric($k)) $k = (int)$k;
+                $result[$k] = $v;
+            }
+        } else {
+            $result = $value;
+        }
+        
+        return $result;
+    }
+
     /**
      * Get a preference object by name.
      *
@@ -74,9 +90,11 @@ class PL_prefs extends PL_handle_mgr {
 
         $result = $this->get_object($name, FALSE);
 
-        // if there is no result, check for a default preference value
-        if(!$result)
+        if($result)
         {
+            $result->value = $this->decode_value($name, $result->value);
+        } else {
+            // if there is no result, check for a default preference value
             if(array_key_exists($name, $this->default_prefs))
             {
                 // create a new preference object for the default preference
@@ -138,6 +156,9 @@ class PL_prefs extends PL_handle_mgr {
     function set($key, $value = FALSE)
     {
         $pref = $this->get_preference($key);
+        
+        if(is_object($value) || is_array($value)) $value = json_encode($value);
+
         if($pref)
         {
             $pref->value = $value;
@@ -199,6 +220,8 @@ class PL_prefs extends PL_handle_mgr {
             if(!array_key_exists($k, $prefs))
             {
                 $prefs[$k] = $this->default_prefs[$k];
+            } else {
+                $prefs[$k] = $this->decode_value($k, $prefs[$k]);
             }
         }
 
@@ -211,7 +234,16 @@ class PL_prefs extends PL_handle_mgr {
     }
 
     function save_preference($object) {
-        return $this->save_object($object);
+        $val = NULL;
+        if(is_object($object->value) || is_array($object->value)) {
+            $val = $object->value;
+            $object->value = json_encode($object->value);
+        }
+        $result = $this->save_object($object);
+        if(!is_null($val)) {
+            $object->value = $val;
+        }
+        return $result;
     }
 
     function save_preferences($prefs)
@@ -228,7 +260,9 @@ class PL_prefs extends PL_handle_mgr {
         {
             if(!array_key_exists($k, $objects))
             {
-                $objects[$k] = new PL_Preference(array('preference_name' => $k, 'value' => $this->default_prefs[$k]));
+                $value = $this->default_prefs[$k];
+                if(is_object($value) || is_array($value)) $value = json_encode($value);
+                $objects[$k] = new PL_Preference(array('preference_name' => $k, 'value' => $value));
                 $objects[$k]->__mgr = $this;
             }
         }

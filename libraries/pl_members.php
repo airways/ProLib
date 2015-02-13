@@ -26,6 +26,17 @@ class PL_Members {
         $this->prolib = &$PROLIB;
     }
     
+    public function get_member($member_id)
+    {
+        $result = array();
+        $query = $this->EE->db->get_where('exp_members', array('member_id' => $member_id));
+        if($query->num_rows() > 0) {
+            return $query->row();
+        } else {
+            return NULL;
+        }
+    }
+
     /**
      * param $mode full | username - full returns full object, username (or any other
      *                               field) returns only that field

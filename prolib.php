@@ -376,16 +376,25 @@ class Prolib_core {
         if($exit) exit("[Exit]");
     }
 
-    function make_options($rows, $value_field, $label_field)
+    function make_options($rows, $value_field, $label_field=NULL)
     {
         $result = array();
         foreach($rows as $row)
         {
-            if(is_object($row))
-            {
-                $result[$row->$value_field] = $row->$label_field;
+            if(is_null($label_field)) {
+                if(is_object($row))
+                {
+                    $result[$row->$value_field] = $row;
+                } else {
+                    $result[$row[$value_field]] = $row;
+                }
             } else {
-                $result[$row[$value_field]] = $row[$label_field];
+                if(is_object($row))
+                {
+                    $result[$row->$value_field] = $row->$label_field;
+                } else {
+                    $result[$row[$value_field]] = $row[$label_field];
+                }
             }
         }
         return $result;

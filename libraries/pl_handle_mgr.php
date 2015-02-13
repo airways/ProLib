@@ -281,30 +281,36 @@ class PL_handle_mgr
 
         if($query->num_rows > 0)
         {
-            foreach($query->result() as $row)
+            $result = $this->load_objects($query->result());
+        }
+        return $result;
+    }
+
+    function load_objects($query_result, $array_type = FALSE)
+    {
+        $result = array();
+        foreach($query_result as $row)
+        {
+            $obj = $this->_load_object($row);
+            
+            switch($array_type)
             {
-                //$obj = $this->get_object($row->{$this->singular . '_id'});
-                $obj = $this->_load_object($row);
-                
-                switch($array_type)
-                {
-                    case 'handle':
-                        $result[$obj->{$this->singular . '_id'}] = $obj;
-                        break;
-                    case 'name':
-                        $result[$obj->{$this->singular . '_name'}] = $obj;
-                        break;
-                    default:
-                        $result[] = $obj;
-                }
-                
-                if($this->object_cache_enabled)
-                {
-                    $this->object_cache[$obj->{$this->singular . '_id'}] = $obj;
-                    $this->object_names[$obj->{$this->singular . '_name'}] = $obj->{$this->singular . '_id'};
-                }
-                
+                case 'handle':
+                    $result[$obj->{$this->singular . '_id'}] = $obj;
+                    break;
+                case 'name':
+                    $result[$obj->{$this->singular . '_name'}] = $obj;
+                    break;
+                default:
+                    $result[] = $obj;
             }
+            
+            if($this->object_cache_enabled)
+            {
+                $this->object_cache[$obj->{$this->singular . '_id'}] = $obj;
+                $this->object_names[$obj->{$this->singular . '_name'}] = $obj->{$this->singular . '_id'};
+            }
+            
         }
         return $result;
     }
