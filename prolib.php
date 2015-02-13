@@ -44,6 +44,7 @@ require_once PATH_THIRD.'prolib/core/mcp.prolib.php';
 require_once PATH_THIRD.'prolib/core/lib.base.php';
 require_once PATH_THIRD.'prolib/core/driver.base.php';
 require_once PATH_THIRD.'prolib/libraries/pl_template.php';
+require_once PATH_THIRD.'prolib/libraries/pl_markdown.php';
 
 function prolib(&$object, $package_name="")
 {
@@ -76,6 +77,7 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_drivers         = &$object->prolib->pl_drivers;
     $object->EE->pl_members         = &$object->prolib->pl_members;
     $object->EE->pl_template        = &$object->prolib->pl_template;
+    $object->EE->pl_markdown        = &$object->prolib->pl_markdown;
 
     $PROLIB->site_id = $PROLIB->EE->config->item('site_id');
     $object->site_id = $PROLIB->site_id;
@@ -114,6 +116,7 @@ class Prolib_core {
         $this->pl_drivers           = new PL_Drivers();
         $this->pl_members           = new PL_Members();
         $this->pl_template          = new PL_Template();
+        $this->pl_markdown          = new PL_Markdown();
 
         // random fun stuff
         if(isset($this->EE->uri->page_query_string))
