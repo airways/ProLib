@@ -61,8 +61,8 @@ class PL_prefs extends PL_handle_mgr {
     private function decode_value($name, $value) {
         $result = NULL;
 
-        if(is_object($this->default_prefs[$name])) $result = json_decode($value);
-        else if(is_array($this->default_prefs[$name])) {
+        if(isset($this->default_prefs[$name]) && is_object($this->default_prefs[$name])) $result = json_decode($value);
+        else if(isset($this->default_prefs[$name]) && is_array($this->default_prefs[$name])) {
             foreach(json_decode($value) as $k => $v) {
                 if(is_numeric($k)) $k = (int)$k;
                 $result[$k] = $v;
@@ -208,10 +208,9 @@ class PL_prefs extends PL_handle_mgr {
     function get_preferences()
     {
         // get a map of preference objects, collapse into a single key/value array
-        $prefs = $this->get_objects(FALSE, 'name');
-        foreach($prefs as $k => $v)
+        foreach($this->get_objects(FALSE, 'name') as $i => $pref)
         {
-            $prefs[$k] = $v->value;
+            $prefs[$pref->preference_name] = $pref->value;
         }
 
         // check for default values, if they are not set - add them to the results
@@ -266,6 +265,7 @@ class PL_prefs extends PL_handle_mgr {
                 $objects[$k]->__mgr = $this;
             }
         }
+        
         return $this->save_objects($objects);
     }
 
