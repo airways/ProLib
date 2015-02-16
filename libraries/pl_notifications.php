@@ -21,7 +21,7 @@ class PL_Notifications {
     
     function __construct()
     {
-        prolib($this, 'proform');
+        prolib($this, $this->hook_prefix);
         $this->mgr = new PL_handle_mgr();
     } // function __construct()
 
@@ -52,12 +52,12 @@ class PL_Notifications {
         $this->parse_ee_tags = $val;
     }
     
-    protected function send_notification($template_name, &$form, &$data, $subject, $notification_list, $reply_to=FALSE, $reply_to_name=FALSE, $send_attachments=FALSE, $driver=FALSE)
+    public function send_notification($template_name, &$model, &$data, $subject, $notification_list, $reply_to=FALSE, $reply_to_name=FALSE, $send_attachments=FALSE, $driver=FALSE)
     {
-        return $this->send_notification_email('custom', $template_name, $form, $data, $subject, $notification_list, $reply_to, $reply_to_name, $send_attachments, $driver);
+        return $this->send_notification_email('custom', $template_name, $model, $data, $subject, $notification_list, $reply_to, $reply_to_name, $send_attachments, $driver);
     }
     
-    protected function send_notification_email($type, $template_name, &$form, &$data, $subject, $notification_list, $reply_to=FALSE, $reply_to_name=FALSE, $send_attachments=FALSE, $driver=FALSE)
+    public function send_notification_email($type, $template_name, &$model, &$data, $subject, $notification_list, $reply_to=FALSE, $reply_to_name=FALSE, $send_attachments=FALSE, $driver=FALSE)
     {
         $this->init();
 
@@ -138,8 +138,8 @@ class PL_Notifications {
             
             if($driver)
             {
-                $this->_debug('Calling form driver->prep_notifications');
-                $result = $driver->prep_notifications($this, $type, $template_name, $form, $data, $subject, $notification_list, $reply_to, $reply_to_name, $send_attachments, $result);
+                $this->_debug('Calling driver->prep_notifications');
+                $result = $driver->prep_notifications($this, $type, $template_name, $model, $data, $subject, $notification_list, $reply_to, $reply_to_name, $send_attachments, $result);
                 $this->_debug('Result after driver->prep_notifications - ' . ($result ? 'okay' : 'failed'));
             }
             
@@ -164,13 +164,13 @@ class PL_Notifications {
                         }
                     } else {
                         // use the form's reply-to email and name if they have been set
-                        if(trim($form->reply_to_address) != '')
+                        if(isset($model) && trim($model->reply_to_address) != '')
                         {
-                            if(trim($form->reply_to_name) != '')
+                            if(trim($model->reply_to_name) != '')
                             {
-                                $this->EE->pl_email->reply_to($form->reply_to_address, $form->reply_to_name);
+                                $this->EE->pl_email->reply_to($model->reply_to_address, $model->reply_to_name);
                             } else {
-                                $this->EE->pl_email->reply_to($form->reply_to_address);
+                                $this->EE->pl_email->reply_to($model->reply_to_address);
                             }
                         } elseif($this->default_reply_to_address) {
                             // use the default reply-to address if it's been set
@@ -179,12 +179,13 @@ class PL_Notifications {
                     }
     
                     // Only normal forms can have files uploaded to them
-                    if($form->form_type == 'form')
+                    if(isset($model) && (isset($model->form_type) && $model->form_type == 'form')
+                                     || (isset($model->has_files) && $model->has_files))
                     {
                         // Attach files
                         if($send_attachments)
                         {
-                            foreach($form->fields() as $field)
+                            foreach($model->fields() as $field)
                             {
                                 if($field->type == 'file')
                                 {
@@ -219,7 +220,7 @@ class PL_Notifications {
                     $this->EE->pl_email->send = TRUE;
                     if ($this->EE->extensions->active_hook($this->hook_prefix.'_notification_message') === TRUE)
                     {
-                        $this->EE->extensions->call($this->hook_prefix.'_notification_message', $type, $form, $this->EE->pl_email, $this);
+                        $this->EE->extensions->call($this->hook_prefix.'_notification_message', $type, $model, $this->EE->pl_email, $this);
                         if($this->EE->extensions->end_script) return;
                     }
                     

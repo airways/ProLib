@@ -1,5 +1,7 @@
 <?php
 
+//@version 0.84
+
 define('PROLIB_VERSION', '0.84');
 define('PROLIB_NAME', 'Prolib');
 define('PROLIB_CLASS', 'Prolib'); // must match module class name
