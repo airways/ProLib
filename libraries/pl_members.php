@@ -76,5 +76,27 @@ class PL_Members {
         }
         return $result;
     }
+
+    /**
+     * param $group_id - group to get list of members from
+     * param $mode full | username - full returns full object, username (or any other
+     *                               field) returns only that field
+     */
+    function get_group_members($group_id, $mode='full')
+    {
+        $result = array();
+        $members = $this->EE->db->where('group_id', $group_id)->get('exp_members');
+        foreach($members->result() as $member)
+        {
+            if($mode == 'full')
+            {
+                $result[$member->member_id] = $member;
+            } else {
+                $result[$member->member_id] = $member->$mode;
+            }
+        }
+        return $result;
+    }
+
 }} // class PL_Members
 

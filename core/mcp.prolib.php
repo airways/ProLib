@@ -54,6 +54,15 @@ class Prolib_base_mcp {
 
     }
 
+    function set_page_title($title)
+    {
+        if (version_compare(APP_VER, '2.6', '>=') >= 0) {
+            $this->EE->view->cp_page_title = $this->EE->lang->line($title);
+        } else {
+            $this->EE->cp->set_variable('cp_page_title', $this->EE->lang->line($title));
+        }
+    }
+
     public function find_manager($type)
     {
         $this->type = $type;

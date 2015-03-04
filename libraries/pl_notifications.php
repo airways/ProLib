@@ -26,6 +26,7 @@ class PL_Notifications {
     } // function __construct()
 
     private function init() {
+        //krumo($this->EE);
         $this->EE->load->library('parser');
         $this->EE->load->library('template');
         $this->EE->load->helper('text');

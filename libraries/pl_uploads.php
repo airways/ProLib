@@ -215,4 +215,24 @@ class PL_uploads {
 
         return $return_array;
     }
+
+    public function get_file_path($file_id)
+    {
+        $this->EE->load->model('file_upload_preferences_model');
+
+        $upload_prefs = $this->EE->file_upload_preferences_model->get_file_upload_preferences(1);
+
+        // Get the file Location:
+        $file_data = ee()->db->select('upload_location_id, rel_path, file_name')
+            ->from('files')
+            ->where('file_id', $file_id)
+            ->get()
+            ->row();
+
+        $file_path = reduce_double_slashes(
+            $upload_prefs[$file_data->upload_location_id]['server_path'].'/'.$file_data->file_name
+        );
+
+        return $file_path;
+    }
 }
