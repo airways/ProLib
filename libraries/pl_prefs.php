@@ -207,6 +207,8 @@ class PL_prefs extends PL_handle_mgr {
      */
     function get_preferences()
     {
+        $prefs = array();
+        
         // get a map of preference objects, collapse into a single key/value array
         foreach($this->get_objects(FALSE, 'name') as $i => $pref)
         {
