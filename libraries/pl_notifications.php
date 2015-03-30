@@ -26,6 +26,7 @@ class PL_Notifications {
     } // function __construct()
 
     private function init() {
+        //krumo($this->EE);
         $this->EE->load->library('parser');
         $this->EE->load->library('template');
         $this->EE->load->helper('text');
@@ -34,7 +35,7 @@ class PL_Notifications {
     protected function _debug($msg, $escape=TRUE)
     {
 
-        $this->debug_str .= ($escape ? htmlentities($msg) : $msg ) . '<br/>';
+        $this->debug_str .= ' - ' . date('%D %H:%i:%s.$u') . ' ' . (($escape ? htmlentities($msg) : $msg )) . '<hr/>';
     }
 
     public function clear_attachments()
