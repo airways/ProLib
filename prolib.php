@@ -153,12 +153,13 @@ class Prolib_core {
         if(substr($theme, -1) != '/') $theme .= '/';
         $object->theme_url = $theme.'third_party/'.$package_name.'/';
 
-        if(defined('BASE'))
+        if(defined('BASE') && $package_name != 'prolib')
         {
             defined('ACTION_BASE') OR define('ACTION_BASE', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('FORM_ACTION_BASE') OR define('FORM_ACTION_BASE', 'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('TAB_ACTION') OR define('TAB_ACTION', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('CP_ACTION') OR define('CP_ACTION', 'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP.'method=');
+            #throw new Exception('what');
         }
 
         return $this;

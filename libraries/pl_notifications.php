@@ -246,7 +246,9 @@ class PL_Notifications {
         }
 
         
+        if($this->debug) {
             echo $this->debug_str;
+        }
         
         return $result;
     } // function send_notification_email()
