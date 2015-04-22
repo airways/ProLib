@@ -35,15 +35,12 @@
  * @link        http://expressionengine.com
  */
 
-
 require_once(BASEPATH.'libraries/Email.php');
+require_once(BASEPATH.'../../expressionengine/libraries/EE_Email.php');
 
-class PL_email extends CI_Email {
+class PL_email extends EE_Email {
 
-
-    /**
-     * Constructor
-     */
+/*
     function PL_email($init = TRUE)
     {
         parent::__construct();
@@ -57,14 +54,7 @@ class PL_email extends CI_Email {
         $this->EE_initialize();
     }
 
-    // --------------------------------------------------------------------
 
-    /**
-     * Set config values
-     *
-     * @access  private
-     * @return  void
-     */
     function EE_initialize()
     {
         // Always validate email addresses to help prevent injection
@@ -86,12 +76,6 @@ class PL_email extends CI_Email {
 
         $this->mailtype = $mailtype;
 
-        /* -------------------------------------------
-        /*  Hidden Configuration Variables
-        /*  - email_newline => Default newline.
-        /*  - email_crlf => CRLF used in quoted-printable encoding
-        /* -------------------------------------------*/
-
         if ($this->EE->config->item('email_newline') !== FALSE)
         {
             $config['newline'] = $this->EE->config->item('email_newline');
@@ -112,16 +96,7 @@ class PL_email extends CI_Email {
         $this->initialize($config);
     }
 
-    // --------------------------------------------------------------------
 
-    /**
-     * Set the email message
-     *
-     * EE uses action ID's so we override the messsage() function
-     *
-     * @access  public
-     * @return  void
-     */
     function message($body, $alt = '', $plain = TRUE, $encode = TRUE)
     {
         // remove {if plain_email}, leaving {if html_email}
@@ -152,13 +127,7 @@ class PL_email extends CI_Email {
         }
     }
 
-    /**
-     * Send Email - after scrubbing headers of junk characters such as newlines, to help
-     * prevent injection attacks.
-     *
-     * @access  public
-     * @return  bool
-     */
+
     function send()
     {
         foreach($this->_headers as $key => $val)
@@ -168,6 +137,7 @@ class PL_email extends CI_Email {
         
         return parent::send();
     }
+    */
 }
 // END CLASS
 

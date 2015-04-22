@@ -1,10 +1,18 @@
 <?php
 
 class PL_EETemplates {
+    public $debug = FALSE;
+    public $debug_str = '<b>Template Debug Output</b><br/>';
+    
     public function __construct() {
         global $PROLIB;
         $this->prolib = &$PROLIB;
         $this->EE = &get_instance();
+    }
+
+    protected function _debug($msg, $escape=TRUE)
+    {
+        $this->debug_str .= ' - ' . date('c') . ' ' . (($escape ? htmlentities($msg) : $msg )) . '<hr/>';
     }
 
     /**
@@ -55,43 +63,58 @@ class PL_EETemplates {
 
     public function get_template($template_group_name, $template_name)
     {
-        //$this->_debug($this->template_group_name);
+        $this->_debug('Get template: '.$template_group_name.'/'.$template_name);
 
         $query = $this->EE->db->query($sql = "SELECT group_id FROM exp_template_groups WHERE group_name = '" . $this->EE->db->escape_str($template_group_name) . "' AND site_id = ".$this->prolib->site_id);
         if($query->num_rows() > 0)
         {
             $group_id = $query->row()->group_id;
 
-            //$this->_debug('Template group ID: '.$group_id);
+            $this->_debug('Template group ID: '.$group_id);
 
             $sql = "SELECT * FROM exp_templates WHERE group_id = {$group_id} AND template_name = '" . $this->EE->db->escape_str($template_name) . "' AND site_id = ".$this->prolib->site_id;
             $query = $this->EE->db->query($sql);
             if($query->num_rows() > 0)
             {
                 $row = $query->row();
+                $this->_debug('Found template row: '.$row->template_id);
+                
+                $template_data = $query->row()->template_data;
+                $this->_debug('Template read from database: '.strlen($template_data).' bytes');
+                
                 if($row->save_template_file == 'y')
                 {
                     // we need to load data from the template file
                     $template_file = $this->EE->config->slash_item('tmpl_file_basepath')
                                     . $this->EE->config->slash_item('site_short_name')
-                                    . $this->template_group_name.'.group/'
+                                    . $template_group_name.'.group/'
                                     . $template_name.'.html';
 
-                    //$this->_debug('Template saved as file '.$template_file);
+                    $this->_debug('Template saved as file '.$template_file);
+                    if(!file_exists($template_file))
+                    {
+                        $this->_debug('File does not exist!');
+                    }
 
-                    $template_data = file_get_contents($template_file);
-                } else {
-                    //$this->_debug('Template from DB');
-                    $template_data = $query->row()->template_data;
+                    $template_file_data = file_get_contents($template_file);
+                    if($template_file_data)
+                    {
+                        $template_data = $template_file_data;
+                        $this->_debug('Template read from file: '.strlen($template_data).' bytes');
+                    } else {
+                        $this->_debug('Template file was empty!');
+                    }
                 }
 
                 //$this->_debug('Template: '.$template_data);
 
                 return $template_data;
             } else {
+                $this->_debug('Template row not found!');
                 return FALSE;
             }
         } else { // if($query->num_rows() > 0)
+            $this->_debug('Template group not found!');
             return FALSE;
         }
     } // function get_template()
