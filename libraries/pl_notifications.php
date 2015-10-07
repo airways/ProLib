@@ -12,6 +12,7 @@ class PL_Notifications {
     public $var_pairs = array();
     public $special_attachments = array();
     public $parse_ee_tags = TRUE;
+    public $message_count = 0;
     protected $template_group_name;
     protected $default_from_address;
     protected $default_from_name;
@@ -268,6 +269,7 @@ class PL_Notifications {
                             $this->_debug($this->EE->pl_email->print_debugger(), false);
 
                         } else {
+                            $this->message_count++;
                             $this->_debug("***** SENT *****");
                         }
                     }
