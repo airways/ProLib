@@ -414,8 +414,9 @@ class Prolib_core {
     {
         if(!is_array($from) AND !is_object($from))
         {
-            xdebug_print_function_stack('Invalid $from supplied to copy_values!');
+            echo('<b>Invalid $from supplied to copy_values! Must be an array or object.</b><br>');
             var_dump($from);
+            exit;
         }
         
         foreach($from as $key => $value)
