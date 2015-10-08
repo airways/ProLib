@@ -238,7 +238,7 @@ class PL_Notifications {
                         }
                     }
                     
-                    $this->_debug('To: '.$to_email);
+                    $this->_debug('To: '.print_r($to_email,true));
                     $this->EE->pl_email->to($to_email);
                     $this->EE->pl_email->subject($subject);
     
