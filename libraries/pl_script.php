@@ -602,7 +602,7 @@ class PL_Script {
 //                             echo 'handle "'.$x.'" == "'.$y.'"<br/>';
                             $x = $x == $y;
 //                             echo 'result ='.$x.'<br/>';
-//                             array_push($stack, $x);
+                             array_push($stack, $x);
                             break;
                         case '>=':
                             $y = stack_pop($stack);

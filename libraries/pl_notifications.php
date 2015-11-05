@@ -7,17 +7,19 @@ class PL_Notifications {
      * @var PL_handler_mgr
      */
     protected $template_mgr;
-    public $debug = TRUE;
+    public $debug = FALSE;
     public $debug_str = '<b>Debug Output</b><br/>';
     public $var_pairs = array();
     public $special_attachments = array();
     public $parse_ee_tags = TRUE;
+    public $message_count = 0;
     protected $template_group_name;
     protected $default_from_address;
     protected $default_from_name;
     protected $default_reply_to_address;
     protected $default_reply_to_name;
     protected $hook_prefix = 'prolib';
+    protected $mailtype = 'html';
     
     function __construct()
     {
@@ -35,7 +37,17 @@ class PL_Notifications {
     protected function _debug($msg, $escape=TRUE)
     {
 
-        $this->debug_str .= ' - ' . date('%D %H:%i:%s.$u') . ' ' . (($escape ? htmlentities($msg) : $msg )) . '<hr/>';
+        $this->debug_str .= ' - ' . date('c') . ' ' . (($escape ? htmlentities($msg) : $msg )) . '<hr/>';
+    }
+
+    public function set_template_group_name($template_group)
+    {
+        $this->template_group_name = $template_group;
+    }
+
+    public function set_mailtype($mailtype)
+    {
+        $this->mailtype = $mailtype;
     }
 
     public function clear_attachments()
@@ -57,14 +69,33 @@ class PL_Notifications {
     {
         return $this->send_notification_email('custom', $template_name, $model, $data, $subject, $notification_list, $reply_to, $reply_to_name, $send_attachments, $driver);
     }
+
+    private function get_mailtype()
+    {
+        if(isset($this->EE->formslib)) {
+            return $this->EE->formslib->prefs->ini('mailtype');
+        } else {
+            return $this->mailtype;
+        }
+    }
     
     public function send_notification_email($type, $template_name, &$model, &$data, $subject, $notification_list, $reply_to=FALSE, $reply_to_name=FALSE, $send_attachments=FALSE, $driver=FALSE)
     {
         $this->init();
 
         $result = FALSE;
-        $template = $this->prolib->pl_eetemplates->get_template($this->template_group_name, $template_name);
 
+        $this->_debug('Template group name: '.$this->template_group_name);
+        if($template_name)
+        {
+            $this->_debug("Template name: ".$template_name);
+        } else {
+            $this->_debug('No template is assigned!');
+        }
+
+        $this->prolib->pl_eetemplates->debug = $this->debug;
+        $template = $this->prolib->pl_eetemplates->get_template($this->template_group_name, $template_name);
+        $this->debug_str .= $this->prolib->pl_eetemplates->debug_str;
 
         if(is_object($data)) {
             $data = (array)$data;
@@ -75,10 +106,11 @@ class PL_Notifications {
 
         $this->EE->pl_email->clear(TRUE);
         
-        if($template)
+        if(!$template)
         {
+        } else {
             // parse data from the entry
-            $this->_debug($template);
+            $this->_debug('Template: '.$template);
             // $message = $this->EE->parser->parse_string($template, $data, TRUE);
             // $subject = $this->EE->parser->parse_string($subject, $data, TRUE);
 // echo "<b>_send_notifications TEMPLATE PARSING</b>";
@@ -148,7 +180,7 @@ class PL_Notifications {
             {
                 foreach($notification_list as $to_email)
                 {
-                    $this->EE->pl_email->PL_initialize($this->EE->formslib->prefs->ini('mailtype'));
+                    //$this->EE->pl_email->PL_initialize($this->get_mailtype());
     
                     if($this->default_from_address)
                     {
@@ -206,7 +238,7 @@ class PL_Notifications {
                         }
                     }
                     
-                    $this->_debug('To: '.print_r($to_email, true));
+                    $this->_debug('To: '.print_r($to_email,true));
                     $this->EE->pl_email->to($to_email);
                     $this->EE->pl_email->subject($subject);
     
@@ -237,6 +269,7 @@ class PL_Notifications {
                             $this->_debug($this->EE->pl_email->print_debugger(), false);
 
                         } else {
+                            $this->message_count++;
                             $this->_debug("***** SENT *****");
                         }
                     }
@@ -246,9 +279,11 @@ class PL_Notifications {
         }
 
         
-        if($this->debug) {
+        /*if($this->debug) {
+            echo '<div style="color: darkblue;">';
             echo $this->debug_str;
-        }
+            exit;
+        }*/
         
         return $result;
     } // function send_notification_email()

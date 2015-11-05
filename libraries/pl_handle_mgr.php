@@ -276,7 +276,8 @@ class PL_handle_mgr
             $this->EE->db->limit($perpage, $offset);
         }
 
-
+        if(!$this->EE->db->table_exists($this->table)) throw new Exception('Table does not exist: '.$this->table);
+        
         $query = $this->EE->db->get($this->table);
 
         if($query->num_rows > 0)
