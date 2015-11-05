@@ -74,7 +74,7 @@ class PL_EETemplates {
                     // we need to load data from the template file
                     $template_file = $this->EE->config->slash_item('tmpl_file_basepath')
                                     . $this->EE->config->slash_item('site_short_name')
-                                    . $this->template_group_name.'.group/'
+                                    . $template_group_name.'.group/'
                                     . $template_name.'.html';
 
                     //$this->_debug('Template saved as file '.$template_file);
