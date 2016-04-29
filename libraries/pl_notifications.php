@@ -181,6 +181,7 @@ class PL_Notifications {
                 foreach($notification_list as $to_email)
                 {
                     //$this->EE->pl_email->PL_initialize($this->get_mailtype());
+                    $this->EE->pl_email->mailtype = $this->get_mailtype();
     
                     if($this->default_from_address)
                     {
