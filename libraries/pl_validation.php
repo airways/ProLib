@@ -536,7 +536,7 @@ class PL_forms_validation_callbacks {
 
     function numeric_dash($value, $param)
     {
-        if(preg_match('/^[1-9\-]*$/', $value))
+        if(preg_match('/^[0-9\-]*$/', $value))
         {
             return TRUE;
         } else {
