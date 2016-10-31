@@ -133,44 +133,73 @@ class PL_Encryption {
  *
  * If encryption is not available, the values of objects stored in the vault will
  * simply be Base64 encoded.
+ *
+ * Also note, new with ProLib 0.87, the vault table will NOT be created unless
+ * something needs to be written into it. You should NEVER query the table directly,
+ * always use this class to access it's contents.
  **/
 
 class PL_Vault {
+    private $checked_table = FALSE;
+
     public function __construct($package)
     {
         $this->EE = &get_instance();
         $this->package = $package;
-        $this->create_table();
+        
     }
 
-    private function create_table()
+    private function check_table($create=TRUE)
     {
+        // We already created the table, or already found it once, return true immediately
+        if($this->checked_table) return TRUE;
+
         $this->table = $this->package.'_vault';
 
         if(!$this->EE->db->table_exists($this->table))
         {
-            $this->EE->load->dbforge();
-            $forge = &$this->EE->dbforge;
+            if($create)
+            {
+                $this->EE->load->dbforge();
+                $forge = &$this->EE->dbforge;
 
-            $fields = array(
-                'vault_id'          => array('type' => 'int', 'constraint' => '10', 'unsigned' => TRUE, 'auto_increment' => TRUE),
-                'site_id'           => array('type' => 'int', 'constraint' => '4', 'default' => '1'),
-                'author_id'         => array('type' => 'int', 'constraint' => '11'),
-                'hash'              => array('type' => 'varchar', 'constraint' => '128'),
-                'data'              => array('type' => 'blob'),
-                'expire'            => array('type' => 'int'),
-            );
+                $fields = array(
+                    'vault_id'          => array('type' => 'int', 'constraint' => '10', 'unsigned' => TRUE, 'auto_increment' => TRUE),
+                    'site_id'           => array('type' => 'int', 'constraint' => '4', 'default' => '1'),
+                    'author_id'         => array('type' => 'int', 'constraint' => '11'),
+                    'hash'              => array('type' => 'varchar', 'constraint' => '128'),
+                    'data'              => array('type' => 'blob'),
+                    'expire'            => array('type' => 'int'),
+                );
 
-            $forge->add_field($fields);
-            $forge->add_key('vault_id', TRUE);
-            $forge->add_key('hash');
+                $forge->add_field($fields);
+                $forge->add_key('vault_id', TRUE);
+                $forge->add_key('hash');
 
-            $forge->create_table($this->table);
+                $forge->create_table($this->table);
+
+                // Table didn't exist but we created it, return true
+                $result = TRUE;
+            } else {
+                // Table doesn't exist and we were asked not to create it, return false
+                $result = FALSE;
+            }
+        } else {
+            // Table already existed, return true
+            $result = TRUE;
         }
 
-        // delete expired items - if expire is 0, then the item never expires!
-        $this->EE->db->where(array('expire <' => time(), 'expire !=' => 0))->delete($this->table);
+        // If the table existed or we just created it...
+        if($result)
+        {
+            // delete expired items - if expire is 0, then the item never expires!
+            $this->EE->db->where(array('expire <' => time(), 'expire !=' => 0))->delete($this->table);
 
+            // Don't do it again
+            $this->checked_table = TRUE;
+        }
+
+        return $result;
     }
 
     /**
@@ -181,6 +210,8 @@ class PL_Vault {
      */
     function put($data, $expires=TRUE, $hash=FALSE)
     {
+        $this->check_table();
+
         if(isset($this->EE->encrypt))
         {
             $data = base64_encode($this->EE->encrypt->encode(serialize($data)));
@@ -212,6 +243,10 @@ class PL_Vault {
      */
     function get($hash)
     {
+        // We can only get a value if the table exists, but we don't want to create a blank table
+        // just to find nothing in it, return false immediately if the table isn't already there
+        if(!$this->check_table(FALSE)) return FALSE;
+
         $query = $this->EE->db->where('hash', $hash)->get($this->table);
         if($query->num_rows() > 0)
         {
@@ -236,7 +271,11 @@ class PL_Vault {
      */
     function delete($hash)
     {
-        $this->EE->db->where(array('hash' => $hash))->delete($this->table);
+        // We can only delete if the table exists, but don't want to create it now if it doesn't
+        if($this->check_table(FALSE))
+        {
+            $this->EE->db->where(array('hash' => $hash))->delete($this->table);
+        }
     }
 }
 

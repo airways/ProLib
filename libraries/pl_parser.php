@@ -18,6 +18,8 @@
  **/
 
 class PL_parser {
+    public $debug = false;
+
     function __construct()
     {
         $this->EE = &get_instance();
@@ -66,9 +68,10 @@ class PL_parser {
             'reparse_vars'      => array(),
             'dst_enabled'       => FALSE,
             'variable_prefix'   => '',
-            'parse_conditionals'=> FALSE,
+            'parse_conditionals'=> TRUE,  // ignored, conditionnals are always parsed
             'auto_key'          => FALSE,
             'var_pair_keys'     => array(),
+            'remove_unknown_vars'=> FALSE
         );
 
         // Check for invalid parameters
@@ -103,13 +106,12 @@ class PL_parser {
             }
         }
 
-        // prep basic conditionals
-        $rowdata = $this->EE->functions->prep_conditionals($rowdata, $this->_make_conditionals($row_vars));
-
         $custom_date_fields = array();
         $this->date_vars_params = array();
 
-        // parse single variables
+        // *** parse single variables ***
+        
+        // first, parse date format="" parameters
         foreach($row_vars as $key => $val)
         {
             if (preg_match_all("/".LD.$this->preg_escape($variable_prefix.$key)."\s+format=[\"'](.*?)[\"']".RD."/s", $rowdata, $matches))
@@ -123,6 +125,7 @@ class PL_parser {
             }
         }
 
+        // now parse regular variables
         foreach($row_vars as $key => $val)
         {
             //$key = $this->_remove_prefix($key);
@@ -136,29 +139,59 @@ class PL_parser {
                 {
                     if(is_object($row_vars[$var]) AND is_callable($row_vars[$var]))
                     {
+                        if($this->debug) echo 'Replace CALLBACK '.$variable_prefix.$key.'<br/>';
                         $rowdata = $this->_swap_var_single($variable_prefix.$key, $row_vars[$var]($row_vars), $rowdata);
                     } else {
                         if(!is_object($row_vars[$var]) AND !is_array($row_vars[$var]))
                         {
+                            if($this->debug) echo 'Replace '.$variable_prefix.$key.'<br/>';
                             $rowdata = $this->_swap_var_single($variable_prefix.$key, $row_vars[$var], $rowdata);
                         }
                     }
                 }
             }
         }
+        
+        // parse out conditionals
+        $rowdata = $this->EE->functions->prep_conditionals($rowdata, $this->_make_conditionals($row_vars), 'n');
+
+        if($this->debug) {
+           echo '<pre><hr/>';
+            echo "\n****************************************\n";
+        }
+        /*
+        echo $rowdata;
+        echo "\n\n\n";
+        var_dump($this->_make_conditionals($row_vars));
+        // */
+        
 
         // If a variable is not parsing, remember to add it to the list of valid var pairs!
         foreach($pairs as $var_pair)
         {
 
+            // If the pair isn't set, this level of the data tree does not have this pair in it
+            if(!isset($row_vars[$var_pair])) {
+                if($this->debug) echo 'No data at this level for '.$var_pair.', skipping!<br/>';
+                continue;
+            } else {
+                if($this->debug) echo '<b>Parsing '.$var_pair.'!</b><br/>';
+            }
+            
+            
             // The variable pair will only match if the ending is exactly like {/tag_name}, which means that we found either
             // a plain pair or possibly a pair with arguments inside, although this pattern currently has this detection
             // turned off - that is the basic formula for finding tags with parameters.
             $count = preg_match_all($pattern = "/".LD.$this->preg_escape($variable_prefix.$var_pair).RD."(.*?)".LD."\/".$this->preg_escape($variable_prefix.$var_pair).RD."/s", $rowdata, $matches);
 
             // if we got some matches
-            if($count > 0)
+            if($count == 0)
             {
+                if($this->debug) echo '<b><u>No matches for '.$variable_prefix.$var_pair.', skipping!</u></b><br/>';
+                if(strpos($rowdata, LD.$variable_prefix.$var_pair)) {
+                    show_error('No closing tag found for pair tag '.LD.$variable_prefix.$var_pair.RD);
+                }
+            } else {
                 // $matches[0] is an array of the full pattern matches
                 // $matches[1] is an array of the contents of the inside of each variable pair
                 for($i = 0; $i < count($matches[0]); $i++)
@@ -170,8 +203,6 @@ class PL_parser {
 
                     // The PL_Parser_ArrayWrapper class allows us to wrap some meta info around an array so we don't need to do
                     // any special parsing for simple cases such as changing {row} to {rule}
-                    // If the pair isn't set, this level of the data tree does not have this pair in it
-                    if(!isset($row_vars[$var_pair])) continue;
                     if($row_vars[$var_pair] instanceof PL_Parser_ArrayWrapper)
                     {
                         $key_var_name = $row_vars[$var_pair]->key_var_name;
@@ -202,20 +233,21 @@ class PL_parser {
 
                                 // Replace and process conditionals for the key variable - often literally {key} - with the array
                                 // index we are currently at in the variable pair
-                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$key_var_name => $data_key));
                                 $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$key_var_name, $data_key, $pair_row_data);
 
                                 // Replace and process conditionals for the value variable - usually {row} - with the value at
                                 // this position
-                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$row_var_name => $data));
                                 $pair_row_data  = $this->EE->TMPL->swap_var_single($variable_prefix.$row_var_name, $data, $pair_row_data);
+
+                                // Prep and run conditionals
+                                $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, array($variable_prefix.$key_var_name => $data_key, $variable_prefix.$row_var_name => $data), 'y');
+
                             }
                         } else {
                             if($auto_key)
                             {
                                 $data[$var_pair_keys[$var_pair]] = $data_key;
                             }
-                            $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($data));
                             $prepped_conditionals = array();
 
                             foreach($data as $k => $v) {
@@ -230,6 +262,9 @@ class PL_parser {
                                 }
                                 $prepped_conditionals[$k] = $value;
                             }
+                            
+                            $pair_row_data = $this->EE->functions->prep_conditionals($pair_row_data, $this->_make_conditionals($prepped_conditionals));
+                            $inner_pair_vars = array();
 
                             foreach($data as $k => $v)
                             {
@@ -289,15 +324,44 @@ class PL_parser {
                                         }
                                     }
                                 } else {
-                                    if(is_array($v) OR $v instanceof PL_Parser_ArrayWrapper) {
-                                        $pair_row_data = $this->parse_variables_ex(array_merge(
-                                            $params,
-                                            array(
-                                                'rowdata' => $pair_row_data,
-                                                'row_vars' => $data,
-                                                'pairs' => array($k)
-                                            )
-                                        ));
+                                    if(is_array($v) OR $v instanceof PL_Parser_ArrayWrapper) {  
+                                        if(in_array($k, $pairs)) {
+                                            $inner_pair_vars[] = $k;
+                                            
+                                            /*
+                                            echo '<i>look for '.$k.'</i><br/>';
+                                            // Find the chunks for the variable pair in the row template block
+                                            if($count = preg_match_all($pattern = '#'.LD.$variable_prefix.$k.RD.'(.*?)'.LD.'/'.$variable_prefix.$k.RD.'#s', $pair_row_data, $chunk_matches))
+                                            {
+                                                echo '<b>matches for '.$k.'</b><br/>';
+                                                krumo($chunk_matches);
+                                                // Run and replace each matched chunk
+                                                foreach($chunk_matches[0] as $i => $chunk_match)
+                                                {
+                                                    // Contents of the match to be used as the inner template code
+                                                    $chunk_block = $chunk_matches[1][$i];
+                                                
+                                                    //*
+                                                    echo ")))))))))) CALL parse_variables_ex FOR nested tag ".$variable_prefix.$k.";; data==<br>";
+                                                    echo '<b>template</b><br/>';
+                                                    echo '<pre>'.htmlentities($chunk_block).'</pre>';
+                                                    //krumo($data);
+                                                    // /
+                                                    
+                                                    $parse_result = $this->parse_variables_ex(array_merge(
+                                                        $params,
+                                                        array(
+                                                            'rowdata' => $chunk_block,
+                                                            'row_vars' => $data,
+                                                        )
+                                                    ));
+                                                    
+                                                    // Replace the entire matched block including the tag pair with the parse results
+                                                    $pair_row_data = str_replace($chunk_match, $parse_result, $pair_row_data);
+                                                }
+                                            }
+                                            */
+                                        }
                                     } else {
                                         if(array_key_exists($k, $row_vars) === FALSE)
                                         {
@@ -309,6 +373,27 @@ class PL_parser {
                                     }
                                 }
                             }
+                            
+                            if(count($inner_pair_vars) > 0)
+                            {
+                                /*
+                                echo ")))))))))) CALL parse_variables_ex FOR nested tags:".implode(',', $inner_pair_vars).";; data==<br>";
+                                echo '<b>template</b><br/>';
+                                echo '<pre>'.htmlentities($pair_row_data).'</pre>';
+                                //krumo($data);
+                                // */
+                                
+                                $pair_row_data = $this->parse_variables_ex(array_merge(
+                                    $params,
+                                    array(
+                                        'rowdata' => $pair_row_data,
+                                        'row_vars' => $data,
+                                    )
+                                ));
+                            }
+                            
+                            
+                            
                         }
 
                         if(isset($this->row_callback))
@@ -324,17 +409,22 @@ class PL_parser {
                 }
             }
         }
-
-        if($parse_conditionals)
-        {
-            $this->EE->TMPL->advanced_conditionals($rowdata);
-        }
-
+        
+        
+        
+        
         if($backspace)
         {
-            $rowdata = substr($rowdata, 0, - $backspace);
+            $rowdata = substr(rtrim($rowdata), 0, - $backspace);
         }
-
+        
+        if($this->debug) {
+            echo '<i>--- return from parse_variables_ex ---</i><br/>';
+            echo 'result:</b>';
+            echo '<pre>'.htmlentities($rowdata).'</pre>';
+            echo '-----<br/>';
+        }
+        
         return $rowdata;
     } // function parse_variables
 
@@ -696,5 +786,9 @@ class PL_Parser_ArrayWrapper {
     public function __toString() {
         xdebug_print_function_stack('PL_Parser_ArrayWrapper::__toString()!');
         exit;
+    }
+    
+    public function count() {
+        return count($this->array);
     }
 }

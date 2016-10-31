@@ -90,6 +90,10 @@ class PL_forms {
                     case 'textarea':
                         $form[] = array('lang_field' => $lang_field, 'control' => form_textarea($input_name, $value));
                         break;
+                    case 'multiselect':
+                        $control = form_multiselect($input_name.'[]', $options, $value, 'style="height: 500px;"');
+                        $form[] = array('lang_field' => $lang_field, 'control' => $control);
+                        break;
                     case 'dropdown':
                         $control = form_dropdown($input_name, $options, $value);
                         foreach($option_settings as $k => $settings)
@@ -365,4 +369,23 @@ class PL_forms {
         return $out;
     } // function _render_grid
 
+}
+
+
+function pl_form_hidden($name, $value = '', $id = false)
+{
+    if ( ! is_array($name))
+    {
+        return '<input type="hidden" id="'.($id ? $id : $name).'" name="'.$name.'" value="'.form_prep($value).'" />';
+    }
+
+    $form = '';
+
+    foreach ($name as $name => $value)
+    {
+        $form .= "\n";
+        $form .= '<input type="hidden"  id="'.($id ? $id : $name).'" name="'.$name.'" value="'.form_prep($value).'" />';
+    }
+
+    return $form;
 }

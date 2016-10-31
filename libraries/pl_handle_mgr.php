@@ -134,6 +134,7 @@ class PL_handle_mgr
                 $object->$field = unserialize($object->$field);
             }
         }
+        $object->__mgr = $this;
         return $object;
     }
     
@@ -275,35 +276,42 @@ class PL_handle_mgr
             $this->EE->db->limit($perpage, $offset);
         }
 
-
+        if(!$this->EE->db->table_exists($this->table)) throw new Exception('Table does not exist: '.$this->table);
+        
         $query = $this->EE->db->get($this->table);
 
         if($query->num_rows > 0)
         {
-            foreach($query->result() as $row)
+            $result = $this->load_objects($query->result());
+        }
+        return $result;
+    }
+
+    function load_objects($query_result, $array_type = FALSE)
+    {
+        $result = array();
+        foreach($query_result as $row)
+        {
+            $obj = $this->_load_object($row);
+            
+            switch($array_type)
             {
-                //$obj = $this->get_object($row->{$this->singular . '_id'});
-                $obj = $this->_load_object($row);
-                
-                switch($array_type)
-                {
-                    case 'handle':
-                        $result[$obj->{$this->singular . '_id'}] = $obj;
-                        break;
-                    case 'name':
-                        $result[$obj->{$this->singular . '_name'}] = $obj;
-                        break;
-                    default:
-                        $result[] = $obj;
-                }
-                
-                if($this->object_cache_enabled)
-                {
-                    $this->object_cache[$obj->{$this->singular . '_id'}] = $obj;
-                    $this->object_names[$obj->{$this->singular . '_name'}] = $obj->{$this->singular . '_id'};
-                }
-                
+                case 'handle':
+                    $result[$obj->{$this->singular . '_id'}] = $obj;
+                    break;
+                case 'name':
+                    $result[$obj->{$this->singular . '_name'}] = $obj;
+                    break;
+                default:
+                    $result[] = $obj;
             }
+            
+            if($this->object_cache_enabled)
+            {
+                $this->object_cache[$obj->{$this->singular . '_id'}] = $obj;
+                $this->object_names[$obj->{$this->singular . '_name'}] = $obj->{$this->singular . '_id'};
+            }
+            
         }
         return $result;
     }

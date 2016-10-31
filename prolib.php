@@ -40,10 +40,13 @@ require_once PATH_THIRD.'prolib/libraries/pl_encryption.php';
 require_once PATH_THIRD.'prolib/libraries/pl_hooks.php';
 require_once PATH_THIRD.'prolib/libraries/pl_drivers.php';
 require_once PATH_THIRD.'prolib/libraries/pl_members.php';
-require_once PATH_THIRD.'prolib/libraries/pl_script.php';
 require_once PATH_THIRD.'prolib/core/mcp.prolib.php';
 require_once PATH_THIRD.'prolib/core/lib.base.php';
 require_once PATH_THIRD.'prolib/core/driver.base.php';
+require_once PATH_THIRD.'prolib/libraries/pl_template.php';
+require_once PATH_THIRD.'prolib/libraries/pl_markdown.php';
+require_once PATH_THIRD.'prolib/libraries/pl_notifications.php';
+require_once PATH_THIRD.'prolib/libraries/pl_eetemplates.php';
 
 function prolib(&$object, $package_name="")
 {
@@ -75,7 +78,10 @@ function prolib(&$object, $package_name="")
     $object->EE->pl_encryption      = &$object->prolib->pl_encryption;
     $object->EE->pl_drivers         = &$object->prolib->pl_drivers;
     $object->EE->pl_members         = &$object->prolib->pl_members;
-    $object->EE->pl_script          = &$object->prolib->pl_script;
+    $object->EE->pl_template        = &$object->prolib->pl_template;
+    $object->EE->pl_markdown        = &$object->prolib->pl_markdown;
+    $object->EE->pl_notifications   = &$object->prolib->pl_notifications;
+    $object->EE->pl_eetemplates     = &$object->prolib->pl_eetemplates;
 
     $PROLIB->site_id = $PROLIB->EE->config->item('site_id');
     $object->site_id = $PROLIB->site_id;
@@ -113,7 +119,10 @@ class Prolib_core {
         $this->pl_encryption        = new PL_Encryption();
         $this->pl_drivers           = new PL_Drivers();
         $this->pl_members           = new PL_Members();
-        $this->pl_script            = new PL_Script();
+        $this->pl_template          = new PL_Template();
+        $this->pl_markdown          = new PL_Markdown();
+        $this->pl_notifications     = new PL_Notifications();
+        $this->pl_eetemplates       = new PL_EETemplates();
 
         // random fun stuff
         if(isset($this->EE->uri->page_query_string))
@@ -144,12 +153,13 @@ class Prolib_core {
         if(substr($theme, -1) != '/') $theme .= '/';
         $object->theme_url = $theme.'third_party/'.$package_name.'/';
 
-        if(defined('BASE'))
+        if(defined('BASE') && $package_name != 'prolib')
         {
             defined('ACTION_BASE') OR define('ACTION_BASE', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('FORM_ACTION_BASE') OR define('FORM_ACTION_BASE', 'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('TAB_ACTION') OR define('TAB_ACTION', BASE.AMP.'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP);
             defined('CP_ACTION') OR define('CP_ACTION', 'C=addons_modules'.AMP.'M=show_module_cp'.AMP.'module='.$package_name.AMP.'method=');
+            #throw new Exception('what');
         }
 
         return $this;
@@ -376,16 +386,25 @@ class Prolib_core {
         if($exit) exit("[Exit]");
     }
 
-    function make_options($rows, $value_field, $label_field)
+    function make_options($rows, $value_field, $label_field=NULL)
     {
         $result = array();
         foreach($rows as $row)
         {
-            if(is_object($row))
-            {
-                $result[$row->$value_field] = $row->$label_field;
+            if(is_null($label_field)) {
+                if(is_object($row))
+                {
+                    $result[$row->$value_field] = $row;
+                } else {
+                    $result[$row[$value_field]] = $row;
+                }
             } else {
-                $result[$row[$value_field]] = $row[$label_field];
+                if(is_object($row))
+                {
+                    $result[$row->$value_field] = $row->$label_field;
+                } else {
+                    $result[$row[$value_field]] = $row[$label_field];
+                }
             }
         }
         return $result;
@@ -395,8 +414,9 @@ class Prolib_core {
     {
         if(!is_array($from) AND !is_object($from))
         {
-            xdebug_print_function_stack('Invalid $from supplied to copy_values!');
+            echo('<b>Invalid $from supplied to copy_values! Must be an array or object.</b><br>');
             var_dump($from);
+            exit;
         }
         
         foreach($from as $key => $value)
@@ -540,4 +560,23 @@ class Prolib_core {
 	{
 		$this->lang[$key] = $value;
 	}
+    
+    function stack_pop(&$stack)
+    {
+        $loop = TRUE;
+        while($loop)
+        {
+            $loop = FALSE;
+            $result = array_pop($stack);
+            if(isset($token->type) && isset($token->op))
+            {
+                if($token->type == EXP_OP && $token->op == ' ')
+                {
+                    $loop = TRUE;
+                }
+            }
+        }
+        return $result;
+    }
+
 }
