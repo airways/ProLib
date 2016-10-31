@@ -1,6 +1,6 @@
 This add-on should be installed to:
 
-    system/expressionengine/prolib
+    system/expressionengine/third_party/prolib
 
 You do NOT need to run any installation step, not even EE's built in
 installers for modules. ProForm or other add-ons that use ProLib
